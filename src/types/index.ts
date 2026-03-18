@@ -18,23 +18,45 @@ export interface AnalyzePayload {
   user_id: string
   face_image_b64: string
   cognitive_session_id: string
+  cognitive_score_override?: number
 }
 
-export interface CognitiveTestResult {
-  session_id: string
-  score: number
-  correct_clicks: number
-  total_rounds: number
-  avg_reaction_time_ms: number
+export interface VocalRoundResult {
+  round: number
+  reactionTimeMs: number
+  durationMs: number
+  isStroop: boolean
+  stroopCorrect?: boolean
 }
 
-export interface CognitiveRound {
-  circles: CognitiveCircle[]
+export interface VocalImportData {
+  rounds: VocalRoundResult[]
+  avgReactionMs: number
 }
 
-export interface CognitiveCircle {
+export interface ReflexSignal {
   id: string
-  x: number
-  y: number
-  isGreen: boolean
+  angle: number
+  distance: number
+  type: 'valid' | 'noise' | 'ghost'
+  spawnTime: number
 }
+
+export interface ReflexResult {
+  intercepted: number
+  total: number
+  avgVelocityMs: number
+  falsePositives: number
+  accuracy: number
+}
+
+export interface CognitiveScoreInput {
+  vocalReactionTime: number
+  stroopAccuracy: number
+  reflexAccuracy: number
+  reflexVelocity: number
+  sensorVariance: number
+  mouseHumanScore?: number
+}
+
+export type ScanPhase = 'idle' | 'facial' | 'vocal' | 'reflex' | 'analysis' | 'result'

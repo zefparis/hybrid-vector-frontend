@@ -1,412 +1,338 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ChevronRight, RotateCcw, AlertCircle } from 'lucide-react'
 import { FaceCapture } from '@/components/FaceCapture'
-import { CognitiveTest } from '@/components/CognitiveTest'
+import { VocalImprint } from '@/components/VocalImprint'
+import { NeuralReflex } from '@/components/NeuralReflex'
 import { TrustScore } from '@/components/TrustScore'
-import { ScoreBreakdown } from '@/components/ScoreBreakdown'
-import { StatusBadge } from '@/components/StatusBadge'
+import { ScanProgress } from '@/components/ScanProgress'
 import { useSessionStore } from '@/store/sessionStore'
-import { analyzeSession, generateMockResult } from '@/services/api'
-import type { CognitiveTestResult } from '@/types'
+import { analyzeSession, generateMockResult, computeCognitiveScore, scoreMouseBehavior } from '@/services/api'
+import { useSensors } from '@/hooks/useSensors'
+import { useTypewriter } from '@/hooks/useTypewriter'
+import { playSuccess } from '@/utils/sounds'
+import type { VocalImportData, ReflexResult } from '@/types'
 
-function useIsMobile() {
-  const [mobile, setMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 480)
-  useEffect(() => {
-    const fn = () => setMobile(window.innerWidth < 480)
-    window.addEventListener('resize', fn)
-    return () => window.removeEventListener('resize', fn)
-  }, [])
-  return mobile
-}
+const HEX_PATTERN = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='49' viewBox='0 0 28 49'%3E%3Cg fill-rule='evenodd'%3E%3Cg fill='%2300C2FF' fill-opacity='0.03'%3E%3Cpath d='M13.99 9.25l13 7.5v15l-13 7.5L1 31.75v-15l12.99-7.5zM3 17.9v12.7l10.99 6.34 11-6.35V17.9l-11-6.34L3 17.9z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
 
-const ANALYSIS_MESSAGES = [
+const STATUS_TEXTS = [
+  'INITIALIZING SCAN PROTOCOL...',
+  'BIOMETRIC SENSORS ACTIVE',
+  'NEURAL PATTERN ACQUISITION IN PROGRESS',
+  'COGNITIVE SIGNATURE MAPPING',
+  'HYBRID VECTOR ENGINE ONLINE',
+]
+
+const ANALYSIS_LINES = [
   'Scanning facial biometrics...',
-  'Running liveness detection...',
-  'Evaluating cognitive response...',
+  'Verifying liveness signature...',
+  'Analyzing vocal neural pattern...',
+  'Evaluating cognitive velocity...',
+  'Processing behavioral layer...',
+  'Applying post-quantum signature...',
   'Computing Hybrid Trust Score...',
 ]
 
-const steps = [
-  { id: 1, label: 'Face Capture' },
-  { id: 2, label: 'Cognitive Test' },
-  { id: 3, label: 'Analysis' },
-]
+function ScanHeader({ elapsed }: { elapsed: number }) {
+  const timeLeft = Math.max(0, 60 - Math.floor(elapsed / 1000))
+  const mm = String(Math.floor(timeLeft / 60)).padStart(2, '0')
+  const ss = String(timeLeft % 60).padStart(2, '0')
 
-function StepIndicator({ currentStep }: { currentStep: number }) {
+  const [statusIdx, setStatusIdx] = useState(0)
+  useEffect(() => {
+    const t = setInterval(() => setStatusIdx((i) => (i + 1) % STATUS_TEXTS.length), 3500)
+    return () => clearInterval(t)
+  }, [])
+  const statusText = useTypewriter(STATUS_TEXTS[statusIdx], 25)
+
   return (
-    <div className="flex items-center justify-center gap-0 mb-8 px-2">
-      {steps.map((step, index) => (
-        <div key={step.id} className="flex items-center">
-          <div className="flex flex-col items-center gap-1.5">
-            <div
-              className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold border-2 transition-all duration-300"
-              style={{
-                borderColor:
-                  step.id <= currentStep ? '#00C2FF' : 'rgba(255,255,255,0.1)',
-                backgroundColor:
-                  step.id < currentStep
-                    ? '#00C2FF'
-                    : step.id === currentStep
-                      ? 'rgba(0,194,255,0.15)'
-                      : 'transparent',
-                color:
-                  step.id < currentStep
-                    ? '#0A0F1E'
-                    : step.id === currentStep
-                      ? '#00C2FF'
-                      : 'rgba(255,255,255,0.3)',
-                boxShadow: step.id === currentStep ? '0 0 12px rgba(0,194,255,0.4)' : undefined,
-              }}
-            >
-              {step.id < currentStep ? '✓' : step.id}
-            </div>
-            <span
-              className="text-xs font-medium whitespace-nowrap"
-              style={{
-                color: step.id === currentStep ? '#F9FAFB' : 'rgba(255,255,255,0.35)',
-              }}
-            >
-              {step.label}
-            </span>
-          </div>
-          {index < steps.length - 1 && (
-            <div
-              className="w-10 sm:w-20 h-px mx-1.5 mb-5 transition-all duration-500"
-              style={{
-                backgroundColor:
-                  step.id < currentStep ? '#00C2FF' : 'rgba(255,255,255,0.08)',
-              }}
-            />
-          )}
+    <div className="mb-6">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2.5">
+          <svg width="16" height="16" viewBox="0 0 28 28">
+            <polygon points="14,2 26,8 26,20 14,26 2,20 2,8" fill="none" stroke="#00C2FF" strokeWidth="2" />
+          </svg>
+          <span className="text-xs sm:text-sm font-black tracking-widest" style={{ color: '#F0F4FF' }}>
+            HYBRID VECTOR
+          </span>
         </div>
-      ))}
+        <div className="font-mono text-sm font-bold tabular-nums tracking-wider" style={{ color: '#00C2FF' }}>
+          {mm}:{ss}
+        </div>
+      </div>
+      <div className="h-px w-full my-3" style={{ backgroundColor: '#1E2D45' }} />
+      <div className="flex flex-col xs:flex-row xs:items-center justify-between gap-1">
+        <span className="text-[10px] font-semibold tracking-widest" style={{ color: '#8899BB' }}>
+          NEURAL SCAN PROTOCOL v2.1
+        </span>
+        <span className="text-[10px] font-semibold tracking-wider" style={{ color: '#00C2FF' }}>
+          STATUS: {statusText}<span className="animate-pulse">_</span>
+        </span>
+      </div>
     </div>
   )
 }
 
-function AnalysisLoader({ onDone }: { onDone: () => void }) {
-  const [msgIndex, setMsgIndex] = useState(0)
+function AnalysisSequence({ onDone }: { onDone: () => void }) {
+  const [lineIdx, setLineIdx] = useState(0)
+  const [progress, setProgress] = useState<number[]>([])
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setMsgIndex((i) => {
-        const next = i + 1
-        if (next >= ANALYSIS_MESSAGES.length) {
-          clearInterval(interval)
-          return i
-        }
+    if (lineIdx >= ANALYSIS_LINES.length) {
+      const t = setTimeout(onDone, 600)
+      return () => clearTimeout(t)
+    }
+
+    const dur = lineIdx < ANALYSIS_LINES.length - 2 ? 350 : 500
+    const t = setTimeout(() => {
+      setProgress((p) => [...p, 100])
+      setLineIdx((i) => i + 1)
+    }, dur)
+    return () => clearTimeout(t)
+  }, [lineIdx, onDone])
+
+  useEffect(() => {
+    if (lineIdx < ANALYSIS_LINES.length) {
+      setProgress((p) => {
+        const next = [...p]
+        next[lineIdx] = 0
         return next
       })
-    }, 900)
-    return () => clearInterval(interval)
-  }, [])
-
-  useEffect(() => {
-    const t = setTimeout(onDone, ANALYSIS_MESSAGES.length * 900 + 400)
-    return () => clearTimeout(t)
-  }, [onDone])
+      const t = setTimeout(() => {
+        setProgress((p) => {
+          const next = [...p]
+          next[lineIdx] = lineIdx < ANALYSIS_LINES.length - 2 ? 100 : 60
+          return next
+        })
+      }, 50)
+      return () => clearTimeout(t)
+    }
+  }, [lineIdx])
 
   return (
-    <div className="flex flex-col items-center gap-8 py-8">
-      <div className="relative w-24 h-24">
-        <div
-          className="absolute inset-0 rounded-full border-2 border-hv-cyan/20 animate-ping-slow"
-          style={{ animationDuration: '2s' }}
-        />
-        <div className="absolute inset-2 rounded-full border-2 border-hv-cyan/30 animate-spin-slow" />
-        <div className="absolute inset-4 rounded-full border-2 border-t-hv-cyan border-r-transparent border-b-transparent border-l-transparent animate-spin" />
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="w-3 h-3 rounded-full bg-hv-cyan animate-pulse" />
-        </div>
-      </div>
-
-      <div className="space-y-3 text-center">
-        <AnimatePresence mode="wait">
-          <motion.p
-            key={msgIndex}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.3 }}
-            className="text-hv-text font-semibold text-lg"
-          >
-            {ANALYSIS_MESSAGES[msgIndex]}
-          </motion.p>
-        </AnimatePresence>
-        <p className="text-hv-muted text-sm">
-          Processing biometric data — this may take a moment
-        </p>
-      </div>
-
-      <div className="flex gap-1.5">
-        {ANALYSIS_MESSAGES.map((_, i) => (
-          <div
-            key={i}
-            className="h-1 rounded-full transition-all duration-500"
-            style={{
-              width: i <= msgIndex ? 24 : 8,
-              backgroundColor: i <= msgIndex ? '#00C2FF' : 'rgba(255,255,255,0.1)',
-            }}
-          />
-        ))}
+    <div className="flex flex-col gap-3 py-4">
+      <p className="text-xs font-bold tracking-widest text-center mb-2" style={{ color: '#00C2FF' }}>
+        HYBRID TRUST SCORE COMPUTING
+      </p>
+      <div className="h-px w-full" style={{ backgroundColor: '#1E2D45' }} />
+      <div className="space-y-2 py-2">
+        {ANALYSIS_LINES.map((line, i) => {
+          if (i > lineIdx) return null
+          const p = progress[i] ?? 0
+          const done = p >= 100
+          return (
+            <motion.div
+              key={line}
+              initial={{ opacity: 0, x: 10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.25 }}
+              className="flex items-center gap-3"
+            >
+              <span className="text-[10px] sm:text-xs font-semibold tracking-wider flex-1 whitespace-nowrap overflow-hidden text-ellipsis"
+                style={{ color: done ? '#F0F4FF' : '#8899BB' }}>
+                {line}
+              </span>
+              <div className="w-20 sm:w-28 h-1.5 rounded-full overflow-hidden shrink-0" style={{ backgroundColor: '#1E2D45' }}>
+                <motion.div
+                  className="h-full rounded-full"
+                  style={{ backgroundColor: done ? '#00FF88' : '#00C2FF' }}
+                  animate={{ width: `${p}%` }}
+                  transition={{ duration: 0.3 }}
+                />
+              </div>
+              <span className="text-[9px] font-bold tracking-wider w-16 text-right shrink-0"
+                style={{ color: done ? '#00FF88' : '#8899BB' }}>
+                {done ? 'COMPLETE' : '...'}
+              </span>
+            </motion.div>
+          )
+        })}
       </div>
     </div>
+  )
+}
+
+function ScanLineOverlay() {
+  return (
+    <motion.div
+      className="absolute left-0 right-0 h-px pointer-events-none z-0"
+      style={{
+        background: 'linear-gradient(90deg, transparent 10%, rgba(0,194,255,0.12) 50%, transparent 90%)',
+      }}
+      animate={{ top: ['0%', '100%'] }}
+      transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
+    />
   )
 }
 
 export function Demo() {
   const {
-    currentStep,
+    phase,
     faceImageB64,
-    cognitiveResult,
+    vocalData,
+    reflexResult,
     currentSession,
     isAnalyzing,
-    error,
-    setStep,
+    setPhase,
     startAnalysis,
     setResult,
     setFaceImage,
-    setCognitiveResult,
-    setError,
+    setVocalData,
+    setReflexResult,
     reset,
   } = useSessionStore()
 
-  const isMobile = useIsMobile()
+  const { recordTap, getSnapshot, startScan, stopScan } = useSensors()
   const analysisCalledRef = useRef(false)
+  const startTimeRef = useRef(performance.now())
+  const [elapsed, setElapsed] = useState(0)
 
-  const handleCapture = (imageSrc: string) => {
-    setFaceImage(imageSrc)
-  }
+  useEffect(() => {
+    if (phase === 'idle') {
+      setPhase('facial')
+      startTimeRef.current = performance.now()
+      startScan()
+    }
+  }, [phase, setPhase, startScan])
 
-  const handleRetake = () => {
+  useEffect(() => {
+    if (phase === 'result') return
+    const t = setInterval(() => setElapsed(performance.now() - startTimeRef.current), 200)
+    return () => clearInterval(t)
+  }, [phase])
+
+  const handleFaceCapture = useCallback((img: string) => {
+    recordTap()
+    setFaceImage(img)
+  }, [recordTap, setFaceImage])
+
+  const handleFaceRetake = useCallback(() => {
     setFaceImage('')
-  }
+  }, [setFaceImage])
 
-  const handleCognitiveComplete = (result: CognitiveTestResult) => {
-    setCognitiveResult(result)
-    setStep(3)
-  }
+  const handleFaceProceed = useCallback(() => {
+    setPhase('vocal')
+  }, [setPhase])
 
-  const handleAnalysisDone = async () => {
+  const handleVocalComplete = useCallback((data: VocalImportData) => {
+    setVocalData(data)
+    setTimeout(() => setPhase('reflex'), 800)
+  }, [setVocalData, setPhase])
+
+  const handleReflexComplete = useCallback((result: ReflexResult) => {
+    setReflexResult(result)
+    setTimeout(() => setPhase('analysis'), 1000)
+  }, [setReflexResult, setPhase])
+
+  const handleAnalysisDone = useCallback(async () => {
     if (analysisCalledRef.current) return
     analysisCalledRef.current = true
     startAnalysis()
 
+    stopScan()
+    const sensors = getSnapshot()
+    const stroopRounds = vocalData?.rounds.filter((r) => r.isStroop) ?? []
+    const stroopCorrectCount = stroopRounds.filter((r) => r.stroopCorrect).length
+    const stroopAccuracy = stroopRounds.length > 0 ? stroopCorrectCount / stroopRounds.length : 0
+    const mouseScore = sensors.mouseBehavior ? scoreMouseBehavior(sensors.mouseBehavior) : undefined
+    const cogScore = computeCognitiveScore({
+      vocalReactionTime: vocalData?.avgReactionMs ?? 800,
+      stroopAccuracy,
+      reflexAccuracy: reflexResult ? reflexResult.intercepted / reflexResult.total : 0.5,
+      reflexVelocity: reflexResult?.avgVelocityMs ?? 600,
+      sensorVariance: sensors.deviceMotionVariance,
+      mouseHumanScore: mouseScore,
+    })
+
     try {
       const tenantId = (import.meta.env.VITE_TENANT_ID as string) || 'demo-tenant'
-      const userId = `user-${Date.now()}`
-      const sessionId = cognitiveResult?.session_id ?? crypto.randomUUID()
-
       const result = await analyzeSession({
         tenant_id: tenantId,
-        user_id: userId,
+        user_id: `user-${Date.now()}`,
         face_image_b64: faceImageB64 ?? '',
-        cognitive_session_id: sessionId,
+        cognitive_session_id: crypto.randomUUID(),
+        cognitive_score_override: cogScore,
       })
       setResult(result)
+      playSuccess()
     } catch {
-      const mock = generateMockResult(cognitiveResult?.score)
+      const mock = generateMockResult(cogScore)
       setResult(mock)
+      playSuccess()
     }
-  }
+  }, [vocalData, reflexResult, faceImageB64, startAnalysis, setResult, getSnapshot, stopScan])
 
-  const handleReset = () => {
+  const handleReset = useCallback(() => {
     analysisCalledRef.current = false
+    startTimeRef.current = performance.now()
+    setElapsed(0)
     reset()
-  }
+  }, [reset])
 
   return (
-    <div className="min-h-screen bg-hv-bg pt-24 pb-16 px-4 overflow-x-hidden">
-      <div className="absolute inset-0 grid-bg pointer-events-none opacity-60" />
-      <div className="max-w-2xl mx-auto relative w-full">
-        <div className="text-center mb-8">
-          <h1 className="font-black text-3xl sm:text-4xl text-hv-text mb-2">
-            Identity Verification
-          </h1>
-          <p className="text-hv-muted text-sm">
-            Complete the 3-step Hybrid Vector verification protocol
-          </p>
+    <div className="min-h-screen pt-16 pb-8 px-3 sm:px-4 overflow-x-hidden" style={{ backgroundColor: '#0A0F1E' }}>
+      <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: HEX_PATTERN }} />
+      <ScanLineOverlay />
+
+      <div className="max-w-2xl mx-auto relative w-full pt-6 sm:pt-8">
+        <div
+          className="rounded-2xl p-5 sm:p-7 relative overflow-hidden"
+          style={{ backgroundColor: '#0D1526', border: '1px solid #1E2D45' }}
+        >
+          <ScanHeader elapsed={elapsed} />
+          <ScanProgress phase={phase} />
+
+          <div className="h-px w-full my-5" style={{ backgroundColor: '#1E2D45' }} />
+
+          <AnimatePresence mode="wait">
+            {phase === 'facial' && (
+              <motion.div key="facial"
+                initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}>
+                <FaceCapture
+                  capturedImage={faceImageB64}
+                  onCapture={handleFaceCapture}
+                  onRetake={handleFaceRetake}
+                  onProceed={handleFaceProceed}
+                />
+              </motion.div>
+            )}
+
+            {phase === 'vocal' && (
+              <motion.div key="vocal"
+                initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}>
+                <VocalImprint onComplete={handleVocalComplete} />
+              </motion.div>
+            )}
+
+            {phase === 'reflex' && (
+              <motion.div key="reflex"
+                initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}>
+                <NeuralReflex onComplete={handleReflexComplete} />
+              </motion.div>
+            )}
+
+            {phase === 'analysis' && (
+              <motion.div key="analysis"
+                initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}>
+                <AnalysisSequence onDone={handleAnalysisDone} />
+              </motion.div>
+            )}
+
+            {phase === 'result' && currentSession && (
+              <motion.div key="result"
+                initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}>
+                <TrustScore session={currentSession} onReset={handleReset} />
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
-        <StepIndicator currentStep={currentStep} />
-
-        <AnimatePresence mode="wait">
-          {currentStep === 1 && (
-            <motion.div
-              key="step1"
-              initial={{ opacity: 0, x: 30 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -30 }}
-              transition={{ duration: 0.3 }}
-              className="glass rounded-2xl border border-white/5 p-6 sm:p-8"
-            >
-              <div className="mb-6">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-xs font-bold text-hv-cyan tracking-widest uppercase">Step 1</span>
-                </div>
-                <h2 className="text-xl font-bold text-hv-text">Face Capture</h2>
-                <p className="text-hv-muted text-sm mt-1">
-                  We use your camera to perform facial liveness detection
-                </p>
-              </div>
-
-              <FaceCapture
-                capturedImage={faceImageB64}
-                onCapture={handleCapture}
-                onRetake={handleRetake}
-              />
-
-              {faceImageB64 && (
-                <div className="mt-6 flex justify-end">
-                  <button
-                    onClick={() => setStep(2)}
-                    className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold text-sm bg-hv-cyan text-hv-bg hover:bg-hv-cyan-dark transition-all duration-200"
-                    style={{ boxShadow: '0 0 16px rgba(0,194,255,0.35)' }}
-                  >
-                    Continue
-                    <ChevronRight size={16} />
-                  </button>
-                </div>
-              )}
-            </motion.div>
-          )}
-
-          {currentStep === 2 && (
-            <motion.div
-              key="step2"
-              initial={{ opacity: 0, x: 30 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -30 }}
-              transition={{ duration: 0.3 }}
-              className="glass rounded-2xl border border-white/5 p-6 sm:p-8"
-            >
-              <div className="mb-6">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-xs font-bold text-hv-cyan tracking-widest uppercase">Step 2</span>
-                </div>
-                <h2 className="text-xl font-bold text-hv-text">Prove You&apos;re Human</h2>
-                <p className="text-hv-muted text-sm mt-1">
-                  Complete the cognitive challenge to generate your behavioral fingerprint
-                </p>
-              </div>
-
-              <CognitiveTest onComplete={handleCognitiveComplete} />
-            </motion.div>
-          )}
-
-          {currentStep === 3 && (
-            <motion.div
-              key="step3"
-              initial={{ opacity: 0, x: 30 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -30 }}
-              transition={{ duration: 0.3 }}
-              className="glass rounded-2xl border border-white/5 p-6 sm:p-8"
-            >
-              <div className="mb-6">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-xs font-bold text-hv-cyan tracking-widest uppercase">Step 3</span>
-                </div>
-                <h2 className="text-xl font-bold text-hv-text">Analysis</h2>
-              </div>
-
-              {error && (
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="flex items-start gap-3 p-4 rounded-xl bg-hv-red/10 border border-hv-red/30 mb-6"
-                >
-                  <AlertCircle size={16} className="text-hv-red mt-0.5 shrink-0" />
-                  <p className="text-sm text-hv-red">{error}</p>
-                </motion.div>
-              )}
-
-              {!currentSession && !isAnalyzing && (
-                <AnalysisLoader onDone={handleAnalysisDone} />
-              )}
-
-              {isAnalyzing && !currentSession && (
-                <AnalysisLoader onDone={() => {}} />
-              )}
-
-              {currentSession && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.5 }}
-                  className="space-y-8"
-                >
-                  <div className="flex flex-col items-center gap-4">
-                    <TrustScore score={currentSession.trust_score} size={isMobile ? 160 : 200} />
-                    <StatusBadge
-                      status={currentSession.is_human ? 'HUMAN' : 'BOT'}
-                      large
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-3 text-center text-xs">
-                    {[
-                      {
-                        label: 'Confidence',
-                        value: currentSession.confidence_level,
-                        color:
-                          currentSession.confidence_level === 'HIGH'
-                            ? '#00C2FF'
-                            : currentSession.confidence_level === 'MEDIUM'
-                              ? '#F97316'
-                              : '#EF4444',
-                      },
-                      {
-                        label: 'Processing',
-                        value: `${currentSession.processing_time_ms}ms`,
-                        color: '#9CA3AF',
-                      },
-                      {
-                        label: 'Session',
-                        value: currentSession.session_id.slice(0, 8) + '…',
-                        color: '#9CA3AF',
-                      },
-                    ].map(({ label, value, color }) => (
-                      <div
-                        key={label}
-                        className="glass rounded-xl p-3"
-                      >
-                        <div className="font-bold text-sm" style={{ color }}>
-                          {value}
-                        </div>
-                        <div className="text-hv-muted mt-0.5">{label}</div>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="glass rounded-xl p-5 border border-white/5">
-                    <h3 className="text-sm font-bold text-hv-text mb-4 tracking-wider uppercase">
-                      Score Breakdown
-                    </h3>
-                    <ScoreBreakdown
-                      facialLiveness={currentSession.facial_liveness}
-                      facialConfidence={currentSession.facial_confidence}
-                      cognitiveScore={currentSession.cognitive_score}
-                      behavioralBonus={currentSession.behavioral_bonus}
-                    />
-                  </div>
-
-                  <button
-                    onClick={handleReset}
-                    className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-bold text-sm border border-white/10 text-hv-muted hover:text-hv-text hover:border-white/20 transition-all duration-200"
-                  >
-                    <RotateCcw size={15} />
-                    Try Again
-                  </button>
-                </motion.div>
-              )}
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        <p className="text-center text-xs text-hv-muted mt-6 leading-relaxed">
-          This demo uses simulated API responses when no backend is configured.
+        <p className="text-center text-[10px] tracking-wider mt-5 leading-relaxed" style={{ color: '#8899BB' }}>
+          Neural scan uses simulated responses when no backend is configured.
           <br />
           No biometric data is stored or transmitted outside your browser.
         </p>
