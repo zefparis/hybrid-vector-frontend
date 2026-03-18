@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronRight, RotateCcw, AlertCircle } from 'lucide-react'
 import { FaceCapture } from '@/components/FaceCapture'
@@ -9,7 +9,16 @@ import { StatusBadge } from '@/components/StatusBadge'
 import { useSessionStore } from '@/store/sessionStore'
 import { analyzeSession, generateMockResult } from '@/services/api'
 import type { CognitiveTestResult } from '@/types'
-import { useState } from 'react'
+
+function useIsMobile() {
+  const [mobile, setMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 480)
+  useEffect(() => {
+    const fn = () => setMobile(window.innerWidth < 480)
+    window.addEventListener('resize', fn)
+    return () => window.removeEventListener('resize', fn)
+  }, [])
+  return mobile
+}
 
 const ANALYSIS_MESSAGES = [
   'Scanning facial biometrics...',
@@ -26,7 +35,7 @@ const steps = [
 
 function StepIndicator({ currentStep }: { currentStep: number }) {
   return (
-    <div className="flex items-center justify-center gap-0 mb-8">
+    <div className="flex items-center justify-center gap-0 mb-8 px-2">
       {steps.map((step, index) => (
         <div key={step.id} className="flex items-center">
           <div className="flex flex-col items-center gap-1.5">
@@ -63,7 +72,7 @@ function StepIndicator({ currentStep }: { currentStep: number }) {
           </div>
           {index < steps.length - 1 && (
             <div
-              className="w-16 sm:w-24 h-px mx-2 mb-5 transition-all duration-500"
+              className="w-10 sm:w-20 h-px mx-1.5 mb-5 transition-all duration-500"
               style={{
                 backgroundColor:
                   step.id < currentStep ? '#00C2FF' : 'rgba(255,255,255,0.08)',
@@ -163,6 +172,7 @@ export function Demo() {
     reset,
   } = useSessionStore()
 
+  const isMobile = useIsMobile()
   const analysisCalledRef = useRef(false)
 
   const handleCapture = (imageSrc: string) => {
@@ -207,9 +217,9 @@ export function Demo() {
   }
 
   return (
-    <div className="min-h-screen bg-hv-bg pt-24 pb-16 px-4">
+    <div className="min-h-screen bg-hv-bg pt-24 pb-16 px-4 overflow-x-hidden">
       <div className="absolute inset-0 grid-bg pointer-events-none opacity-60" />
-      <div className="max-w-2xl mx-auto relative">
+      <div className="max-w-2xl mx-auto relative w-full">
         <div className="text-center mb-8">
           <h1 className="font-black text-3xl sm:text-4xl text-hv-text mb-2">
             Identity Verification
@@ -251,7 +261,7 @@ export function Demo() {
                 <div className="mt-6 flex justify-end">
                   <button
                     onClick={() => setStep(2)}
-                    className="flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm bg-hv-cyan text-hv-bg hover:bg-hv-cyan-dark transition-all duration-200"
+                    className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold text-sm bg-hv-cyan text-hv-bg hover:bg-hv-cyan-dark transition-all duration-200"
                     style={{ boxShadow: '0 0 16px rgba(0,194,255,0.35)' }}
                   >
                     Continue
@@ -328,7 +338,7 @@ export function Demo() {
                   className="space-y-8"
                 >
                   <div className="flex flex-col items-center gap-4">
-                    <TrustScore score={currentSession.trust_score} size={200} />
+                    <TrustScore score={currentSession.trust_score} size={isMobile ? 160 : 200} />
                     <StatusBadge
                       status={currentSession.is_human ? 'HUMAN' : 'BOT'}
                       large

@@ -183,13 +183,13 @@ export function Landing() {
               <div className="w-3 h-3 rounded-full bg-hv-orange/70" />
               <div className="w-3 h-3 rounded-full bg-hv-green/70" />
               <div className="flex-1 flex justify-center">
-                <div className="px-4 py-1 rounded-md bg-white/5 text-xs text-hv-muted font-mono">
+                <div className="px-3 py-1 rounded-md bg-white/5 text-xs text-hv-muted font-mono truncate max-w-[180px] sm:max-w-none">
                   hybrid-vector-api.onrender.com
                 </div>
               </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 xs:grid-cols-3 sm:grid-cols-3 gap-3">
               {[
                 { step: '01', label: 'Face Capture', icon: Fingerprint, status: 'complete' },
                 { step: '02', label: 'Cognitive Test', icon: Brain, status: 'complete' },
@@ -374,7 +374,7 @@ export function Landing() {
             <span className="font-bold text-hv-text">Hybrid Vector</span>
             <span>— Identity Beyond Biometrics</span>
           </div>
-          <div className="flex items-center gap-6">
+          <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-1">
             <span>3 Patents Filed · France 2024</span>
             <span>GDPR Compliant</span>
             <span>SOC 2 Ready</span>

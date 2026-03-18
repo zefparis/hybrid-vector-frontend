@@ -232,7 +232,7 @@ export function CognitiveTest({ onComplete }: CognitiveTestProps) {
 
       <div
         className="relative rounded-2xl border border-white/5 bg-hv-surface overflow-hidden select-none"
-        style={{ height: 280 }}
+        style={{ height: 'clamp(220px, 40vw, 280px)' }}
       >
         <div className="absolute inset-0 grid-bg opacity-40" />
 
@@ -256,7 +256,7 @@ export function CognitiveTest({ onComplete }: CognitiveTestProps) {
                   animate={{ scale: isClicked ? 1.3 : 1, opacity: isClicked ? 0 : 1 }}
                   transition={{ type: 'spring', stiffness: 400, damping: 20 }}
                   onClick={() => handleCircleClick(circle)}
-                  className="absolute w-14 h-14 rounded-full border-2 flex items-center justify-center -translate-x-1/2 -translate-y-1/2 cursor-pointer"
+                  className="absolute w-14 h-14 sm:w-14 sm:h-14 rounded-full border-2 flex items-center justify-center -translate-x-1/2 -translate-y-1/2 cursor-pointer touch-manipulation"
                   style={{
                     left: `${circle.x}%`,
                     top: `${circle.y}%`,

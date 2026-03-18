@@ -106,19 +106,19 @@ export function Dashboard() {
   ]
 
   return (
-    <div className="min-h-screen bg-hv-bg pt-24 pb-16 px-4">
+    <div className="min-h-screen bg-hv-bg pt-24 pb-16 px-4 overflow-x-hidden">
       <div className="absolute inset-0 grid-bg pointer-events-none opacity-40" />
       <div className="max-w-6xl mx-auto relative">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
           <div>
-            <h1 className="font-black text-3xl text-hv-text">Session Dashboard</h1>
+            <h1 className="font-black text-2xl sm:text-3xl text-hv-text">Session Dashboard</h1>
             <p className="text-hv-muted text-sm mt-1">
               {totalSessions > 0
                 ? `${totalSessions} session${totalSessions !== 1 ? 's' : ''} recorded this session`
                 : 'No sessions yet — run a demo to see results here'}
             </p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2">
             {totalSessions > 0 && (
               <>
                 <button

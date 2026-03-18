@@ -164,7 +164,7 @@ export function FaceCapture({ capturedImage, onCapture, onRetake }: FaceCaptureP
         onClick={capture}
         disabled={permissionState !== 'granted' || isCapturing}
         className={cn(
-          'flex items-center gap-2.5 px-8 py-3.5 rounded-xl font-bold text-sm transition-all duration-200',
+          'w-full sm:w-auto flex items-center justify-center gap-2.5 px-8 py-3.5 rounded-xl font-bold text-sm transition-all duration-200',
           permissionState === 'granted' && !isCapturing
             ? 'bg-hv-cyan text-hv-bg cyan-glow hover:bg-hv-cyan-dark'
             : 'bg-white/5 text-hv-muted cursor-not-allowed',
