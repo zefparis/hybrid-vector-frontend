@@ -15,6 +15,10 @@ function scoreGlow(s: number): string {
   return 'rgba(255,51,85,0.5)'
 }
 
+function toPercent(value: number): number {
+  return value <= 1 ? value * 100 : value
+}
+
 function ScoreRing({ score, size }: { score: number; size: number }) {
   const radius = 80
   const circ = 2 * Math.PI * radius
@@ -59,7 +63,8 @@ function ScoreRing({ score, size }: { score: number; size: number }) {
 }
 
 function BreakdownBar({ label, value, delay }: { label: string; value: number; delay: number }) {
-  const color = scoreColor(value)
+  const percent = toPercent(value)
+  const color = scoreColor(percent)
   return (
     <div className="space-y-1">
       <div className="flex items-center justify-between">
@@ -67,7 +72,7 @@ function BreakdownBar({ label, value, delay }: { label: string; value: number; d
           {label}
         </span>
         <span className="text-[10px] sm:text-xs font-bold tabular-nums" style={{ color }}>
-          {value}%
+          {Math.round(percent)}%
         </span>
       </div>
       <div className="h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: '#1E2D45' }}>
@@ -75,7 +80,7 @@ function BreakdownBar({ label, value, delay }: { label: string; value: number; d
           className="h-full rounded-full"
           style={{ backgroundColor: color }}
           initial={{ width: 0 }}
-          animate={{ width: `${value}%` }}
+          animate={{ width: `${percent}%` }}
           transition={{ delay, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
         />
       </div>
@@ -94,6 +99,7 @@ export function TrustScore({ session, onReset }: TrustScoreProps) {
   const color = scoreColor(session.trust_score)
   const isHuman = session.is_human
   const ringSize = typeof window !== 'undefined' && window.innerWidth < 480 ? 160 : 200
+  const breakdown = session.breakdown ?? session
 
   const handleShare = () => {
     const text = t('score_share_text').replace('{score}', String(session.trust_score))
@@ -104,10 +110,10 @@ export function TrustScore({ session, onReset }: TrustScoreProps) {
   }
 
   const breakdowns = [
-    { label: t('score_facial'), value: session.facial_liveness },
-    { label: t('score_vocal'), value: session.facial_confidence },
-    { label: t('score_reflex'), value: session.cognitive_score },
-    { label: t('score_behavioral'), value: session.behavioral_bonus },
+    { label: t('score_facial'), value: breakdown.facial_liveness },
+    { label: t('score_vocal'), value: breakdown.facial_confidence },
+    { label: t('score_reflex'), value: breakdown.cognitive_score },
+    { label: t('score_behavioral'), value: breakdown.behavioral_bonus },
   ]
 
   return (

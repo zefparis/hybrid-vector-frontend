@@ -23,6 +23,10 @@ function getBarColor(value: number): string {
   return '#EF4444'
 }
 
+function toPercent(value: number): number {
+  return value <= 1 ? value * 100 : value
+}
+
 export function ScoreBreakdown({
   facialLiveness,
   facialConfidence,
@@ -39,30 +43,30 @@ export function ScoreBreakdown({
   const metrics: ScoreMetric[] = [
     {
       label: 'Facial Liveness',
-      value: facialLiveness,
+      value: toPercent(facialLiveness),
       icon: Eye,
-      color: getBarColor(facialLiveness),
+      color: getBarColor(toPercent(facialLiveness)),
       description: 'Anti-spoofing liveness verification',
     },
     {
       label: 'Facial Confidence',
-      value: facialConfidence,
+      value: toPercent(facialConfidence),
       icon: Shield,
-      color: getBarColor(facialConfidence),
+      color: getBarColor(toPercent(facialConfidence)),
       description: 'Biometric match confidence',
     },
     {
       label: 'Cognitive Score',
-      value: cognitiveScore,
+      value: toPercent(cognitiveScore),
       icon: Brain,
-      color: getBarColor(cognitiveScore),
+      color: getBarColor(toPercent(cognitiveScore)),
       description: 'Human reaction pattern analysis',
     },
     {
       label: 'Behavioral Bonus',
-      value: behavioralBonus,
+      value: toPercent(behavioralBonus),
       icon: Sparkles,
-      color: getBarColor(behavioralBonus),
+      color: getBarColor(toPercent(behavioralBonus)),
       description: 'Interaction entropy factor',
     },
   ]

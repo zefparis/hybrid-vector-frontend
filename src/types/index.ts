@@ -11,6 +11,15 @@ export interface SessionResult {
   behavioral_bonus: number
   timestamp: string
   processing_time_ms: number
+  breakdown?: TrustScoreBreakdown
+  reason?: string | null
+}
+
+export interface TrustScoreBreakdown {
+  facial_liveness: number
+  facial_confidence: number
+  cognitive_score: number
+  behavioral_bonus: number
 }
 
 export interface AnalyzePayload {
