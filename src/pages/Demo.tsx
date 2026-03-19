@@ -185,7 +185,7 @@ export function Demo() {
     reset,
   } = useSessionStore()
 
-  const { recordTap, getSnapshot, startScan, stopScan } = useSensors()
+  const { recordTap, getSnapshot, startScan, stopScan, isMobile } = useSensors()
   const analysisCalledRef = useRef(false)
   const startTimeRef = useRef(performance.now())
   const [elapsed, setElapsed] = useState(0)
@@ -205,9 +205,11 @@ export function Demo() {
   }, [phase])
 
   const handleFaceCapture = useCallback((img: string, pointerPressure?: number) => {
-    recordTap(pointerPressure)
+    if (!isMobile) {
+      recordTap(pointerPressure)
+    }
     setFaceImage(img)
-  }, [recordTap, setFaceImage])
+  }, [isMobile, recordTap, setFaceImage])
 
   const handleFaceRetake = useCallback(() => {
     setFaceImage('')

@@ -78,6 +78,7 @@ export function useSensors() {
   const handlersRef = useRef<{
     motion?: (e: DeviceMotionEvent) => void
     orientation?: (e: DeviceOrientationEvent) => void
+    pointerdown?: (e: PointerEvent) => void
     mousemove?: (e: MouseEvent) => void
     mouseenter?: (e: MouseEvent) => void
     mouseleave?: (e: MouseEvent) => void
@@ -109,6 +110,15 @@ export function useSensors() {
 
     if (isMobile) {
       // Mobile: device motion + orientation
+      const handlePointerDown = (e: PointerEvent) => {
+        if (!active.current) return
+        if (e.pointerType !== 'touch' && e.pointerType !== 'pen') return
+
+        taps.current.push(performance.now())
+        if (e.pressure != null && e.pressure > 0) {
+          pressure.current.push(e.pressure)
+        }
+      }
       const handleMotion = (e: DeviceMotionEvent) => {
         if (!active.current) return
         const a = e.accelerationIncludingGravity
@@ -124,9 +134,11 @@ export function useSensors() {
       }
       handlersRef.current.motion = handleMotion
       handlersRef.current.orientation = handleOrientation
+      handlersRef.current.pointerdown = handlePointerDown
       try {
         window.addEventListener('devicemotion', handleMotion, { passive: true })
         window.addEventListener('deviceorientation', handleOrientation, { passive: true })
+        window.addEventListener('pointerdown', handlePointerDown, { passive: true })
       } catch { /* silent */ }
     } else {
       // Desktop: mouse behavior at ~60Hz via rAF
@@ -212,6 +224,8 @@ export function useSensors() {
           window.removeEventListener('devicemotion', handlersRef.current.motion)
         if (handlersRef.current.orientation)
           window.removeEventListener('deviceorientation', handlersRef.current.orientation)
+        if (handlersRef.current.pointerdown)
+          window.removeEventListener('pointerdown', handlersRef.current.pointerdown)
       } catch { /* silent */ }
     } else {
       cancelAnimationFrame(rafId.current)
