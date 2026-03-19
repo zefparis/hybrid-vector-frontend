@@ -204,8 +204,8 @@ export function Demo() {
     return () => clearInterval(t)
   }, [phase])
 
-  const handleFaceCapture = useCallback((img: string) => {
-    recordTap()
+  const handleFaceCapture = useCallback((img: string, pointerPressure?: number) => {
+    recordTap(pointerPressure)
     setFaceImage(img)
   }, [recordTap, setFaceImage])
 
@@ -240,6 +240,9 @@ export function Demo() {
     const mouseScore = sensors.mouseBehavior ? scoreMouseBehavior(sensors.mouseBehavior) : undefined
     console.log('[DEMO] cognitive score inputs:', JSON.stringify({
       sensorVariance: sensors.deviceMotionVariance,
+      accelerometerSamples: sensors.accelerometer.length,
+      gyroscopeSamples: sensors.gyroscope.length,
+      touchPressureSamples: sensors.touchPressure.length,
       tapTimings: sensors.tapTimings,
       mouseBehavior: Boolean(sensors.mouseBehavior),
       mouseScore,
@@ -250,6 +253,9 @@ export function Demo() {
       reflexAccuracy: reflexResult ? reflexResult.intercepted / reflexResult.total : 0.5,
       reflexVelocity: reflexResult?.avgVelocityMs ?? 600,
       sensorVariance: sensors.deviceMotionVariance,
+      accelerometer: sensors.accelerometer,
+      gyroscope: sensors.gyroscope,
+      touchPressure: sensors.touchPressure,
       tapTimings: sensors.tapTimings,
       mouseHumanScore: mouseScore,
     })

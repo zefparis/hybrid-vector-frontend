@@ -65,6 +65,9 @@ export interface CognitiveScoreInput {
   reflexAccuracy: number
   reflexVelocity: number
   sensorVariance: number
+  accelerometer?: Array<{ x: number; y: number; z: number }>
+  gyroscope?: Array<{ alpha: number; beta: number; gamma: number }>
+  touchPressure?: number[]
   tapTimings?: number[]
   mouseHumanScore?: number
 }

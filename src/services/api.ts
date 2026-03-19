@@ -24,6 +24,96 @@ function computeVariance(values: number[]): number {
   return values.reduce((sum, value) => sum + (value - mean) ** 2, 0) / values.length
 }
 
+function computeMean(values: number[]): number {
+  if (values.length === 0) return 0
+  return values.reduce((sum, value) => sum + value, 0) / values.length
+}
+
+function magnitude3(x: number, y: number, z: number): number {
+  return Math.sqrt(x ** 2 + y ** 2 + z ** 2)
+}
+
+function normalizeVarianceScore(values: number[], divisor: number): number {
+  return clamp01(values.length > 1 ? computeVariance(values) / divisor : 0)
+}
+
+function computeTouchPressureScore(pressures: number[]): number {
+  if (pressures.length === 0) return 0
+
+  const meanPressure = computeMean(pressures)
+  const variancePressure = normalizeVarianceScore(pressures, 0.08)
+  const presenceScore = clamp01(pressures.length / 3)
+  const meanScore = clamp01(meanPressure / 0.65)
+
+  return clamp01(meanScore * 0.45 + variancePressure * 0.35 + presenceScore * 0.2)
+}
+
+function computeTapTimingScore(tapTimings: number[]): number {
+  if (tapTimings.length === 0) return 0
+
+  const varianceScore = normalizeVarianceScore(tapTimings, 200)
+  const presenceScore = clamp01(Math.min(tapTimings.length, 5) / 5)
+
+  return clamp01(varianceScore * 0.75 + presenceScore * 0.25)
+}
+
+function computeGyroscopeScore(gyroscope: Array<{ alpha: number; beta: number; gamma: number }>): number {
+  if (gyroscope.length === 0) return 0
+
+  const headingSeries = gyroscope.map((sample) => sample.alpha)
+  const tiltSeries = gyroscope.map((sample) => Math.sqrt(sample.beta ** 2 + sample.gamma ** 2))
+  const magnitudeSeries = gyroscope.map((sample) => magnitude3(sample.alpha, sample.beta, sample.gamma))
+
+  const headingScore = normalizeVarianceScore(headingSeries, 1800)
+  const tiltScore = normalizeVarianceScore(tiltSeries, 900)
+  const magnitudeScore = normalizeVarianceScore(magnitudeSeries, 2200)
+
+  return clamp01(headingScore * 0.35 + tiltScore * 0.4 + magnitudeScore * 0.25)
+}
+
+function computeMobileBehaviorScore(input: CognitiveScoreInput): {
+  score: number
+  accelerometerScore: number
+  gyroscopeScore: number
+  touchPressureScore: number
+  tapTimingScore: number
+} {
+  const accelerometerScore = input.sensorVariance === 0
+    ? 0.3
+    : clamp01(input.sensorVariance / 30)
+  const gyroscopeScore = computeGyroscopeScore(input.gyroscope ?? [])
+  const touchPressureScore = computeTouchPressureScore(input.touchPressure ?? [])
+  const tapTimingScore = computeTapTimingScore(input.tapTimings ?? [])
+
+  const available: Array<{ score: number; weight: number }> = []
+
+  if (input.accelerometer && input.accelerometer.length > 0) {
+    available.push({ score: accelerometerScore, weight: 0.35 })
+  }
+  if ((input.gyroscope?.length ?? 0) > 0) {
+    available.push({ score: gyroscopeScore, weight: 0.25 })
+  }
+  if ((input.touchPressure?.length ?? 0) > 0) {
+    available.push({ score: touchPressureScore, weight: 0.2 })
+  }
+  if ((input.tapTimings?.length ?? 0) > 0) {
+    available.push({ score: tapTimingScore, weight: 0.2 })
+  }
+
+  const totalWeight = available.reduce((sum, entry) => sum + entry.weight, 0)
+  const score = totalWeight > 0
+    ? available.reduce((sum, entry) => sum + entry.score * entry.weight, 0) / totalWeight
+    : 0
+
+  return {
+    score: clamp01(score),
+    accelerometerScore,
+    gyroscopeScore,
+    touchPressureScore,
+    tapTimingScore,
+  }
+}
+
 export function scoreMouseBehavior(m: MouseBehavior): number {
   // Jitter: humans have jitter 0.3–1.5px stddev; bots ≈ 0
   const jitterScore = clamp01(m.jitterAmplitude > 0.1 ? Math.min(m.jitterAmplitude / 1.5, 1) : 0)
@@ -83,7 +173,8 @@ export function computeCognitiveScore(input: CognitiveScoreInput): number {
   }
 
   const hasMouse = input.mouseHumanScore != null
-  const behavioralScore = hasMouse ? mouseScore : tapScore
+  const mobileBehavior = computeMobileBehaviorScore(input)
+  const behavioralScore = hasMouse ? mouseScore : mobileBehavior.score
 
   console.log('[SCORE] inputs:', JSON.stringify({
     vocalReactionTime: input.vocalReactionTime,
@@ -91,6 +182,9 @@ export function computeCognitiveScore(input: CognitiveScoreInput): number {
     reflexAccuracy: input.reflexAccuracy,
     reflexVelocity: input.reflexVelocity,
     sensorVariance: input.sensorVariance,
+    accelerometerSamples: input.accelerometer?.length ?? 0,
+    gyroscopeSamples: input.gyroscope?.length ?? 0,
+    touchPressureSamples: input.touchPressure?.length ?? 0,
     mouseHumanScore: input.mouseHumanScore,
     tapTimings: input.tapTimings,
   }))
@@ -106,8 +200,7 @@ export function computeCognitiveScore(input: CognitiveScoreInput): number {
     stroop: 0.24,
     reflex: 0.28,
     reflexVelocity: 0.14,
-    sensorNorm: 0.05,
-    tapBehavioral: 0.1,
+    mobileBehavior: 0.15,
   }))
   console.log('[SCORE] raw scores:', JSON.stringify({
     vocal: vocalScore,
@@ -119,6 +212,13 @@ export function computeCognitiveScore(input: CognitiveScoreInput): number {
     tapVariance,
     tapScore,
     sensorNorm,
+    mobileBehaviorScore: mobileBehavior.score,
+    mobileBehaviorBreakdown: {
+      accelerometerScore: mobileBehavior.accelerometerScore,
+      gyroscopeScore: mobileBehavior.gyroscopeScore,
+      touchPressureScore: mobileBehavior.touchPressureScore,
+      tapTimingScore: mobileBehavior.tapTimingScore,
+    },
   }))
 
   if (hasMouse) {
@@ -141,8 +241,7 @@ export function computeCognitiveScore(input: CognitiveScoreInput): number {
     stroopScore * 0.24 +
     reflexScore * 0.28 +
     reflexVelocityScore * 0.14 +
-    sensorNorm * 0.05 +
-    tapScore * 0.1
+    mobileBehavior.score * 0.15
 
   const finalScore = Math.round(Math.max(0, Math.min(100, score * 100)))
   console.log('[SCORE] final cognitive_score:', finalScore)

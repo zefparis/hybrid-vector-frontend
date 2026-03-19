@@ -7,7 +7,7 @@ import { useT } from '@/i18n/useLang'
 
 interface FaceCaptureProps {
   capturedImage: string | null
-  onCapture: (imageSrc: string) => void
+  onCapture: (imageSrc: string, pointerPressure?: number) => void
   onRetake: () => void
   onProceed: () => void
 }
@@ -106,6 +106,7 @@ function SuccessOverlay({ lines }: { lines: string[] }) {
 export function FaceCapture({ capturedImage, onCapture, onRetake, onProceed }: FaceCaptureProps) {
   const { t, tArr } = useT()
   const webcamRef = useRef<Webcam>(null)
+  const capturePressureRef = useRef<number | undefined>(undefined)
   const [permission, setPermission] = useState<'waiting' | 'granted' | 'denied'>('waiting')
   const [isCapturing, setIsCapturing] = useState(false)
   const [flashVisible, setFlashVisible] = useState(false)
@@ -134,7 +135,8 @@ export function FaceCapture({ capturedImage, onCapture, onRetake, onProceed }: F
 
     setTimeout(() => {
       const img = webcamRef.current?.getScreenshot()
-      if (img) onCapture(img)
+      if (img) onCapture(img, capturePressureRef.current)
+      capturePressureRef.current = undefined
       setIsCapturing(false)
     }, 500)
   }, [isCapturing, onCapture])
@@ -228,6 +230,9 @@ export function FaceCapture({ capturedImage, onCapture, onRetake, onProceed }: F
       {!capturedImage && (
         <button
           onClick={handleCapture}
+          onPointerDown={(e) => {
+            capturePressureRef.current = e.pressure > 0 ? e.pressure : undefined
+          }}
           disabled={permission !== 'granted' || isCapturing}
           className="w-full flex items-center justify-center gap-2.5 py-3.5 rounded-xl font-bold text-sm tracking-wider transition-all duration-300 touch-manipulation"
           style={{
