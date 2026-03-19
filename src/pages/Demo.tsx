@@ -224,7 +224,7 @@ export function Demo() {
   }, [setReflexResult, setPhase])
 
   const handleAnalysisDone = useCallback(async () => {
-    if (analysisCalledRef.current) return
+    if (analysisCalledRef.current || useSessionStore.getState().isAnalyzing) return
     analysisCalledRef.current = true
     startAnalysis()
 
