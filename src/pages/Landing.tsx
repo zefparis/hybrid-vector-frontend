@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { ArrowRight, Shield, Brain, Lock, ChevronRight, Fingerprint, Cpu, Zap } from 'lucide-react'
 import { useMemo } from 'react'
+import { useT } from '@/i18n/useLang'
 
 const PARTICLE_COUNT = 40
 
@@ -69,6 +70,7 @@ const itemVariants = {
 }
 
 export function Landing() {
+  const { t } = useT()
   const navigate = useNavigate()
   const particles = useMemo(generateParticles, [])
 
@@ -122,18 +124,15 @@ export function Landing() {
             variants={itemVariants}
             className="font-black text-5xl sm:text-6xl lg:text-7xl leading-none tracking-tight"
           >
-            <span className="text-gradient-white block">Identity Beyond</span>
-            <span className="text-gradient-cyan block mt-1">Biometrics</span>
+            <span className="text-gradient-white block">{t('landing_hero_title').split(' ').slice(0, -2).join(' ')}</span>
+            <span className="text-gradient-cyan block mt-1">{t('landing_hero_title').split(' ').slice(-2).join(' ')}</span>
           </motion.h1>
 
           <motion.p
             variants={itemVariants}
             className="text-hv-muted text-lg sm:text-xl max-w-2xl mx-auto leading-relaxed"
           >
-            The first platform combining{' '}
-            <span className="text-hv-text font-medium">facial recognition</span> +{' '}
-            <span className="text-hv-text font-medium">cognitive biometrics</span> to
-            distinguish genuine humans from AI agents with cryptographic certainty.
+            {t('landing_hero_subtitle')}
           </motion.p>
 
           <motion.div variants={itemVariants} className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -142,7 +141,7 @@ export function Landing() {
               className="group flex items-center gap-2.5 px-8 py-4 rounded-xl font-bold text-base bg-hv-cyan text-hv-bg transition-all duration-200 hover:bg-hv-cyan-dark"
               style={{ boxShadow: '0 0 24px rgba(0,194,255,0.45), 0 0 48px rgba(0,194,255,0.2)' }}
             >
-              Launch Demo
+              {t('landing_cta')}
               <ArrowRight size={18} className="transition-transform duration-200 group-hover:translate-x-1" />
             </button>
             <a
@@ -372,7 +371,7 @@ export function Landing() {
           <div className="flex items-center gap-2">
             <Shield size={14} className="text-hv-cyan" />
             <span className="font-bold text-hv-text">Hybrid Vector</span>
-            <span>— Identity Beyond Biometrics</span>
+            <span>— {t('landing_hero_title')}</span>
           </div>
           <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-1">
             <span>3 Patents Filed · France 2024</span>

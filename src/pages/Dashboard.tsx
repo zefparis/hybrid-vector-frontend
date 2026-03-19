@@ -3,6 +3,7 @@ import { Download, BarChart3, Users, ShieldCheck, Clock, Trash2 } from 'lucide-r
 import { useSessionStore } from '@/store/sessionStore'
 import { StatusBadge } from '@/components/StatusBadge'
 import type { SessionResult } from '@/types'
+import { useT } from '@/i18n/useLang'
 
 function exportToCSV(sessions: SessionResult[]) {
   const headers = ['timestamp', 'session_id', 'user_id', 'trust_score', 'is_human', 'confidence_level', 'facial_liveness', 'facial_confidence', 'cognitive_score', 'processing_time_ms']
@@ -28,9 +29,9 @@ function exportToCSV(sessions: SessionResult[]) {
   URL.revokeObjectURL(url)
 }
 
-function formatTimestamp(ts: string): string {
+function formatTimestamp(ts: string, lang: string): string {
   try {
-    return new Date(ts).toLocaleString('en-US', {
+    return new Date(ts).toLocaleString(lang === 'fr' ? 'fr-FR' : 'en-US', {
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
@@ -60,6 +61,7 @@ function ScoreBar({ value }: { value: number }) {
 }
 
 export function Dashboard() {
+  const { t, lang } = useT()
   const { sessionHistory, reset } = useSessionStore()
 
   const totalSessions = sessionHistory.length
@@ -111,7 +113,7 @@ export function Dashboard() {
       <div className="max-w-6xl mx-auto relative">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
           <div>
-            <h1 className="font-black text-2xl sm:text-3xl text-hv-text">Session Dashboard</h1>
+            <h1 className="font-black text-2xl sm:text-3xl text-hv-text">{t('dash_title')}</h1>
             <p className="text-hv-muted text-sm mt-1">
               {totalSessions > 0
                 ? `${totalSessions} session${totalSessions !== 1 ? 's' : ''} recorded this session`
@@ -126,14 +128,14 @@ export function Dashboard() {
                   className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold border border-hv-cyan/30 text-hv-cyan hover:bg-hv-cyan/10 transition-all duration-200"
                 >
                   <Download size={15} />
-                  Export CSV
+                  {t('dash_export')}
                 </button>
                 <button
                   onClick={reset}
                   className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold border border-white/10 text-hv-muted hover:text-hv-red hover:border-hv-red/30 transition-all duration-200"
                 >
                   <Trash2 size={15} />
-                  Clear
+                  {t('dash_clear')}
                 </button>
               </>
             )}
@@ -175,9 +177,9 @@ export function Dashboard() {
             <div className="w-16 h-16 rounded-full bg-hv-cyan/10 border border-hv-cyan/20 flex items-center justify-center mx-auto mb-4">
               <BarChart3 size={28} className="text-hv-cyan" />
             </div>
-            <h3 className="font-bold text-hv-text text-lg mb-2">No Sessions Yet</h3>
+            <h3 className="font-bold text-hv-text text-lg mb-2">{t('dash_sessions')}</h3>
             <p className="text-hv-muted text-sm max-w-sm mx-auto mb-6">
-              Complete a verification on the Demo page to see your session analytics here.
+              {t('dash_no_sessions')}
             </p>
             <a
               href="/demo"
@@ -226,7 +228,7 @@ export function Dashboard() {
                       className="border-b border-white/5 hover:bg-white/2 transition-colors duration-150"
                     >
                       <td className="px-4 py-3 text-hv-muted text-xs whitespace-nowrap font-mono">
-                        {formatTimestamp(session.timestamp)}
+                        {formatTimestamp(session.timestamp, lang)}
                       </td>
                       <td className="px-4 py-3 text-hv-muted text-xs font-mono whitespace-nowrap">
                         {session.session_id.slice(0, 12)}…

@@ -11,37 +11,29 @@ import { useSensors } from '@/hooks/useSensors'
 import { useTypewriter } from '@/hooks/useTypewriter'
 import { playSuccess } from '@/utils/sounds'
 import type { VocalImportData, ReflexResult } from '@/types'
+import { useT } from '@/i18n/useLang'
 
 const HEX_PATTERN = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='49' viewBox='0 0 28 49'%3E%3Cg fill-rule='evenodd'%3E%3Cg fill='%2300C2FF' fill-opacity='0.03'%3E%3Cpath d='M13.99 9.25l13 7.5v15l-13 7.5L1 31.75v-15l12.99-7.5zM3 17.9v12.7l10.99 6.34 11-6.35V17.9l-11-6.34L3 17.9z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
 
-const STATUS_TEXTS = [
-  'INITIALIZING SCAN PROTOCOL...',
-  'BIOMETRIC SENSORS ACTIVE',
-  'NEURAL PATTERN ACQUISITION IN PROGRESS',
-  'COGNITIVE SIGNATURE MAPPING',
-  'HYBRID VECTOR ENGINE ONLINE',
-]
-
-const ANALYSIS_LINES = [
-  'Scanning facial biometrics...',
-  'Verifying liveness signature...',
-  'Analyzing vocal neural pattern...',
-  'Evaluating cognitive velocity...',
-  'Processing behavioral layer...',
-  'Applying post-quantum signature...',
-  'Computing Hybrid Trust Score...',
-]
-
 function ScanHeader({ elapsed }: { elapsed: number }) {
+  const { t } = useT()
   const timeLeft = Math.max(0, 60 - Math.floor(elapsed / 1000))
   const mm = String(Math.floor(timeLeft / 60)).padStart(2, '0')
   const ss = String(timeLeft % 60).padStart(2, '0')
 
+  const STATUS_TEXTS = [
+    t('demo_status_init'),
+    t('demo_status_facial'),
+    t('demo_status_vocal'),
+    t('demo_status_reflex'),
+    t('demo_status_online'),
+  ]
+
   const [statusIdx, setStatusIdx] = useState(0)
   useEffect(() => {
-    const t = setInterval(() => setStatusIdx((i) => (i + 1) % STATUS_TEXTS.length), 3500)
-    return () => clearInterval(t)
-  }, [])
+    const interval = setInterval(() => setStatusIdx((i) => (i + 1) % STATUS_TEXTS.length), 3500)
+    return () => clearInterval(interval)
+  }, [STATUS_TEXTS.length])
   const statusText = useTypewriter(STATUS_TEXTS[statusIdx], 25)
 
   return (
@@ -62,7 +54,7 @@ function ScanHeader({ elapsed }: { elapsed: number }) {
       <div className="h-px w-full my-3" style={{ backgroundColor: '#1E2D45' }} />
       <div className="flex flex-col xs:flex-row xs:items-center justify-between gap-1">
         <span className="text-[10px] font-semibold tracking-widest" style={{ color: '#8899BB' }}>
-          NEURAL SCAN PROTOCOL v2.1
+          {t('demo_protocol')}
         </span>
         <span className="text-[10px] font-semibold tracking-wider" style={{ color: '#00C2FF' }}>
           STATUS: {statusText}<span className="animate-pulse">_</span>
@@ -73,22 +65,33 @@ function ScanHeader({ elapsed }: { elapsed: number }) {
 }
 
 function AnalysisSequence({ onDone }: { onDone: () => void }) {
+  const { t } = useT()
+  const ANALYSIS_LINES = [
+    t('analysis_facial'),
+    t('analysis_liveness'),
+    t('analysis_vocal'),
+    t('analysis_cognitive'),
+    t('analysis_behavioral'),
+    t('analysis_pqc'),
+    t('analysis_computing'),
+  ]
+
   const [lineIdx, setLineIdx] = useState(0)
   const [progress, setProgress] = useState<number[]>([])
 
   useEffect(() => {
     if (lineIdx >= ANALYSIS_LINES.length) {
-      const t = setTimeout(onDone, 600)
-      return () => clearTimeout(t)
+      const timer = setTimeout(onDone, 600)
+      return () => clearTimeout(timer)
     }
 
     const dur = lineIdx < ANALYSIS_LINES.length - 2 ? 350 : 500
-    const t = setTimeout(() => {
+    const timer2 = setTimeout(() => {
       setProgress((p) => [...p, 100])
       setLineIdx((i) => i + 1)
     }, dur)
-    return () => clearTimeout(t)
-  }, [lineIdx, onDone])
+    return () => clearTimeout(timer2)
+  }, [lineIdx, onDone, ANALYSIS_LINES.length])
 
   useEffect(() => {
     if (lineIdx < ANALYSIS_LINES.length) {
@@ -97,14 +100,14 @@ function AnalysisSequence({ onDone }: { onDone: () => void }) {
         next[lineIdx] = 0
         return next
       })
-      const t = setTimeout(() => {
+      const timer3 = setTimeout(() => {
         setProgress((p) => {
           const next = [...p]
           next[lineIdx] = lineIdx < ANALYSIS_LINES.length - 2 ? 100 : 60
           return next
         })
       }, 50)
-      return () => clearTimeout(t)
+      return () => clearTimeout(timer3)
     }
   }, [lineIdx])
 
@@ -165,6 +168,7 @@ function ScanLineOverlay() {
 }
 
 export function Demo() {
+  const { t } = useT()
   const {
     phase,
     faceImageB64,
@@ -332,9 +336,7 @@ export function Demo() {
         </div>
 
         <p className="text-center text-[10px] tracking-wider mt-5 leading-relaxed" style={{ color: '#8899BB' }}>
-          Neural scan uses simulated responses when no backend is configured.
-          <br />
-          No biometric data is stored or transmitted outside your browser.
+          {t('disclaimer')}
         </p>
       </div>
     </div>

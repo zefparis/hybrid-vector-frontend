@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { playIntercept, playError, playSuccess } from '@/utils/sounds'
 import type { ReflexResult } from '@/types'
+import { useT } from '@/i18n/useLang'
 
 interface NeuralReflexProps {
   onComplete: (result: ReflexResult) => void
@@ -108,22 +109,23 @@ function RadarGrid({ size }: { size: number }) {
 }
 
 function CompletionScreen({ result }: { result: ReflexResult }) {
+  const { t } = useT()
   const velocityLabel =
     result.avgVelocityMs < 350 ? 'EXCEPTIONAL' :
       result.avgVelocityMs < 500 ? 'OPTIMAL' : 'STANDARD'
 
   const lines = [
-    `${result.intercepted}/${result.total} signals intercepted`,
-    `Neural velocity: ${result.avgVelocityMs}ms \u2014 ${velocityLabel}`,
+    `${result.intercepted}/${result.total} ${t('reflex_intercepted').toLowerCase()}`,
+    `${t('reflex_velocity')}: ${result.avgVelocityMs}ms \u2014 ${velocityLabel}`,
     `False positive rate: ${result.falsePositives > 0 ? result.falsePositives : '0'}%`,
-    'Behavioral signature locked',
+    t('reflex_complete_locked').replace('✓ ', ''),
   ]
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col gap-4 py-4">
       <div className="text-center">
         <p className="text-xs font-bold tracking-widest" style={{ color: '#00FF88' }}>
-          NEURAL CALIBRATION COMPLETE
+          {t('reflex_complete_title')}
         </p>
         <div className="h-px w-full mt-3" style={{ backgroundColor: '#1E2D45' }} />
       </div>
@@ -148,6 +150,7 @@ function CompletionScreen({ result }: { result: ReflexResult }) {
 }
 
 export function NeuralReflex({ onComplete }: NeuralReflexProps) {
+  const { t } = useT()
   const [signals, setSignals] = useState<Signal[]>([])
   const [interceptedIds, setInterceptedIds] = useState<Set<string>>(new Set())
   const [errorFlash, setErrorFlash] = useState(false)
@@ -277,10 +280,10 @@ export function NeuralReflex({ onComplete }: NeuralReflexProps) {
     <div className="flex flex-col gap-4">
       <div className="text-center">
         <p className="text-xs font-bold tracking-widest mb-0.5" style={{ color: '#00C2FF' }}>
-          NEURAL REFLEX CALIBRATION
+          {t('reflex_title')}
         </p>
         <p className="text-[10px] tracking-wider" style={{ color: '#8899BB' }}>
-          Intercept valid signals. Ignore noise.
+          {t('reflex_subtitle')}
         </p>
         <div className="h-px w-full mt-3" style={{ backgroundColor: '#1E2D45' }} />
       </div>
@@ -364,10 +367,10 @@ export function NeuralReflex({ onComplete }: NeuralReflexProps) {
 
       <div className="flex items-center justify-between text-[10px] sm:text-xs font-semibold tracking-wider px-1">
         <span style={{ color: '#F0F4FF' }}>
-          INTERCEPTED: <span style={{ color: '#00C2FF' }}>{interceptedCount}/{VALID_COUNT}</span>
+          {t('reflex_intercepted')}: <span style={{ color: '#00C2FF' }}>{interceptedCount}/{VALID_COUNT}</span>
         </span>
         <span style={{ color: '#F0F4FF' }}>
-          VELOCITY: <span style={{ color: '#00C2FF' }}>{avgVelocity > 0 ? `${avgVelocity}ms` : '--'}</span>
+          {t('reflex_velocity')}: <span style={{ color: '#00C2FF' }}>{avgVelocity > 0 ? `${avgVelocity}ms` : '--'}</span>
         </span>
       </div>
 
@@ -380,7 +383,7 @@ export function NeuralReflex({ onComplete }: NeuralReflexProps) {
         />
       </div>
       <p className="text-center text-[10px] font-semibold tracking-wider" style={{ color: '#8899BB' }}>
-        TIME REMAINING: {Math.ceil(timeLeft / 1000)}s
+        {t('reflex_time')}: {Math.ceil(timeLeft / 1000)}s
       </p>
 
       <div className="flex justify-center gap-6 text-[9px] tracking-wider" style={{ color: '#8899BB' }}>

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { motion, useMotionValue, useTransform, animate } from 'framer-motion'
 import type { SessionResult } from '@/types'
+import { useT } from '@/i18n/useLang'
 
 function scoreColor(s: number): string {
   if (s >= 75) return '#00C2FF'
@@ -88,13 +89,14 @@ interface TrustScoreProps {
 }
 
 export function TrustScore({ session, onReset }: TrustScoreProps) {
+  const { t } = useT()
   const [copied, setCopied] = useState(false)
   const color = scoreColor(session.trust_score)
   const isHuman = session.is_human
   const ringSize = typeof window !== 'undefined' && window.innerWidth < 480 ? 160 : 200
 
   const handleShare = () => {
-    const text = `I scored ${session.trust_score}/100 on Hybrid Vector Neural Scan.\nIdentity verified with facial + vocal + cognitive biometrics.\nSecured by 3 French Patents & post-quantum cryptography.\nhybridvector.io`
+    const text = t('score_share_text').replace('{score}', String(session.trust_score))
     navigator.clipboard.writeText(text).then(() => {
       setCopied(true)
       setTimeout(() => setCopied(false), 2500)
@@ -102,10 +104,10 @@ export function TrustScore({ session, onReset }: TrustScoreProps) {
   }
 
   const breakdowns = [
-    { label: 'Facial Signature', value: session.facial_liveness },
-    { label: 'Vocal Imprint', value: session.facial_confidence },
-    { label: 'Neural Velocity', value: session.cognitive_score },
-    { label: 'Behavioral Layer', value: session.behavioral_bonus },
+    { label: t('score_facial'), value: session.facial_liveness },
+    { label: t('score_vocal'), value: session.facial_confidence },
+    { label: t('score_reflex'), value: session.cognitive_score },
+    { label: t('score_behavioral'), value: session.behavioral_bonus },
   ]
 
   return (
@@ -120,7 +122,7 @@ export function TrustScore({ session, onReset }: TrustScoreProps) {
           <polygon points="14,2 26,8 26,20 14,26 2,20 2,8" fill="none" stroke="#00C2FF" strokeWidth="2" />
         </svg>
         <span className="text-xs font-bold tracking-widest" style={{ color: '#F0F4FF' }}>
-          HYBRID TRUST SCORE
+          {t('score_title')}
         </span>
       </div>
 
@@ -142,12 +144,12 @@ export function TrustScore({ session, onReset }: TrustScoreProps) {
             {isHuman ? '✓' : '✗'}
           </span>
           <span className="text-xs font-bold tracking-widest" style={{ color: isHuman ? '#00FF88' : '#FF3355' }}>
-            {isHuman ? 'HUMAN CONFIRMED' : 'IDENTITY UNVERIFIED'}
+            {isHuman ? t('score_human') : t('score_bot')}
           </span>
         </motion.div>
 
         <span className="text-[10px] font-semibold tracking-wider" style={{ color }}>
-          Confidence: {session.confidence_level}
+          {t('score_confidence')}: {session.confidence_level}
         </span>
       </div>
 
@@ -155,7 +157,7 @@ export function TrustScore({ session, onReset }: TrustScoreProps) {
 
       <div className="space-y-3">
         <p className="text-[10px] font-bold tracking-widest" style={{ color: '#8899BB' }}>
-          SCORE BREAKDOWN
+          {t('score_breakdown')}
         </p>
         {breakdowns.map((b, i) => (
           <BreakdownBar key={b.label} label={b.label} value={b.value} delay={1.8 + i * 0.2} />
@@ -166,7 +168,7 @@ export function TrustScore({ session, onReset }: TrustScoreProps) {
 
       <div className="space-y-2">
         <p className="text-[10px] font-bold tracking-widest" style={{ color: '#8899BB' }}>
-          CERTIFIED BY
+          {t('score_certified')}
         </p>
         {['ML-KEM FIPS 203/204', '3 Brevets Fran\u00e7ais', 'Celestial Entropy'].map((cert) => (
           <div key={cert} className="flex items-center gap-2">
@@ -192,15 +194,14 @@ export function TrustScore({ session, onReset }: TrustScoreProps) {
           }}
         >
           <span className="text-base">&#8599;</span>
-          {copied ? 'COPIED TO CLIPBOARD ✓' : 'SHARE MY SCORE'}
+          {copied ? 'COPIED ✓' : t('score_share')}
         </button>
         <button
           onClick={onReset}
           className="flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-bold text-sm tracking-wider transition-all duration-300 touch-manipulation"
           style={{ border: '1.5px solid #1E2D45', color: '#8899BB' }}
         >
-          <span className="text-base">&#8634;</span>
-          SCAN AGAIN
+          {t('score_rescan')}
         </button>
       </div>
     </motion.div>

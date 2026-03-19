@@ -1,0 +1,247 @@
+export type Lang = 'fr' | 'en'
+
+export const translations = {
+  fr: {
+    // Navbar
+    nav_live_demo: 'Live Demo',
+    nav_dashboard: 'Tableau de bord',
+    nav_system_online: 'Système en ligne',
+    nav_try_demo: 'Essayer la démo',
+
+    // Landing
+    landing_hero_title: 'L\'identité au-delà de la biométrie',
+    landing_hero_subtitle: 'La première plateforme combinant reconnaissance faciale et biométrie cognitive pour distinguer les humains des agents IA',
+    landing_stat_1: '100% taux de blocage',
+    landing_stat_2: '3 Brevets Français',
+    landing_stat_3: '<500ms',
+    landing_cta: 'Lancer le scan neural',
+    landing_feature_face: 'Reconnaissance Faciale',
+    landing_feature_face_desc: 'ArcFace + détection de vie en temps réel',
+    landing_feature_cognitive: 'Moteur Cognitif',
+    landing_feature_cognitive_desc: 'Tests neuropsychologiques brevetés',
+    landing_feature_pqc: 'Post-Quantique',
+    landing_feature_pqc_desc: 'Signé ML-KEM FIPS 203/204',
+
+    // Demo header
+    demo_protocol: 'PROTOCOLE DE SCAN NEURAL v2.1',
+    demo_status_init: 'INITIALISATION DU PROTOCOLE...',
+    demo_status_facial: 'ACQUISITION SIGNATURE FACIALE...',
+    demo_status_vocal: 'EMPREINTE VOCALE EN COURS...',
+    demo_status_reflex: 'CALIBRATION RÉFLEXES NEURAUX...',
+    demo_status_computing: 'CALCUL DU HYBRID TRUST SCORE...',
+    demo_status_online: 'HYBRID VECTOR ENGINE EN LIGNE',
+
+    // Scan progress nodes
+    scan_facial: 'FACIAL',
+    scan_vocal: 'VOCAL',
+    scan_reflex: 'RÉFLEXE',
+    scan_analysis: 'ANALYSE',
+
+    // FaceCapture
+    face_align: 'ALIGNEZ VOTRE VISAGE DANS LE CADRE',
+    face_initiate: 'INITIER LE SCAN FACIAL',
+    face_retake: 'REPRENDRE',
+    face_proceed: 'PROCÉDER À L\'EMPREINTE VOCALE →',
+    face_mapped: 'GÉOMÉTRIE FACIALE MAPPÉE',
+    face_liveness: 'VIE CONFIRMÉE',
+    face_depth: 'SIGNATURE DE PROFONDEUR ACQUISE',
+    face_points: '432 POINTS NEURAUX CAPTURÉS',
+    face_labels: ['CONTRÔLE DE VIE', 'ANALYSE DE PROFONDEUR', 'CARTOGRAPHIE'],
+
+    // VocalImprint
+    vocal_title: 'ACQUISITION EMPREINTE VOCALE',
+    vocal_subtitle: 'Votre voix contient une signature neurale qu\'aucune IA ne peut reproduire.',
+    vocal_round: 'Cycle',
+    vocal_of: 'sur',
+    vocal_speak: '🎤  PARLER MAINTENANT',
+    vocal_captured: 'EMPREINTE VOCALE CAPTURÉE ✓',
+    vocal_proceed: 'PROCÉDER AUX RÉFLEXES NEURAUX →',
+    vocal_layer: 'Couche vocale neurale',
+    vocal_complete_title: 'EMPREINTE VOCALE COMPLÈTE',
+    vocal_complete_phonetic: '✓ Signature phonétique mappée',
+    vocal_complete_stroop: '✓ Couche cognitive Stroop vérifiée',
+    vocal_complete_timing: '✓ Timing neural: {avg}ms moy.',
+    vocal_complete_liveness: '✓ Vivacité vocale confirmée',
+    // Round instructions
+    vocal_instruction_letter: 'Dites la lettre',
+    vocal_instruction_color: 'Dites la COULEUR de l\'encre (pas le mot)',
+    vocal_instruction_number: 'Dites le nombre',
+    vocal_instruction_math: 'Dites le nombre suivant',
+
+    // NeuralReflex
+    reflex_title: 'CALIBRATION RÉFLEXES NEURAUX',
+    reflex_subtitle: 'Filtrez le signal du bruit. Votre vélocité neurale est unique.',
+    reflex_intercepted: 'INTERCEPTÉ',
+    reflex_velocity: 'VÉLOCITÉ',
+    reflex_time: 'TEMPS RESTANT',
+    reflex_complete_title: 'CALIBRATION NEURALE COMPLÈTE',
+    reflex_complete_signals: '✓ 12/12 signaux interceptés',
+    reflex_complete_velocity: '✓ Vélocité neurale: 287ms — EXCEPTIONNEL',
+    reflex_complete_false: '✓ Taux faux positifs: 0%',
+    reflex_complete_locked: '✓ Signature comportementale verrouillée',
+
+    // TrustScore
+    score_title: 'HYBRID TRUST SCORE',
+    score_human: '✓ HUMAIN CONFIRMÉ',
+    score_bot: '✗ IDENTITÉ NON VÉRIFIÉE',
+    score_breakdown: 'DÉTAIL DU SCORE',
+    score_facial: 'Signature Faciale',
+    score_vocal: 'Empreinte Vocale',
+    score_reflex: 'Vélocité Neurale',
+    score_behavioral: 'Couche Comportementale',
+    score_certified: 'CERTIFIÉ PAR',
+    score_share: '↗ PARTAGER MON SCORE',
+    score_rescan: '↺ NOUVEAU SCAN',
+    score_confidence: 'Confiance',
+    score_share_text: 'J\'ai obtenu {score}/100 sur Hybrid Vector Neural Scan. Identité vérifiée avec biométrie faciale + vocale + cognitive. Sécurisé par 3 Brevets Français & cryptographie post-quantique. hybridvector.io',
+
+    // Analysis
+    analysis_facial: 'Analyse biométrique faciale...',
+    analysis_liveness: 'Vérification signature de vie...',
+    analysis_vocal: 'Analyse pattern vocal neural...',
+    analysis_cognitive: 'Évaluation vélocité cognitive...',
+    analysis_behavioral: 'Traitement couche comportementale...',
+    analysis_pqc: 'Application signature post-quantique...',
+    analysis_computing: 'Calcul Hybrid Trust Score...',
+
+    // Dashboard
+    dash_title: 'Tableau de bord',
+    dash_sessions: 'Sessions',
+    dash_avg_score: 'Score moyen',
+    dash_human_rate: 'Taux humain',
+    dash_export: 'Exporter CSV',
+    dash_clear: 'Effacer',
+    dash_no_sessions: 'Aucune session pour le moment. Lancez un scan neural pour commencer.',
+    dash_timestamp: 'Horodatage',
+    dash_user: 'Utilisateur',
+    dash_score: 'Score',
+    dash_human: 'Humain',
+    dash_confidence: 'Confiance',
+
+    // Disclaimer
+    disclaimer: 'Le scan neural utilise des réponses simulées lorsque le backend n\'est pas configuré. Aucune donnée biométrique n\'est stockée ou transmise hors de votre navigateur.',
+  },
+
+  en: {
+    // Navbar
+    nav_live_demo: 'Live Demo',
+    nav_dashboard: 'Dashboard',
+    nav_system_online: 'System Online',
+    nav_try_demo: 'Try Demo',
+
+    // Landing
+    landing_hero_title: 'Identity Beyond Biometrics',
+    landing_hero_subtitle: 'The first platform combining facial recognition and cognitive biometrics to distinguish humans from AI agents',
+    landing_stat_1: '100% block rate',
+    landing_stat_2: '3 French Patents',
+    landing_stat_3: '<500ms',
+    landing_cta: 'Launch Neural Scan',
+    landing_feature_face: 'Face Recognition',
+    landing_feature_face_desc: 'ArcFace + real-time liveness detection',
+    landing_feature_cognitive: 'Cognitive Engine',
+    landing_feature_cognitive_desc: 'Patented neuropsychological tests',
+    landing_feature_pqc: 'Post-Quantum',
+    landing_feature_pqc_desc: 'Signed ML-KEM FIPS 203/204',
+
+    // Demo header
+    demo_protocol: 'NEURAL SCAN PROTOCOL v2.1',
+    demo_status_init: 'INITIALIZING SCAN PROTOCOL...',
+    demo_status_facial: 'ACQUIRING FACIAL SIGNATURE...',
+    demo_status_vocal: 'VOCAL IMPRINT IN PROGRESS...',
+    demo_status_reflex: 'CALIBRATING NEURAL REFLEXES...',
+    demo_status_computing: 'COMPUTING HYBRID TRUST SCORE...',
+    demo_status_online: 'HYBRID VECTOR ENGINE ONLINE',
+
+    // Scan progress nodes
+    scan_facial: 'FACIAL',
+    scan_vocal: 'VOCAL',
+    scan_reflex: 'REFLEX',
+    scan_analysis: 'ANALYSIS',
+
+    // FaceCapture
+    face_align: 'ALIGN FACE WITHIN FRAME',
+    face_initiate: 'INITIATE FACIAL SCAN',
+    face_retake: 'RETAKE',
+    face_proceed: 'PROCEED TO VOCAL IMPRINT →',
+    face_mapped: 'FACIAL GEOMETRY MAPPED',
+    face_liveness: 'LIVENESS CONFIRMED',
+    face_depth: 'DEPTH SIGNATURE ACQUIRED',
+    face_points: '432 NEURAL POINTS CAPTURED',
+    face_labels: ['LIVENESS CHECK', 'DEPTH ANALYSIS', 'MAPPING'],
+
+    // VocalImprint
+    vocal_title: 'VOCAL IMPRINT ACQUISITION',
+    vocal_subtitle: 'Your voice contains a neural signature no AI can replicate.',
+    vocal_round: 'Round',
+    vocal_of: 'of',
+    vocal_speak: '🎤  SPEAK NOW',
+    vocal_captured: 'VOCAL SIGNATURE CAPTURED ✓',
+    vocal_proceed: 'PROCEED TO NEURAL REFLEX →',
+    vocal_layer: 'Neural vocal layer',
+    vocal_complete_title: 'VOCAL IMPRINT COMPLETE',
+    vocal_complete_phonetic: '✓ Phonetic signature mapped',
+    vocal_complete_stroop: '✓ Stroop cognitive layer verified',
+    vocal_complete_timing: '✓ Neural timing: {avg}ms avg',
+    vocal_complete_liveness: '✓ Voice liveness confirmed',
+    // Round instructions
+    vocal_instruction_letter: 'Say the letter',
+    vocal_instruction_color: 'Say the COLOR of the ink (not the word)',
+    vocal_instruction_number: 'Say the number',
+    vocal_instruction_math: 'Say the next number',
+
+    // NeuralReflex
+    reflex_title: 'NEURAL REFLEX CALIBRATION',
+    reflex_subtitle: 'Filter signal from noise. Your neural velocity is unique.',
+    reflex_intercepted: 'INTERCEPTED',
+    reflex_velocity: 'VELOCITY',
+    reflex_time: 'TIME REMAINING',
+    reflex_complete_title: 'NEURAL CALIBRATION COMPLETE',
+    reflex_complete_signals: '✓ 12/12 signals intercepted',
+    reflex_complete_velocity: '✓ Neural velocity: 287ms — EXCEPTIONAL',
+    reflex_complete_false: '✓ False positive rate: 0%',
+    reflex_complete_locked: '✓ Behavioral signature locked',
+
+    // TrustScore
+    score_title: 'HYBRID TRUST SCORE',
+    score_human: '✓ HUMAN CONFIRMED',
+    score_bot: '✗ IDENTITY UNVERIFIED',
+    score_breakdown: 'SCORE BREAKDOWN',
+    score_facial: 'Facial Signature',
+    score_vocal: 'Vocal Imprint',
+    score_reflex: 'Neural Velocity',
+    score_behavioral: 'Behavioral Layer',
+    score_certified: 'CERTIFIED BY',
+    score_share: '↗ SHARE MY SCORE',
+    score_rescan: '↺ SCAN AGAIN',
+    score_confidence: 'Confidence',
+    score_share_text: 'I scored {score}/100 on Hybrid Vector Neural Scan. Identity verified with facial + vocal + cognitive biometrics. Secured by 3 French Patents & post-quantum cryptography. hybridvector.io',
+
+    // Analysis
+    analysis_facial: 'Scanning facial biometrics...',
+    analysis_liveness: 'Verifying liveness signature...',
+    analysis_vocal: 'Analyzing vocal neural pattern...',
+    analysis_cognitive: 'Evaluating cognitive velocity...',
+    analysis_behavioral: 'Processing behavioral layer...',
+    analysis_pqc: 'Applying post-quantum signature...',
+    analysis_computing: 'Computing Hybrid Trust Score...',
+
+    // Dashboard
+    dash_title: 'Dashboard',
+    dash_sessions: 'Sessions',
+    dash_avg_score: 'Avg Score',
+    dash_human_rate: 'Human Rate',
+    dash_export: 'Export CSV',
+    dash_clear: 'Clear',
+    dash_no_sessions: 'No sessions yet. Launch a neural scan to begin.',
+    dash_timestamp: 'Timestamp',
+    dash_user: 'User',
+    dash_score: 'Score',
+    dash_human: 'Human',
+    dash_confidence: 'Confidence',
+
+    // Disclaimer
+    disclaimer: 'Neural scan uses simulated responses when backend is not configured. No biometric data is stored or transmitted outside your browser.',
+  },
+} as const
+
+export type TranslationKey = keyof typeof translations.fr

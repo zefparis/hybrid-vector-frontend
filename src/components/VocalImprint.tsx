@@ -2,6 +2,7 @@ import { useRef, useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { playBeep, playSuccess } from '@/utils/sounds'
 import type { VocalRoundResult, VocalImportData } from '@/types'
+import { useT } from '@/i18n/useLang'
 
 interface VocalImprintProps {
   onComplete: (data: VocalImportData) => void
@@ -142,12 +143,13 @@ function WaveformCanvas({ active, frozen }: { active: boolean; frozen: boolean }
 }
 
 function CompletionScreen({ results }: { results: VocalRoundResult[] }) {
+  const { t } = useT()
   const avg = Math.round(results.reduce((s, r) => s + r.reactionTimeMs, 0) / results.length)
   const lines = [
-    'Phonetic signature mapped',
-    'Stroop cognitive layer verified',
-    `Neural timing: ${avg}ms avg`,
-    'Voice liveness confirmed',
+    t('vocal_complete_phonetic'),
+    t('vocal_complete_stroop'),
+    t('vocal_complete_timing').replace('{avg}', String(avg)),
+    t('vocal_complete_liveness'),
   ]
   return (
     <motion.div
@@ -157,7 +159,7 @@ function CompletionScreen({ results }: { results: VocalRoundResult[] }) {
     >
       <div className="text-center">
         <p className="text-xs font-bold tracking-widest" style={{ color: '#00FF88' }}>
-          VOCAL IMPRINT COMPLETE
+          {t('vocal_complete_title')}
         </p>
         <div className="h-px w-full mt-3" style={{ backgroundColor: '#1E2D45' }} />
       </div>
@@ -182,6 +184,7 @@ function CompletionScreen({ results }: { results: VocalRoundResult[] }) {
 }
 
 export function VocalImprint({ onComplete }: VocalImprintProps) {
+  const { t } = useT()
   const [roundIndex, setRoundIndex] = useState(0)
   const [state, setState] = useState<string>('ready')
   const [results, setResults] = useState<VocalRoundResult[]>([])
@@ -245,7 +248,7 @@ export function VocalImprint({ onComplete }: VocalImprintProps) {
     <div className="flex flex-col gap-4">
       <div className="text-center">
         <p className="text-xs font-bold tracking-widest mb-1" style={{ color: '#00C2FF' }}>
-          VOCAL IMPRINT ACQUISITION
+          {t('vocal_title')}
         </p>
         <div className="h-px w-full" style={{ backgroundColor: '#1E2D45' }} />
       </div>
@@ -258,7 +261,7 @@ export function VocalImprint({ onComplete }: VocalImprintProps) {
       >
         <div className="flex items-center justify-between w-full">
           <span className="text-[10px] font-semibold tracking-wider" style={{ color: '#8899BB' }}>
-            Round {roundIndex + 1} of {ROUNDS.length}
+            {t('vocal_round')} {roundIndex + 1} {t('vocal_of')} {ROUNDS.length}
           </span>
           {state === 'captured' && (
             <motion.span
@@ -267,7 +270,7 @@ export function VocalImprint({ onComplete }: VocalImprintProps) {
               className="text-[10px] font-bold tracking-wider"
               style={{ color: '#00FF88' }}
             >
-              CAPTURED ✓
+              {t('vocal_captured').replace(' ✓', '')} ✓
             </motion.span>
           )}
         </div>
@@ -320,12 +323,12 @@ export function VocalImprint({ onComplete }: VocalImprintProps) {
           <path d="M19 10v1a7 7 0 0 1-14 0v-1" fill="none" stroke="currentColor" strokeWidth="2" />
           <line x1="12" y1="19" x2="12" y2="23" stroke="currentColor" strokeWidth="2" />
         </svg>
-        {isRecording ? 'RECORDING... RELEASE TO STOP' : state === 'captured' ? 'VOCAL SIGNATURE CAPTURED' : 'HOLD TO SPEAK'}
+        {isRecording ? 'RECORDING...' : state === 'captured' ? t('vocal_captured') : t('vocal_speak')}
       </button>
 
       <div className="flex items-center gap-1.5 justify-center">
         <span className="text-[10px] font-semibold tracking-wider" style={{ color: '#8899BB' }}>
-          Neural vocal layer:
+          {t('vocal_layer')}:
         </span>
         <div className="w-24 h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: '#1E2D45' }}>
           <motion.div

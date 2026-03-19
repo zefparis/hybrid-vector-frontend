@@ -3,16 +3,19 @@ import { Link, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Shield, LayoutDashboard, Zap, Menu, X, Home } from 'lucide-react'
 import { cn } from '@/lib/utils'
-
-const navLinks = [
-  { to: '/', label: 'Home', icon: Home },
-  { to: '/demo', label: 'Live Demo', icon: Zap },
-  { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-]
+import { useT, useLangStore } from '@/i18n/useLang'
 
 export function Navbar() {
   const location = useLocation()
   const [open, setOpen] = useState(false)
+  const { t } = useT()
+  const { lang, toggle } = useLangStore()
+
+  const navLinks = [
+    { to: '/', label: 'Home', icon: Home },
+    { to: '/demo', label: t('nav_live_demo'), icon: Zap },
+    { to: '/dashboard', label: t('nav_dashboard'), icon: LayoutDashboard },
+  ]
 
   useEffect(() => { setOpen(false) }, [location.pathname])
   useEffect(() => {
@@ -54,12 +57,21 @@ export function Navbar() {
           </nav>
 
           <div className="flex items-center gap-2">
+            <button
+              onClick={toggle}
+              className="hidden sm:flex items-center gap-1 px-3 py-1.5 rounded-lg border border-white/10 text-xs font-bold tracking-widest transition-all duration-200 hover:border-hv-cyan/40 hover:text-hv-cyan"
+              style={{ color: '#8899BB' }}
+            >
+              <span style={{ color: lang === 'fr' ? '#00C2FF' : '#8899BB' }}>FR</span>
+              <span style={{ color: '#1E2D45' }}>|</span>
+              <span style={{ color: lang === 'en' ? '#00C2FF' : '#8899BB' }}>EN</span>
+            </button>
             <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-hv-green/30 bg-hv-green/5">
               <div className="w-1.5 h-1.5 rounded-full bg-hv-green animate-pulse" />
-              <span className="text-xs text-hv-green font-medium">System Online</span>
+              <span className="text-xs text-hv-green font-medium">{t('nav_system_online')}</span>
             </div>
             <Link to="/demo" className="hidden sm:flex btn-primary text-sm py-2 px-4 rounded-lg font-semibold">
-              Try Demo
+              {t('nav_try_demo')}
             </Link>
             <button
               onClick={() => setOpen(o => !o)}
@@ -99,9 +111,20 @@ export function Navbar() {
                     </Link>
                   )
                 })}
-                <div className="flex items-center gap-2 px-4 py-3 mt-1">
-                  <div className="w-1.5 h-1.5 rounded-full bg-hv-green animate-pulse" />
-                  <span className="text-xs text-hv-green font-medium">System Online</span>
+                <div className="flex items-center justify-between px-4 py-3 mt-1">
+                  <div className="flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-hv-green animate-pulse" />
+                    <span className="text-xs text-hv-green font-medium">{t('nav_system_online')}</span>
+                  </div>
+                  <button
+                    onClick={toggle}
+                    className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-white/10 text-xs font-bold tracking-widest"
+                    style={{ color: '#8899BB' }}
+                  >
+                    <span style={{ color: lang === 'fr' ? '#00C2FF' : '#8899BB' }}>FR</span>
+                    <span style={{ color: '#1E2D45' }}>|</span>
+                    <span style={{ color: lang === 'en' ? '#00C2FF' : '#8899BB' }}>EN</span>
+                  </button>
                 </div>
               </nav>
             </motion.div>

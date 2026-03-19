@@ -1,13 +1,8 @@
 import { motion } from 'framer-motion'
 import type { ScanPhase } from '@/types'
+import { useT } from '@/i18n/useLang'
 
-const nodes: { id: ScanPhase; label: string }[] = [
-  { id: 'facial', label: 'FACIAL' },
-  { id: 'vocal', label: 'VOCAL' },
-  { id: 'reflex', label: 'REFLEX' },
-  { id: 'analysis', label: 'ANALYSIS' },
-]
-
+const NODE_IDS: ScanPhase[] = ['facial', 'vocal', 'reflex', 'analysis']
 const phaseOrder: ScanPhase[] = ['facial', 'vocal', 'reflex', 'analysis', 'result']
 
 function getNodeState(node: ScanPhase, current: ScanPhase): 'pending' | 'active' | 'complete' {
@@ -22,13 +17,22 @@ interface ScanProgressProps {
   phase: ScanPhase
 }
 
+const NODE_LABEL_KEYS: Record<string, 'scan_facial' | 'scan_vocal' | 'scan_reflex' | 'scan_analysis'> = {
+  facial: 'scan_facial',
+  vocal: 'scan_vocal',
+  reflex: 'scan_reflex',
+  analysis: 'scan_analysis',
+}
+
 export function ScanProgress({ phase }: ScanProgressProps) {
+  const { t } = useT()
+
   return (
     <div className="flex items-center justify-between w-full max-w-md mx-auto px-2 select-none">
-      {nodes.map((node, i) => {
-        const state = phase === 'result' ? 'complete' : getNodeState(node.id, phase)
+      {NODE_IDS.map((nodeId, i) => {
+        const state = phase === 'result' ? 'complete' : getNodeState(nodeId, phase)
         return (
-          <div key={node.id} className="flex items-center flex-1 last:flex-none">
+          <div key={nodeId} className="flex items-center flex-1 last:flex-none">
             <div className="flex flex-col items-center gap-1.5 relative z-10">
               <div className="relative">
                 {state === 'active' && (
@@ -72,21 +76,21 @@ export function ScanProgress({ phase }: ScanProgressProps) {
                         : '#8899BB',
                 }}
               >
-                {node.label}
+                {t(NODE_LABEL_KEYS[nodeId])}
               </span>
             </div>
 
-            {i < nodes.length - 1 && (
+            {i < NODE_IDS.length - 1 && (
               <div className="flex-1 h-px mx-2 mb-5 relative overflow-hidden">
                 <div
                   className="absolute inset-0"
                   style={{
                     backgroundImage: `repeating-linear-gradient(90deg, ${
-                      getNodeState(nodes[i + 1].id, phase === 'result' ? 'result' : phase) !== 'pending'
+                      getNodeState(NODE_IDS[i + 1], phase === 'result' ? 'result' : phase) !== 'pending'
                         ? '#00FF88'
                         : '#1E2D45'
                     } 0px, ${
-                      getNodeState(nodes[i + 1].id, phase === 'result' ? 'result' : phase) !== 'pending'
+                      getNodeState(NODE_IDS[i + 1], phase === 'result' ? 'result' : phase) !== 'pending'
                         ? '#00FF88'
                         : '#1E2D45'
                     } 4px, transparent 4px, transparent 8px)`,

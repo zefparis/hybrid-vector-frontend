@@ -3,6 +3,7 @@ import Webcam from 'react-webcam'
 import { motion, AnimatePresence } from 'framer-motion'
 import { playCapture, playScan } from '@/utils/sounds'
 import { useTypewriter } from '@/hooks/useTypewriter'
+import { useT } from '@/i18n/useLang'
 
 interface FaceCaptureProps {
   capturedImage: string | null
@@ -12,14 +13,6 @@ interface FaceCaptureProps {
 }
 
 const VIDEO_CONSTRAINTS = { width: 640, height: 480, facingMode: 'user' as const }
-
-const FLOATING_LABELS = ['LIVENESS CHECK', 'DEPTH ANALYSIS', 'MAPPING', 'NEURAL POINTS']
-const SUCCESS_LINES = [
-  'FACIAL GEOMETRY MAPPED',
-  'LIVENESS CONFIRMED',
-  'DEPTH SIGNATURE ACQUIRED',
-  '432 NEURAL POINTS CAPTURED',
-]
 
 function CornerBrackets({ color }: { color: string }) {
   const s = { borderColor: color }
@@ -62,7 +55,7 @@ function ScanLine() {
   )
 }
 
-function FloatingLabels() {
+function FloatingLabels({ labels }: { labels: string[] }) {
   const positions = [
     { top: '18%', left: '8%' },
     { top: '25%', right: '6%' },
@@ -71,7 +64,7 @@ function FloatingLabels() {
   ]
   return (
     <>
-      {FLOATING_LABELS.map((label, i) => (
+      {labels.map((label, i) => (
         <motion.div
           key={label}
           className="absolute pointer-events-none text-[9px] sm:text-[10px] font-semibold tracking-widest"
@@ -111,13 +104,18 @@ function SuccessOverlay({ lines }: { lines: string[] }) {
 }
 
 export function FaceCapture({ capturedImage, onCapture, onRetake, onProceed }: FaceCaptureProps) {
+  const { t, tArr } = useT()
   const webcamRef = useRef<Webcam>(null)
   const [permission, setPermission] = useState<'waiting' | 'granted' | 'denied'>('waiting')
   const [isCapturing, setIsCapturing] = useState(false)
   const [flashVisible, setFlashVisible] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
+
+  const floatingLabels = [...tArr('face_labels'), 'NEURAL POINTS']
+  const successLines = [t('face_mapped'), t('face_liveness'), t('face_depth'), t('face_points')]
+
   const statusText = useTypewriter(
-    capturedImage ? 'FACIAL SIGNATURE ACQUIRED' : 'ALIGN FACE WITHIN FRAME',
+    capturedImage ? t('face_mapped') : t('face_align'),
     35,
   )
 
@@ -193,14 +191,14 @@ export function FaceCapture({ capturedImage, onCapture, onRetake, onProceed }: F
             <CornerBrackets color="#00C2FF" />
             <FaceOvalGuide />
             <ScanLine />
-            <FloatingLabels />
+            <FloatingLabels labels={floatingLabels} />
           </>
         )}
 
         {capturedImage && showSuccess && (
           <>
             <CornerBrackets color="#00FF88" />
-            <SuccessOverlay lines={SUCCESS_LINES} />
+            <SuccessOverlay lines={successLines} />
             <div className="absolute inset-0 bg-gradient-to-t from-[#0A0F1E]/70 via-transparent to-transparent pointer-events-none" />
           </>
         )}
@@ -244,7 +242,7 @@ export function FaceCapture({ capturedImage, onCapture, onRetake, onProceed }: F
             <circle cx="12" cy="12" r="3" />
             <path d="M3 9a2 2 0 0 1 2-2h.93a2 2 0 0 0 1.664-.89l.812-1.22A2 2 0 0 1 10.07 4h3.86a2 2 0 0 1 1.664.89l.812 1.22A2 2 0 0 0 18.07 7H19a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
           </svg>
-          {isCapturing ? 'SCANNING...' : 'INITIATE FACIAL SCAN'}
+          {isCapturing ? 'SCANNING...' : t('face_initiate')}
         </button>
       )}
 
@@ -259,15 +257,14 @@ export function FaceCapture({ capturedImage, onCapture, onRetake, onProceed }: F
               boxShadow: '0 0 20px rgba(0,194,255,0.3)',
             }}
           >
-            PROCEED TO VOCAL IMPRINT
-            <span className="text-base">&#8594;</span>
+            {t('face_proceed')}
           </button>
           <button
             onClick={() => { onRetake(); setShowSuccess(false) }}
             className="w-full py-2 text-[11px] font-semibold tracking-wider transition-all duration-300"
             style={{ color: '#8899BB' }}
           >
-            RETAKE
+            {t('face_retake')}
           </button>
         </div>
       )}
