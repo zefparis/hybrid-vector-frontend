@@ -238,12 +238,19 @@ export function Demo() {
     const stroopCorrectCount = stroopRounds.filter((r) => r.stroopCorrect).length
     const stroopAccuracy = stroopRounds.length > 0 ? stroopCorrectCount / stroopRounds.length : 0
     const mouseScore = sensors.mouseBehavior ? scoreMouseBehavior(sensors.mouseBehavior) : undefined
+    console.log('[DEMO] cognitive score inputs:', JSON.stringify({
+      sensorVariance: sensors.deviceMotionVariance,
+      tapTimings: sensors.tapTimings,
+      mouseBehavior: Boolean(sensors.mouseBehavior),
+      mouseScore,
+    }))
     const cogScore = computeCognitiveScore({
       vocalReactionTime: vocalData?.avgReactionMs ?? 800,
       stroopAccuracy,
       reflexAccuracy: reflexResult ? reflexResult.intercepted / reflexResult.total : 0.5,
       reflexVelocity: reflexResult?.avgVelocityMs ?? 600,
       sensorVariance: sensors.deviceMotionVariance,
+      tapTimings: sensors.tapTimings,
       mouseHumanScore: mouseScore,
     })
 

@@ -18,6 +18,12 @@ function clamp01(v: number): number {
   return Math.max(0, Math.min(1, v))
 }
 
+function computeVariance(values: number[]): number {
+  if (values.length < 2) return 0
+  const mean = values.reduce((sum, value) => sum + value, 0) / values.length
+  return values.reduce((sum, value) => sum + (value - mean) ** 2, 0) / values.length
+}
+
 export function scoreMouseBehavior(m: MouseBehavior): number {
   // Jitter: humans have jitter 0.3–1.5px stddev; bots ≈ 0
   const jitterScore = clamp01(m.jitterAmplitude > 0.1 ? Math.min(m.jitterAmplitude / 1.5, 1) : 0)
@@ -59,36 +65,92 @@ export function scoreMouseBehavior(m: MouseBehavior): number {
 }
 
 export function computeCognitiveScore(input: CognitiveScoreInput): number {
-  const reactionNorm = clamp01(1 - input.vocalReactionTime / 2000)
-  const reflexNorm = clamp01(1 - input.reflexVelocity / 1500)
-  const sensorNorm = clamp01(1 - input.sensorVariance / 50)
+  const vocalScore = clamp01(1 - input.vocalReactionTime / 2000)
+  const stroopScore = clamp01(input.stroopAccuracy)
+  const reflexScore = clamp01(input.reflexAccuracy)
+  const reflexVelocityScore = clamp01(1 - input.reflexVelocity / 1500)
+  const mouseScore = input.mouseHumanScore ?? 0
+
+  const tapTimings = input.tapTimings ?? []
+  const tapVariance = tapTimings.length > 1 ? computeVariance(tapTimings) : 0
+  const tapScore = clamp01(tapVariance / 200)
+
+  let sensorNorm: number
+  if (input.sensorVariance === 0) {
+    sensorNorm = 0.3
+  } else {
+    sensorNorm = clamp01(input.sensorVariance / 30)
+  }
 
   const hasMouse = input.mouseHumanScore != null
+  const behavioralScore = hasMouse ? mouseScore : tapScore
+
+  console.log('[SCORE] inputs:', JSON.stringify({
+    vocalReactionTime: input.vocalReactionTime,
+    stroopAccuracy: input.stroopAccuracy,
+    reflexAccuracy: input.reflexAccuracy,
+    reflexVelocity: input.reflexVelocity,
+    sensorVariance: input.sensorVariance,
+    mouseHumanScore: input.mouseHumanScore,
+    tapTimings: input.tapTimings,
+  }))
+  console.log('[SCORE] weights used:', JSON.stringify(hasMouse ? {
+    vocal: 0.17,
+    stroop: 0.21,
+    reflex: 0.25,
+    reflexVelocity: 0.13,
+    sensorNorm: 0.09,
+    mouse: 0.15,
+  } : {
+    vocal: 0.19,
+    stroop: 0.24,
+    reflex: 0.28,
+    reflexVelocity: 0.14,
+    sensorNorm: 0.05,
+    tapBehavioral: 0.1,
+  }))
+  console.log('[SCORE] raw scores:', JSON.stringify({
+    vocal: vocalScore,
+    stroop: stroopScore,
+    reflex: reflexScore,
+    behavioral: behavioralScore,
+    mouse: input.mouseHumanScore,
+    tapTimings,
+    tapVariance,
+    tapScore,
+    sensorNorm,
+  }))
 
   if (hasMouse) {
     // Desktop weights (reduced proportionally to make room for 0.15 mouse)
     const score =
-      reactionNorm * 0.17 +
-      input.stroopAccuracy * 0.21 +
-      input.reflexAccuracy * 0.25 +
-      reflexNorm * 0.13 +
+      vocalScore * 0.17 +
+      stroopScore * 0.21 +
+      reflexScore * 0.25 +
+      reflexVelocityScore * 0.13 +
       sensorNorm * 0.09 +
-      input.mouseHumanScore! * 0.15
-    return Math.round(Math.max(0, Math.min(100, score * 100)))
+      mouseScore * 0.15
+    const finalScore = Math.round(Math.max(0, Math.min(100, score * 100)))
+    console.log('[SCORE] final cognitive_score:', finalScore)
+    return finalScore
   }
 
   // Mobile weights (no mouse data)
   const score =
-    reactionNorm * 0.2 +
-    input.stroopAccuracy * 0.25 +
-    input.reflexAccuracy * 0.3 +
-    reflexNorm * 0.15 +
-    sensorNorm * 0.1
+    vocalScore * 0.19 +
+    stroopScore * 0.24 +
+    reflexScore * 0.28 +
+    reflexVelocityScore * 0.14 +
+    sensorNorm * 0.05 +
+    tapScore * 0.1
 
-  return Math.round(Math.max(0, Math.min(100, score * 100)))
+  const finalScore = Math.round(Math.max(0, Math.min(100, score * 100)))
+  console.log('[SCORE] final cognitive_score:', finalScore)
+  return finalScore
 }
 
 export async function analyzeSession(payload: AnalyzePayload): Promise<SessionResult> {
+  console.log('[API] cognitive_score_override sent:', payload.cognitive_score_override)
   const { data } = await client.post<SessionResult>('/auth/session', payload)
   return data
 }

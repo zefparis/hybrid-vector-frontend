@@ -37,6 +37,24 @@ function stddev(values: number[]): number {
   return Math.sqrt(variance(values))
 }
 
+async function requestMotionPermission(): Promise<boolean> {
+  // iOS 13+ requires explicit permission
+  if (
+    typeof DeviceMotionEvent !== 'undefined' &&
+    typeof (DeviceMotionEvent as any).requestPermission === 'function'
+  ) {
+    try {
+      const permission = await (DeviceMotionEvent as any).requestPermission()
+      return permission === 'granted'
+    } catch {
+      return false
+    }
+  }
+
+  // Android / desktop — no permission needed
+  return true
+}
+
 export function useSensors() {
   const accel = useRef<Vec3[]>([])
   const gyro = useRef<Orientation[]>([])
@@ -66,7 +84,7 @@ export function useSensors() {
     click?: (e: MouseEvent) => void
   }>({})
 
-  const startScan = useCallback(() => {
+  const startScan = useCallback(async () => {
     if (active.current) return
     active.current = true
 
@@ -83,6 +101,11 @@ export function useSensors() {
     clickOffsets.current = []
     clickTimestamps.current = []
     lastSample.current = null
+
+    const granted = await requestMotionPermission()
+    if (!granted) {
+      console.log('[SENSORS] motion permission denied — mobile behavioral will use touch/tap only')
+    }
 
     if (isMobile) {
       // Mobile: device motion + orientation
@@ -261,7 +284,7 @@ export function useSensors() {
       }
     }
 
-    return {
+    const sensorData: SensorData = {
       accelerometer: [...accel.current],
       gyroscope: [...gyro.current],
       touchPressure: [...pressure.current],
@@ -269,6 +292,20 @@ export function useSensors() {
       deviceMotionVariance: variance(magnitudes),
       mouseBehavior,
     }
+
+    console.log('[SENSORS] accelerometer samples:', sensorData.accelerometer?.length ?? 0)
+    console.log('[SENSORS] gyroscope samples:', sensorData.gyroscope?.length ?? 0)
+    console.log('[SENSORS] touch pressure samples:', sensorData.touchPressure?.length ?? 0)
+    console.log('[SENSORS] tap timings:', sensorData.tapTimings?.length ?? 0)
+    console.log(
+      '[SENSORS] mouse behavior:',
+      sensorData.mouseBehavior
+        ? `path=${sensorData.mouseBehavior.path?.length}, jitter=${sensorData.mouseBehavior.jitterAmplitude}`
+        : 'null (mobile)'
+    )
+    console.log('[SENSORS] deviceMotionVariance:', sensorData.deviceMotionVariance)
+
+    return sensorData
   }, [])
 
   return { recordTap, getSnapshot, startScan, stopScan, isMobile }

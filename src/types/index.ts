@@ -56,6 +56,7 @@ export interface CognitiveScoreInput {
   reflexAccuracy: number
   reflexVelocity: number
   sensorVariance: number
+  tapTimings?: number[]
   mouseHumanScore?: number
 }
 
