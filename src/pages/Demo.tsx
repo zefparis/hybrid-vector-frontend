@@ -253,6 +253,11 @@ export function Demo() {
       tapTimings: sensors.tapTimings,
       mouseHumanScore: mouseScore,
     })
+    const cognitiveScoreOverride = Math.max(0, Math.min(1, cogScore / 100))
+    console.log('[DEMO] cognitive score override normalized:', JSON.stringify({
+      raw: cogScore,
+      normalized: cognitiveScoreOverride,
+    }))
 
     try {
       const tenantId = (import.meta.env.VITE_TENANT_ID as string) || 'demo-tenant'
@@ -261,7 +266,7 @@ export function Demo() {
         user_id: `user-${Date.now()}`,
         face_image_b64: faceImageB64 ?? '',
         cognitive_session_id: crypto.randomUUID(),
-        cognitive_score_override: cogScore,
+        cognitive_score_override: cognitiveScoreOverride,
       })
       setResult(result)
       playSuccess()
