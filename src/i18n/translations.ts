@@ -62,7 +62,6 @@ export const translations = {
     vocal_complete_stroop: '✓ Couche cognitive Stroop vérifiée',
     vocal_complete_timing: '✓ Timing neural: {avg}ms moy.',
     vocal_complete_liveness: '✓ Vivacité vocale confirmée',
-    // Round instructions
     vocal_instruction_letter: 'Dites la lettre',
     vocal_instruction_color: 'Dites la COULEUR de l\'encre (pas le mot)',
     vocal_instruction_number: 'Dites le nombre',
@@ -120,6 +119,29 @@ export const translations = {
 
     // Disclaimer
     disclaimer: 'Le scan neural utilise des réponses simulées lorsque le backend n\'est pas configuré. Aucune donnée biométrique n\'est stockée ou transmise hors de votre navigateur.',
+
+    // EDGUARD
+    edguard_title: 'EDGUARD',
+    edguard_subtitle: 'Academic Identity Shield',
+    edguard_enroll: 'Enrollment Étudiant',
+    edguard_session: 'Session d\'Examen',
+    edguard_step: 'Étape',
+    edguard_student_id: 'Identifiant étudiant',
+    edguard_institution_id: 'Code établissement',
+    edguard_official_photo: 'Photo officielle',
+    edguard_selfie: 'Selfie live',
+    edguard_cognitive: 'Calibration neurale',
+    edguard_skip: 'Ignorer',
+    edguard_start_session: 'Démarrer la surveillance',
+    edguard_end_session: 'Terminer la session',
+    edguard_checkpoint: 'Checkpoint',
+    edguard_clear: 'VALIDÉ',
+    edguard_warning: 'ATTENTION',
+    edguard_alert: 'ALERTE',
+    edguard_export_pdf: 'Exporter rapport PDF',
+    edguard_identity_mismatch: 'La photo officielle ne correspond pas au selfie. Vérifiez l\'éclairage et recommencez.',
+    edguard_embedding_failed: 'Visage non détecté. Assurez-vous que le visage est bien visible.',
+    edguard_enrolled_success: 'ENROLLMENT CONFIRMÉ',
   },
 
   en: {
@@ -183,7 +205,6 @@ export const translations = {
     vocal_complete_stroop: '✓ Stroop cognitive layer verified',
     vocal_complete_timing: '✓ Neural timing: {avg}ms avg',
     vocal_complete_liveness: '✓ Voice liveness confirmed',
-    // Round instructions
     vocal_instruction_letter: 'Say the letter',
     vocal_instruction_color: 'Say the COLOR of the ink (not the word)',
     vocal_instruction_number: 'Say the number',
@@ -241,6 +262,29 @@ export const translations = {
 
     // Disclaimer
     disclaimer: 'Neural scan uses simulated responses when backend is not configured. No biometric data is stored or transmitted outside your browser.',
+
+    // EDGUARD
+    edguard_title: 'EDGUARD',
+    edguard_subtitle: 'Academic Identity Shield',
+    edguard_enroll: 'Student Enrollment',
+    edguard_session: 'Exam Session',
+    edguard_step: 'Step',
+    edguard_student_id: 'Student ID',
+    edguard_institution_id: 'Institution code',
+    edguard_official_photo: 'Official photo',
+    edguard_selfie: 'Live selfie',
+    edguard_cognitive: 'Neural calibration',
+    edguard_skip: 'Skip',
+    edguard_start_session: 'Start monitoring',
+    edguard_end_session: 'End session',
+    edguard_checkpoint: 'Checkpoint',
+    edguard_clear: 'CLEAR',
+    edguard_warning: 'WARNING',
+    edguard_alert: 'ALERT',
+    edguard_export_pdf: 'Export PDF report',
+    edguard_identity_mismatch: 'Official photo does not match selfie. Check lighting and try again.',
+    edguard_embedding_failed: 'Face not detected. Make sure your face is clearly visible.',
+    edguard_enrolled_success: 'ENROLLMENT CONFIRMED',
   },
 } as const
 

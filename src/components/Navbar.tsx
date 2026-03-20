@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Shield, LayoutDashboard, Zap, Menu, X, Home } from 'lucide-react'
+import { Shield, LayoutDashboard, Zap, Menu, X, Home, GraduationCap } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useT, useLangStore } from '@/i18n/useLang'
 
@@ -14,6 +14,7 @@ export function Navbar() {
   const navLinks = [
     { to: '/', label: 'Home', icon: Home },
     { to: '/demo', label: t('nav_live_demo'), icon: Zap },
+    { to: '/edguard', label: 'EDGUARD', icon: GraduationCap },
     { to: '/dashboard', label: t('nav_dashboard'), icon: LayoutDashboard },
   ]
 
