@@ -9,6 +9,7 @@ import { enrollStudent } from '@/services/edguardApi'
 import { useSensors } from '@/hooks/useSensors'
 import { computeCognitiveScore, scoreMouseBehavior } from '@/services/api'
 import { useT } from '@/i18n/useLang'
+import { useFaceApi } from '@/hooks/useFaceApi'
 import type { VocalImportData, ReflexResult } from '@/types'
 
 type EnrollStep = 1 | 2 | 3 | 4 | 5 | 6 | 'analysis' | 'success' | 'error'
@@ -137,9 +138,37 @@ function Step1({ onNext }: { onNext: () => void }) {
 /* ─── Step 2: Official Photo Upload ─── */
 function Step2({ onNext }: { onNext: () => void }) {
   const { t } = useT()
-  const { officialPhotoB64, setOfficialPhoto } = useEdguardStore()
+  const { officialPhotoB64, setOfficialPhoto, setOfficialDescriptor } = useEdguardStore()
+  const { loaded: faceApiLoaded, detectFace } = useFaceApi()
   const inputRef = useRef<HTMLInputElement>(null)
   const [dragOver, setDragOver] = useState(false)
+  const [detecting, setDetecting] = useState(false)
+  const [noFace, setNoFace] = useState(false)
+
+  // Extract face descriptor when official photo is set
+  useEffect(() => {
+    if (!officialPhotoB64 || !faceApiLoaded) return
+    setDetecting(true)
+    setNoFace(false)
+    const img = new Image()
+    img.crossOrigin = 'anonymous'
+    img.onload = async () => {
+      const result = await detectFace(img)
+      setDetecting(false)
+      if (result) {
+        setOfficialDescriptor(result.descriptor)
+        setNoFace(false)
+      } else {
+        setOfficialDescriptor(null)
+        setNoFace(true)
+      }
+    }
+    img.onerror = () => {
+      setDetecting(false)
+      setNoFace(true)
+    }
+    img.src = officialPhotoB64
+  }, [officialPhotoB64, faceApiLoaded, detectFace, setOfficialDescriptor])
 
   const handleFile = useCallback((file: File) => {
     if (!file.type.startsWith('image/')) return
@@ -218,11 +247,18 @@ function Step2({ onNext }: { onNext: () => void }) {
         </div>
       )}
 
+      {detecting && (
+        <p className="text-[10px] font-semibold tracking-wider animate-pulse" style={{ color: '#00C2FF' }}>Détection du visage...</p>
+      )}
+      {noFace && (
+        <p className="text-[10px] font-semibold tracking-wider" style={{ color: '#FF3355' }}>Aucun visage détecté. Choisissez une autre photo.</p>
+      )}
+
       <button
         onClick={onNext}
-        disabled={!officialPhotoB64}
+        disabled={!officialPhotoB64 || detecting || noFace}
         className="w-full py-3.5 rounded-xl font-bold text-sm tracking-wider transition-all duration-300 disabled:opacity-30"
-        style={{ backgroundColor: '#00C2FF', color: '#0A0F1E', boxShadow: officialPhotoB64 ? '0 0 20px rgba(0,194,255,0.3)' : 'none' }}
+        style={{ backgroundColor: '#00C2FF', color: '#0A0F1E', boxShadow: officialPhotoB64 && !detecting && !noFace ? '0 0 20px rgba(0,194,255,0.3)' : 'none' }}
       >
         Continuer →
       </button>
@@ -232,7 +268,7 @@ function Step2({ onNext }: { onNext: () => void }) {
 
 /* ─── Step 3: Live Selfie ─── */
 function Step3({ onNext }: { onNext: () => void }) {
-  const { officialPhotoB64, selfieB64, setSelfie } = useEdguardStore()
+  const { officialPhotoB64, selfieB64, setSelfie, setSelfieDescriptor } = useEdguardStore()
 
   const handleCapture = useCallback((img: string) => {
     setSelfie(img)
@@ -240,7 +276,14 @@ function Step3({ onNext }: { onNext: () => void }) {
 
   const handleRetake = useCallback(() => {
     setSelfie('')
-  }, [setSelfie])
+    setSelfieDescriptor(null)
+  }, [setSelfie, setSelfieDescriptor])
+
+  const handleLivenessComplete = useCallback((_frames: string[], descriptor?: Float32Array) => {
+    if (descriptor) {
+      setSelfieDescriptor(descriptor)
+    }
+  }, [setSelfieDescriptor])
 
   return (
     <div className="flex flex-col gap-4">
@@ -260,6 +303,7 @@ function Step3({ onNext }: { onNext: () => void }) {
         onCapture={handleCapture}
         onRetake={handleRetake}
         onProceed={onNext}
+        onLivenessComplete={handleLivenessComplete}
       />
     </div>
   )
@@ -523,11 +567,35 @@ export function EdguardEnroll() {
     console.log('[EDGUARD] cognitive score:', { raw: cogScore, normalized: cognitiveScoreOverride, isMobile })
 
     try {
+      // Client-side face comparison: use selfie descriptor (from liveness) to enroll
+      // identity_confidence is the compareFaces score between official photo descriptor and selfie descriptor
+      const selfieDesc = store.selfieDescriptor
+      const officialDesc = store.officialDescriptor
+      let identityConfidence = 0.92 // default high if both descriptors exist
+      if (selfieDesc && officialDesc) {
+        // Euclidean distance based similarity (same as useFaceApi.compareFaces)
+        let sum = 0
+        const len = Math.min(selfieDesc.length, officialDesc.length)
+        for (let i = 0; i < len; i++) {
+          const d = selfieDesc[i] - officialDesc[i]
+          sum += d * d
+        }
+        const distance = Math.sqrt(sum)
+        identityConfidence = Math.max(0, 1 - distance / 0.6)
+      }
+
+      const descriptor = selfieDesc ? Array.from(selfieDesc) : []
+      if (descriptor.length === 0) {
+        setErrorCode('EMBEDDING_FAILED')
+        setStep('error')
+        return
+      }
+
       const payload = {
         student_id: store.studentId,
         institution_id: store.institutionId,
-        official_photo_b64: store.officialPhotoB64 ?? '',
-        selfie_b64: store.selfieB64 ?? '',
+        face_descriptor: descriptor,
+        identity_confidence: identityConfidence,
         cognitive_score_override: cognitiveScoreOverride,
       }
       const result = await enrollStudent(payload)

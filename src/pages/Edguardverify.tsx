@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FaceCapture } from '@/components/FaceCapture'
@@ -18,6 +18,7 @@ export function EdguardVerify() {
   const [selfieB64, setSelfieB64] = useState('')
   const [confidence, setConfidence] = useState(0)
   const [errorMsg, setErrorMsg] = useState('')
+  const descriptorRef = useRef<Float32Array | null>(null)
 
   // Step 1 — submit student ID
   const handleIdSubmit = useCallback((e: React.FormEvent) => {
@@ -29,12 +30,24 @@ export function EdguardVerify() {
   // Step 2 — face captured → verify
   const handleCapture = useCallback(async (img: string) => {
     setSelfieB64(img)
+  }, [])
+
+  const handleLivenessComplete = useCallback(async (_frames: string[], descriptor?: Float32Array) => {
+    if (descriptor) {
+      descriptorRef.current = descriptor
+    }
+    const desc = descriptor ?? descriptorRef.current
+    if (!desc) {
+      setErrorMsg('EMBEDDING_FAILED')
+      setStep('error')
+      return
+    }
     setStep('checking')
 
     try {
       const result = await verifyStudent({
         student_id: studentId.trim(),
-        selfie_b64: img,
+        face_descriptor: Array.from(desc),
       })
 
       if (result.success && result.match) {
@@ -55,6 +68,7 @@ export function EdguardVerify() {
 
   const handleRetry = useCallback(() => {
     setSelfieB64('')
+    descriptorRef.current = null
     setErrorMsg('')
     setStep('face')
   }, [])
@@ -185,8 +199,9 @@ export function EdguardVerify() {
                 <FaceCapture
                   capturedImage={selfieB64}
                   onCapture={handleCapture}
-                  onRetake={() => setSelfieB64('')}
+                  onRetake={() => { setSelfieB64(''); descriptorRef.current = null }}
                   onProceed={() => {}}
+                  onLivenessComplete={handleLivenessComplete}
                 />
 
                 <button

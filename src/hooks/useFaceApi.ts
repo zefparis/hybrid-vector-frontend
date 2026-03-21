@@ -33,10 +33,10 @@ export function useFaceApi() {
     ensureModelsLoaded().then(() => setLoaded(true)).catch(() => {})
   }, [])
 
-  const detectFace = useCallback(async (video: HTMLVideoElement): Promise<FaceDetectionResult | null> => {
+  const detectFace = useCallback(async (input: HTMLVideoElement | HTMLImageElement | HTMLCanvasElement): Promise<FaceDetectionResult | null> => {
     if (!loaded) return null
     const detection = await faceapi
-      .detectSingleFace(video, optionsRef.current)
+      .detectSingleFace(input, optionsRef.current)
       .withFaceLandmarks()
       .withFaceDescriptor()
     if (!detection) return null
