@@ -215,7 +215,7 @@ export function Demo() {
   }, [isMobile, recordTap, setFaceImage])
 
   const handleLivenessComplete = useCallback((_frames: string[], descriptor?: Float32Array) => {
-    const confidence = descriptor ? 0.92 : 0
+    const confidence = descriptor ? 75 : 0
     setFaceDetection(descriptor ?? null, confidence)
   }, [setFaceDetection])
 

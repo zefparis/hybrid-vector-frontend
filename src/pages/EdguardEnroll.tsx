@@ -361,7 +361,9 @@ function SuccessScreen() {
   const fullName = `${store.firstName} ${store.lastName}`.trim() || store.studentId
   const roleLabel = store.role === 'STUDENT' ? 'ÉTUDIANT' : store.role === 'TEACHER' ? 'ENSEIGNANT' : 'BÉNÉFICIAIRE'
 
-  const facialPct = Math.min(100, Math.round(enrollmentResult.identity_confidence))
+  const facialPct = enrollmentResult.identity_confidence <= 1
+    ? Math.min(100, Math.round(enrollmentResult.identity_confidence * 100))
+    : Math.min(100, Math.round(enrollmentResult.identity_confidence))
   const vocalPct = Math.min(100, Math.round(store.cognitiveScore * 100))
   const reflexPct = store.reflexVelocity > 0 ? Math.min(100, Math.round(Math.max(0, 100 - (store.reflexVelocity - 200) / 8))) : 70
   const stroopPct = Math.min(100, Math.round(store.stroopAccuracy * 100))

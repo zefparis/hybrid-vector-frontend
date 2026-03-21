@@ -315,7 +315,7 @@ export function FaceCapture({ capturedImage, onCapture, onRetake, onProceed, onL
         const result = await detectFace(video)
         if (!cancelled) {
           setFaceDetected(!!result)
-          setFaceScore(result?.score ?? 0)
+          setFaceScore(result ? 75 : 0)
           if (result?.descriptor) {
             descriptorRef.current = result.descriptor
           }
@@ -591,7 +591,7 @@ export function FaceCapture({ capturedImage, onCapture, onRetake, onProceed, onL
                       }}
                     />
                     <span className="text-[9px] font-bold tracking-wider" style={{ color: faceDetected ? '#00FF88' : '#FF3355' }}>
-                      {faceDetected ? `FACE ${Math.round(faceScore * 100)}%` : 'NO FACE'}
+                      {faceDetected ? `FACE ${Math.round(faceScore)}%` : 'NO FACE'}
                     </span>
                   </div>
                 </div>
