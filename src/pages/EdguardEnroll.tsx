@@ -763,6 +763,10 @@ export function EdguardEnroll() {
         student_id: store.studentId,
         institution_id: store.institutionId,
         selfie_b64: selfieB64,
+        first_name: store.firstName || undefined,
+        last_name: store.lastName || undefined,
+        email: store.email || undefined,
+        role: store.role.toLowerCase() as 'student' | 'teacher' | 'beneficiary',
         cognitive_score_override: cognitiveScoreOverride,
       }
       const result = await enrollStudent(payload)

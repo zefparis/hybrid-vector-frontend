@@ -16,6 +16,10 @@ export interface EnrollRequest {
   student_id: string
   institution_id: string
   selfie_b64: string
+  first_name?: string
+  last_name?: string
+  email?: string
+  role?: 'student' | 'teacher' | 'beneficiary'
   cognitive_score_override?: number
 }
 
