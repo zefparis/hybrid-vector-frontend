@@ -119,26 +119,18 @@ function StepCircle({ progress }: { progress: number }) {
   )
 }
 
-function DataReadout({ stepIndex, complete }: { stepIndex: number; complete: boolean }) {
-  const stepLabel = complete ? 'COMPLETE' : `STEP ${Math.min(stepIndex + 1, 3)}/3`
+function DataReadout({ stepIndex }: { stepIndex: number }) {
   return (
     <div className="absolute bottom-3 left-3 z-10 pointer-events-none">
       <div
-        className="px-2 py-1.5 rounded"
-        style={{ backgroundColor: 'rgba(10,15,30,0.75)', backdropFilter: 'blur(4px)' }}
+        className="rounded"
+        style={{ padding: '4px 8px', backgroundColor: 'rgba(10,15,30,0.6)' }}
       >
         <div style={{ fontFamily: "'JetBrains Mono', monospace" }}>
           <span className="text-[9px] tracking-wider" style={{ color: '#8899BB' }}>LIVENESS: </span>
-          <span
-            className="text-[10px] font-bold tracking-wider"
-            style={{ color: complete ? '#00FF88' : '#00C2FF' }}
-          >
-            {stepLabel}
+          <span className="text-[9px] font-bold tracking-wider" style={{ color: '#00C2FF' }}>
+            STEP {Math.min(stepIndex + 1, 3)}/3
           </span>
-        </div>
-        <div style={{ fontFamily: "'JetBrains Mono', monospace" }}>
-          <span className="text-[9px] tracking-wider" style={{ color: '#8899BB' }}>CONFIDENCE: </span>
-          <span className="text-[10px] font-bold tracking-wider" style={{ color: '#8899BB' }}>--</span>
         </div>
       </div>
     </div>
@@ -417,7 +409,7 @@ export function FaceCapture({ capturedImage, onCapture, onRetake, onProceed, onL
               <>
                 <LivenessProgress step={livenessStepIndex} timer={stepTimer} />
                 <StepCircle progress={arcProgress} />
-                <DataReadout stepIndex={livenessStepIndex} complete={livenessStep === 'confirm'} />
+                {livenessStep !== 'confirm' && <DataReadout stepIndex={livenessStepIndex} />}
               </>
             )}
 
@@ -441,7 +433,6 @@ export function FaceCapture({ capturedImage, onCapture, onRetake, onProceed, onL
           <>
             <CornerBrackets color="#00FF88" glow />
             <StepCircle progress={1} />
-            <DataReadout stepIndex={3} complete />
             <div className="absolute inset-0 bg-gradient-to-t from-[#0A0F1E]/60 via-transparent to-transparent pointer-events-none" />
           </>
         )}
