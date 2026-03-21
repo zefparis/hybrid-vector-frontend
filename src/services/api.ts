@@ -155,7 +155,8 @@ export function scoreMouseBehavior(m: MouseBehavior): number {
 }
 
 export function computeCognitiveScore(input: CognitiveScoreInput): number {
-  const vocalScore = clamp01(1 - input.vocalReactionTime / 2000)
+  const cappedVocalRT = Math.min(input.vocalReactionTime, 3000)
+  const vocalScore = clamp01(1 - cappedVocalRT / 2000)
   const stroopScore = clamp01(input.stroopAccuracy)
   const reflexScore = clamp01(input.reflexAccuracy)
   const reflexVelocityScore = clamp01(1 - input.reflexVelocity / 1500)

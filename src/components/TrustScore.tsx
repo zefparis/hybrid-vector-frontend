@@ -110,8 +110,8 @@ export function TrustScore({ session, onReset }: TrustScoreProps) {
   }
 
   const breakdowns = [
-    { label: t('score_facial'), value: breakdown.facial_liveness },
-    { label: t('score_vocal'), value: breakdown.facial_confidence },
+    { label: t('score_facial'), value: breakdown.facial_confidence },
+    { label: t('score_vocal'), value: breakdown.facial_liveness },
     { label: t('score_reflex'), value: breakdown.cognitive_score },
     { label: t('score_behavioral'), value: breakdown.behavioral_bonus },
   ]
