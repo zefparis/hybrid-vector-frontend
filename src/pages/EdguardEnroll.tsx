@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from 'react'
+import { useState, useRef, useCallback, useEffect, type FormEvent, type ReactNode } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { QRCodeSVG } from 'qrcode.react'
@@ -95,7 +95,7 @@ function Step1({ onNext }: { onNext: () => void }) {
   const [localEmail, setLocalEmail] = useState(email)
   const [localRole, setLocalRole] = useState(role)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (!localStudentId.trim() || !localInstId.trim() || !localFirstName.trim() || !localLastName.trim()) return
     setStudentInfo(localStudentId.trim(), localInstId.trim())
@@ -308,7 +308,7 @@ function AnalysisSequence({ onDone }: { onDone: () => void }) {
 function NeuralMetricRow({
   icon, label, value, percent, color, delay, animate,
 }: {
-  icon: React.ReactNode; label: string; value: string; percent: number; color: string; delay: number; animate: boolean
+  icon: ReactNode; label: string; value: string; percent: number; color: string; delay: number; animate: boolean
 }) {
   return (
     <motion.div
@@ -688,165 +688,258 @@ function MobileRequiredScreen() {
 
 /* ─── Main Enrollment Page ─── */
 export function EdguardEnroll() {
-  const [step, setStep] = useState<EnrollStep>(1)
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [errorCode, setErrorCode] = useState('')
+  const navigate = useNavigate()
   const store = useEdguardStore()
 
-  // Behavioral data collection (same as Demo.tsx)
-  const { recordTap, getSnapshot, startScan, stopScan, isMobile } = useSensors()
-  const [vocalData, setVocalData] = useState<VocalImportData | null>(null)
-  const [reflexResult, setReflexResult] = useState<ReflexResult | null>(null)
-  const analysisCalledRef = useRef(false)
+  const [step, setStep] = useState<1 | 2 | 'success' | 'error'>(1)
+  const [firstName, setFirstName] = useState(store.firstName)
+  const [lastName, setLastName] = useState(store.lastName)
+  const [email, setEmail] = useState(store.email)
+  const [selfieB64, setSelfieB64] = useState(store.selfieB64 ?? '')
+  const [errorMsg, setErrorMsg] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
-  // Start sensor collection when entering selfie step
-  useEffect(() => {
-    if (step === 2) startScan()
-  }, [step, startScan])
+  const tenantId = 'demo-tenant'
 
-  // Step 3: Vocal complete → advance to step 4 (Reflex)
-  const handleVocalComplete = useCallback((data: VocalImportData) => {
-    setVocalData(data)
-    setTimeout(() => setStep(4), 800)
+  const handleIdentitySubmit = useCallback((e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    if (!firstName.trim() || !lastName.trim()) return
+    store.setPersonalInfo(firstName.trim(), lastName.trim(), email.trim(), store.role)
+    setStep(2)
+  }, [email, firstName, lastName, store])
+
+  const handleCapture = useCallback((img: string) => {
+    setSelfieB64(img)
   }, [])
 
-  // Step 4: Reflex complete → advance to analysis
-  const handleReflexComplete = useCallback((result: ReflexResult) => {
-    setReflexResult(result)
-    setTimeout(() => setStep('analysis'), 1000)
+  const handleRetake = useCallback(() => {
+    setSelfieB64('')
   }, [])
 
-  // Analysis done → compute cognitive score & submit enrollment
-  const handleAnalysisDone = useCallback(async () => {
-    if (analysisCalledRef.current || isSubmitting) return
-    analysisCalledRef.current = true
+  const handleEnroll = useCallback(async () => {
+    if (!selfieB64) {
+      setErrorMsg('Capture failed — please center your face and try again.')
+      setStep('error')
+      return
+    }
+
     setIsSubmitting(true)
 
-    stopScan()
-    const sensors = getSnapshot()
-
-    // Compute cognitive score exactly like Demo.tsx
-    const stroopRounds = vocalData?.rounds.filter((r) => r.isStroop) ?? []
-    const stroopCorrectCount = stroopRounds.filter((r) => r.stroopCorrect).length
-    const stroopAccuracy = stroopRounds.length > 0 ? stroopCorrectCount / stroopRounds.length : 0
-    const mouseScore = sensors.mouseBehavior ? scoreMouseBehavior(sensors.mouseBehavior) : undefined
-
-    const cogScore = computeCognitiveScore({
-      vocalReactionTime: vocalData?.avgReactionMs ?? 800,
-      stroopAccuracy,
-      reflexAccuracy: reflexResult ? reflexResult.intercepted / reflexResult.total : 0.5,
-      reflexVelocity: reflexResult?.avgVelocityMs ?? 600,
-      sensorVariance: sensors.deviceMotionVariance,
-      accelerometer: sensors.accelerometer,
-      gyroscope: sensors.gyroscope,
-      touchPressure: sensors.touchPressure,
-      tapTimings: sensors.tapTimings,
-      mouseHumanScore: mouseScore,
-    })
-
-    const cognitiveScoreOverride = Math.max(0, Math.min(1, cogScore / 100))
-    console.log('[EDGUARD] cognitive score:', { raw: cogScore, normalized: cognitiveScoreOverride, isMobile })
-
-    store.setEnrollmentMetrics(
-      cognitiveScoreOverride,
-      stroopAccuracy,
-      reflexResult?.avgVelocityMs ?? 0,
-    )
-
     try {
-      const selfieB64 = store.selfieB64 ?? ''
-
-      if (!selfieB64) {
-        setErrorCode('CAPTURE_FAILED')
-        setStep('error')
-        return
-      }
-
-      const payload = {
-        student_id: store.studentId,
-        institution_id: store.institutionId,
+      const result = await enrollStudent({
         selfie_b64: selfieB64,
-        first_name: store.firstName || undefined,
-        last_name: store.lastName || undefined,
-        email: store.email || undefined,
-        role: store.role.toLowerCase() as 'student' | 'teacher' | 'beneficiary',
-        cognitive_score_override: cognitiveScoreOverride,
-      }
-      const result = await enrollStudent(payload)
-      if (result.success && result.enrolled) {
+        first_name: firstName.trim(),
+        last_name: lastName.trim(),
+        email: email.trim() || undefined,
+        tenant_id: tenantId,
+      })
+
+      if (result.success) {
         store.setEnrollmentResult(result)
         setStep('success')
       } else {
-        setErrorCode(result.error ?? 'UNKNOWN')
+        setErrorMsg(result.message ?? result.error ?? 'Service indisponible. Réessayez.')
         setStep('error')
       }
     } catch {
-      setErrorCode('NETWORK_ERROR')
+      setErrorMsg('Service indisponible. Réessayez.')
       setStep('error')
     } finally {
       setIsSubmitting(false)
     }
-  }, [isSubmitting, store, vocalData, reflexResult, getSnapshot, stopScan, isMobile])
+  }, [email, firstName, lastName, selfieB64, store])
 
   const handleRetry = useCallback(() => {
-    analysisCalledRef.current = false
-    setVocalData(null)
-    setReflexResult(null)
+    setErrorMsg('')
     setStep(2)
-    setErrorCode('')
   }, [])
 
-  const stepNum = typeof step === 'number' ? step : 5
+  const handleReset = useCallback(() => {
+    setFirstName('')
+    setLastName('')
+    setEmail('')
+    setSelfieB64('')
+    setErrorMsg('')
+    setStep(1)
+  }, [])
 
-  if (!isMobileDevice) return <MobileRequiredScreen />
+  const confidence = Math.round(store.enrollmentResult?.confidence ?? 0)
 
   return (
     <div className="min-h-screen pt-16 pb-8 px-3 sm:px-4 overflow-x-hidden" style={{ backgroundColor: '#0A0F1E' }}>
       <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: HEX_PATTERN }} />
 
-      <div className="max-w-2xl mx-auto relative w-full pt-6 sm:pt-8">
+      <div className="max-w-md mx-auto relative w-full pt-8 sm:pt-12">
         <div className="rounded-2xl p-5 sm:p-7 relative overflow-hidden" style={{ backgroundColor: '#0D1526', border: '1px solid #1E2D45' }}>
-          {step !== 'success' && step !== 'error' && step !== 'analysis' && (
-            <>
-              <EnrollHeader step={stepNum} />
-              <StepIndicator current={stepNum} />
-            </>
-          )}
-
           <AnimatePresence mode="wait">
             {step === 1 && (
-              <motion.div key="s1" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }}>
-                <Step1 onNext={() => setStep(2)} />
+              <motion.div key="enroll-id" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.3 }}>
+                <div className="text-center mb-6">
+                  <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: 'rgba(0,194,255,0.1)', border: '1.5px solid rgba(0,194,255,0.3)' }}>
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#00C2FF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                      <circle cx="12" cy="7" r="4" />
+                    </svg>
+                  </div>
+                  <h2 className="text-base font-bold tracking-wider mb-1" style={{ color: '#F0F4FF' }}>
+                    Enregistrement d’identité
+                  </h2>
+                  <p className="text-xs" style={{ color: '#8899BB' }}>
+                    Saisissez votre prénom, votre nom et votre email optionnel
+                  </p>
+                </div>
+
+                <form onSubmit={handleIdentitySubmit} className="flex flex-col gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-[10px] font-semibold tracking-widest" style={{ color: '#8899BB' }}>PRÉNOM *</label>
+                      <input
+                        type="text"
+                        value={firstName}
+                        onChange={(e) => setFirstName(e.target.value)}
+                        required
+                        autoFocus
+                        placeholder="Jean"
+                        className="w-full px-4 py-3 rounded-xl text-sm font-medium outline-none transition-all duration-200"
+                        style={{ backgroundColor: '#0A0F1E', border: '1px solid #1E2D45', color: '#F0F4FF' }}
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-[10px] font-semibold tracking-widest" style={{ color: '#8899BB' }}>NOM *</label>
+                      <input
+                        type="text"
+                        value={lastName}
+                        onChange={(e) => setLastName(e.target.value)}
+                        required
+                        placeholder="Dupont"
+                        className="w-full px-4 py-3 rounded-xl text-sm font-medium outline-none transition-all duration-200"
+                        style={{ backgroundColor: '#0A0F1E', border: '1px solid #1E2D45', color: '#F0F4FF' }}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[10px] font-semibold tracking-widest" style={{ color: '#8899BB' }}>EMAIL</label>
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="jean.dupont@universite.fr"
+                      className="w-full px-4 py-3 rounded-xl text-sm font-medium outline-none transition-all duration-200"
+                      style={{ backgroundColor: '#0A0F1E', border: '1px solid #1E2D45', color: '#F0F4FF' }}
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="w-full py-3.5 rounded-xl font-bold text-sm tracking-wider transition-all duration-300"
+                    style={{ backgroundColor: '#00C2FF', color: '#0A0F1E', boxShadow: '0 0 20px rgba(0,194,255,0.3)' }}
+                  >
+                    Continuer →
+                  </button>
+                </form>
               </motion.div>
             )}
+
             {step === 2 && (
-              <motion.div key="s2" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }}>
-                <Step2Selfie onNext={() => setStep(3)} />
+              <motion.div key="enroll-face" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.3 }}>
+                <div className="text-center mb-4">
+                  <h2 className="text-base font-bold tracking-wider mb-1" style={{ color: '#F0F4FF' }}>
+                    Capture selfie
+                  </h2>
+                  <p className="text-xs" style={{ color: '#8899BB' }}>
+                    Centrez votre visage et capturez une seule fois
+                  </p>
+                </div>
+
+                <FaceCapture
+                  capturedImage={selfieB64}
+                  onCapture={handleCapture}
+                  onRetake={handleRetake}
+                  onProceed={handleEnroll}
+                  proceedLabel="M'enregistrer"
+                />
+
+                <button
+                  onClick={handleReset}
+                  className="w-full mt-3 text-[10px] font-semibold tracking-wider py-2"
+                  style={{ color: '#3D5A75' }}
+                >
+                  ← Modifier l’identité
+                </button>
               </motion.div>
             )}
-            {step === 3 && (
-              <motion.div key="s3" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }}>
-                <VocalImprint onComplete={handleVocalComplete} />
-              </motion.div>
-            )}
-            {step === 4 && (
-              <motion.div key="s4" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }}>
-                <NeuralReflex onComplete={handleReflexComplete} />
-              </motion.div>
-            )}
-            {step === 'analysis' && (
-              <motion.div key="analysis" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }}>
-                <AnalysisSequence onDone={handleAnalysisDone} />
-              </motion.div>
-            )}
+
             {step === 'success' && (
-              <motion.div key="success" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-                <SuccessScreen />
+              <motion.div key="enroll-success" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="flex flex-col items-center gap-4 py-6">
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: 'spring', stiffness: 220, delay: 0.05 }}
+                  className="w-20 h-20 rounded-full flex items-center justify-center"
+                  style={{ backgroundColor: 'rgba(0,255,136,0.15)', border: '2px solid #00FF88', boxShadow: '0 0 30px rgba(0,255,136,0.3)' }}
+                >
+                  <span className="text-3xl" style={{ color: '#00FF88' }}>✓</span>
+                </motion.div>
+
+                <div className="text-center">
+                  <p className="text-sm font-bold tracking-widest mb-1" style={{ color: '#00FF88' }}>
+                    ✅ Identité enregistrée
+                  </p>
+                  <p className="text-xs mb-3" style={{ color: '#8899BB' }}>
+                    {firstName.trim()}
+                  </p>
+                  <div className="inline-flex items-center gap-2 px-4 py-2 rounded-lg" style={{ backgroundColor: 'rgba(0,255,136,0.1)', border: '1px solid rgba(0,255,136,0.2)' }}>
+                    <span className="text-[10px] font-bold tracking-widest" style={{ color: '#00FF88' }}>
+                      CONFIDENCE
+                    </span>
+                    <span className="text-sm font-black" style={{ color: '#00FF88', fontFamily: 'monospace' }}>
+                      {confidence}%
+                    </span>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => navigate('/edguard/verify')}
+                  className="w-full py-3.5 rounded-xl font-bold text-sm tracking-wider transition-all duration-300"
+                  style={{ backgroundColor: '#00C2FF', color: '#0A0F1E', boxShadow: '0 0 20px rgba(0,194,255,0.3)' }}
+                >
+                  Accéder à l’examen →
+                </button>
               </motion.div>
             )}
+
             {step === 'error' && (
-              <motion.div key="error" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }}>
-                <ErrorScreen errorCode={errorCode} onRetry={handleRetry} />
+              <motion.div key="enroll-error" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center gap-4 py-6">
+                <div className="w-20 h-20 rounded-full flex items-center justify-center" style={{ backgroundColor: 'rgba(255,51,85,0.1)', border: '2px solid #FF3355' }}>
+                  <span className="text-3xl" style={{ color: '#FF3355' }}>✗</span>
+                </div>
+
+                <div className="text-center">
+                  <p className="text-sm font-bold tracking-widest mb-2" style={{ color: '#FF3355' }}>
+                    ENREGISTREMENT ÉCHOUÉ
+                  </p>
+                  <p className="text-xs max-w-xs" style={{ color: '#8899BB' }}>
+                    {errorMsg}
+                  </p>
+                </div>
+
+                <div className="flex gap-3 w-full">
+                  <button
+                    onClick={handleRetry}
+                    className="flex-1 py-3 rounded-xl font-bold text-sm tracking-wider"
+                    style={{ backgroundColor: '#00C2FF', color: '#0A0F1E', boxShadow: '0 0 20px rgba(0,194,255,0.3)' }}
+                  >
+                    Réessayer
+                  </button>
+                  <button
+                    onClick={handleReset}
+                    className="flex-1 py-3 rounded-xl font-bold text-sm tracking-wider"
+                    style={{ border: '1px solid #1E2D45', color: '#8899BB' }}
+                  >
+                    Recommencer
+                  </button>
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
@@ -855,7 +948,7 @@ export function EdguardEnroll() {
             <div className="absolute inset-0 flex items-center justify-center z-20 rounded-2xl" style={{ backgroundColor: 'rgba(10,15,30,0.85)' }}>
               <div className="flex flex-col items-center gap-3">
                 <div className="w-8 h-8 rounded-full border-2 border-[#1E2D45] border-t-[#00C2FF] animate-spin" />
-                <span className="text-xs font-semibold tracking-widest" style={{ color: '#00C2FF' }}>ENROLLMENT EN COURS...</span>
+                <span className="text-xs font-semibold tracking-widest" style={{ color: '#00C2FF' }}>ENREGISTREMENT EN COURS...</span>
               </div>
             </div>
           )}

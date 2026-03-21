@@ -13,24 +13,19 @@ const client = axios.create({
 })
 
 export interface EnrollRequest {
-  student_id: string
-  institution_id: string
   selfie_b64: string
-  first_name?: string
-  last_name?: string
+  first_name: string
+  last_name: string
   email?: string
-  role?: 'student' | 'teacher' | 'beneficiary'
-  cognitive_score_override?: number
+  tenant_id: string
 }
 
 export interface EnrollResponse {
   success: boolean
   student_id: string
-  institution_id: string
-  enrolled: boolean
-  faceId: string
   confidence: number
-  enrolled_at: string
+  faceId?: string
+  enrolled_at?: string
   error?: string
   message?: string
 }
@@ -68,12 +63,8 @@ export async function enrollStudent(payload: EnrollRequest): Promise<EnrollRespo
     }
     return {
       success: false,
-      student_id: payload.student_id,
-      institution_id: payload.institution_id,
-      enrolled: false,
-      faceId: '',
+      student_id: '',
       confidence: 0,
-      enrolled_at: '',
       error: 'NETWORK_ERROR',
       message: 'Service indisponible. Réessayez.',
     }
@@ -132,8 +123,10 @@ export async function lookupStudent(payload: {
 }
 
 export async function verifyStudent(payload: {
-  student_id: string
   selfie_b64: string
+  first_name: string
+  last_name: string
+  tenant_id: string
 }): Promise<{
   verified: boolean
   similarity: number

@@ -11,6 +11,7 @@ interface FaceCaptureProps {
   onCapture: (imageSrc: string, pointerPressure?: number) => void
   onRetake: () => void
   onProceed: () => void
+  proceedLabel?: string
   onLivenessComplete?: (frames: string[], descriptor?: Float32Array) => void
 }
 
@@ -187,7 +188,7 @@ function LivenessProgress({ step, timer }: { step: number; timer: number }) {
   )
 }
 
-export function FaceCapture({ capturedImage, onCapture, onRetake, onProceed, onLivenessComplete }: FaceCaptureProps) {
+export function FaceCapture({ capturedImage, onCapture, onRetake, onProceed, proceedLabel, onLivenessComplete }: FaceCaptureProps) {
   const { t } = useT()
   const webcamRef = useRef<Webcam>(null)
   const capturePressureRef = useRef<number | undefined>(undefined)
@@ -667,7 +668,7 @@ export function FaceCapture({ capturedImage, onCapture, onRetake, onProceed, onL
               boxShadow: '0 0 20px rgba(0,194,255,0.3)',
             }}
           >
-            {t('face_proceed')}
+            {proceedLabel ?? t('face_proceed')}
           </button>
           <button
             onClick={handleRetake}

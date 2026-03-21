@@ -41,13 +41,12 @@ export function EdguardHome() {
     <div className="min-h-screen pt-16 pb-12 px-3 sm:px-4 overflow-x-hidden" style={{ backgroundColor: '#0A0F1E' }}>
       <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: HEX_PATTERN }} />
 
-      <div className="max-w-4xl mx-auto relative w-full pt-8 sm:pt-14">
-        {/* Hero */}
+      <div className="max-w-2xl mx-auto relative w-full pt-10 sm:pt-16">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
-          className="text-center mb-10 sm:mb-14"
+          className="text-center mb-10 sm:mb-12"
         >
           <div className="flex items-center justify-center gap-3 mb-4">
             <HexIcon />
@@ -59,14 +58,11 @@ export function EdguardHome() {
             {t('edguard_subtitle')}
           </p>
           <p className="text-xs sm:text-sm max-w-xl mx-auto leading-relaxed" style={{ color: '#8899BB' }}>
-            Vérification biométrique continue pour examens en ligne et attribution de bourses.
-            Facial + Cognitif + Post-Quantique.
+            Choisissez un parcours pour enregistrer ou vérifier une identité faciale.
           </p>
         </motion.div>
 
-        {/* Action cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-10 sm:mb-14">
-          {/* Card 1 — Enrollment */}
+        <div className="grid grid-cols-1 gap-4 sm:gap-5">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -81,33 +77,29 @@ export function EdguardHome() {
                   <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: 'rgba(0,194,255,0.08)', border: '1px solid rgba(0,194,255,0.2)' }}>
                     <UserScanIcon />
                   </div>
-                  <span className="text-[10px] font-bold tracking-widest px-2.5 py-1 rounded-full" style={{ backgroundColor: 'rgba(0,194,255,0.1)', color: '#00C2FF', border: '1px solid rgba(0,194,255,0.2)' }}>
-                    {t('edguard_step')} 1
-                  </span>
                 </div>
                 <h2 className="text-base sm:text-lg font-bold tracking-wider mb-2" style={{ color: '#F0F4FF' }}>
                   {t('edguard_enroll')}
                 </h2>
                 <p className="text-xs leading-relaxed mb-5" style={{ color: '#8899BB' }}>
-                  Enregistrer l&apos;identité d&apos;un étudiant via photo officielle + selfie live
+                  Commencer l’enregistrement avec formulaire d’identité puis selfie
                 </p>
                 <div
                   className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm tracking-wider transition-all duration-300 group-hover:shadow-[0_0_20px_rgba(0,194,255,0.2)]"
                   style={{ border: '1.5px solid rgba(0,194,255,0.5)', color: '#00C2FF' }}
                 >
-                  Démarrer l&apos;enrollment →
+                  Démarrer l’enregistrement →
                 </div>
               </div>
             </Link>
           </motion.div>
 
-          {/* Card 2 — Session */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3, duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
           >
-            <Link to="/edguard/session" className="block group">
+            <Link to="/edguard/verify" className="block group">
               <div
                 className="rounded-2xl p-6 sm:p-7 relative overflow-hidden transition-all duration-300 group-hover:border-[#00C2FF]/50"
                 style={{ backgroundColor: '#0D1526', border: '1px solid #1E2D45' }}
@@ -116,49 +108,23 @@ export function EdguardHome() {
                   <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: 'rgba(0,194,255,0.08)', border: '1px solid rgba(0,194,255,0.2)' }}>
                     <ShieldCheckIcon />
                   </div>
-                  <span className="text-[10px] font-bold tracking-widest px-2.5 py-1 rounded-full" style={{ backgroundColor: 'rgba(0,194,255,0.1)', color: '#00C2FF', border: '1px solid rgba(0,194,255,0.2)' }}>
-                    {t('edguard_step')} 2
-                  </span>
                 </div>
                 <h2 className="text-base sm:text-lg font-bold tracking-wider mb-2" style={{ color: '#F0F4FF' }}>
-                  {t('edguard_session')}
+                  Vérification d’identité
                 </h2>
                 <p className="text-xs leading-relaxed mb-5" style={{ color: '#8899BB' }}>
-                  Démarrer une session surveillée avec vérifications biométriques continues
+                  Vérifier une identité existante avec prénom, nom et selfie
                 </p>
                 <div
                   className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm tracking-wider transition-all duration-300 group-hover:shadow-[0_0_20px_rgba(0,194,255,0.2)]"
                   style={{ border: '1.5px solid rgba(0,194,255,0.5)', color: '#00C2FF' }}
                 >
-                  Démarrer la session →
+                  Démarrer la vérification →
                 </div>
               </div>
             </Link>
           </motion.div>
         </div>
-
-        {/* Stats bar */}
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5, duration: 0.5 }}
-          className="rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-around gap-3 sm:gap-0"
-          style={{ backgroundColor: '#0D1526', border: '1px solid #1E2D45' }}
-        >
-          {[
-            { label: 'Facial + Cognitif', icon: '◈' },
-            { label: 'Post-Quantum FIPS 203', icon: '◈' },
-            { label: '3 Brevets FR', icon: '◈' },
-          ].map((stat, i) => (
-            <div key={stat.label} className="flex items-center gap-2">
-              {i > 0 && <div className="hidden sm:block w-px h-6 mx-4" style={{ backgroundColor: '#1E2D45' }} />}
-              <span className="text-xs" style={{ color: '#00C2FF' }}>{stat.icon}</span>
-              <span className="text-[11px] sm:text-xs font-semibold tracking-wider" style={{ color: '#F0F4FF' }}>
-                {stat.label}
-              </span>
-            </div>
-          ))}
-        </motion.div>
       </div>
     </div>
   )
