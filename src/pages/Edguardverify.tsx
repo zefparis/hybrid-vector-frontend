@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react'
+import { useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FaceCapture } from '@/components/FaceCapture'
@@ -18,7 +18,6 @@ export function EdguardVerify() {
   const [selfieB64, setSelfieB64] = useState('')
   const [confidence, setConfidence] = useState(0)
   const [errorMsg, setErrorMsg] = useState('')
-  const descriptorRef = useRef<Float32Array | null>(null)
 
   // Step 1 — submit student ID
   const handleIdSubmit = useCallback((e: React.FormEvent) => {
@@ -32,12 +31,10 @@ export function EdguardVerify() {
     setSelfieB64(img)
   }, [])
 
-  const handleLivenessComplete = useCallback(async (_frames: string[], descriptor?: Float32Array) => {
-    if (descriptor) {
-      descriptorRef.current = descriptor
-    }
-    const desc = descriptor ?? descriptorRef.current
-    if (!desc) {
+  const handleLivenessComplete = useCallback(async (frames: string[]) => {
+    // Use last captured frame as selfie for verification
+    const selfie = selfieB64 || frames[frames.length - 1] || ''
+    if (!selfie) {
       setErrorMsg('EMBEDDING_FAILED')
       setStep('error')
       return
@@ -47,7 +44,7 @@ export function EdguardVerify() {
     try {
       const result = await verifyStudent({
         student_id: studentId.trim(),
-        face_descriptor: Array.from(desc),
+        selfie_b64: selfie,
       })
 
       if (result.success && result.match) {
@@ -64,11 +61,10 @@ export function EdguardVerify() {
       setErrorMsg('NETWORK_ERROR')
       setStep('error')
     }
-  }, [studentId, setStudentInfo, navigate])
+  }, [studentId, selfieB64, setStudentInfo, navigate])
 
   const handleRetry = useCallback(() => {
     setSelfieB64('')
-    descriptorRef.current = null
     setErrorMsg('')
     setStep('face')
   }, [])
@@ -199,7 +195,7 @@ export function EdguardVerify() {
                 <FaceCapture
                   capturedImage={selfieB64}
                   onCapture={handleCapture}
-                  onRetake={() => { setSelfieB64(''); descriptorRef.current = null }}
+                  onRetake={() => setSelfieB64('')}
                   onProceed={() => {}}
                   onLivenessComplete={handleLivenessComplete}
                 />

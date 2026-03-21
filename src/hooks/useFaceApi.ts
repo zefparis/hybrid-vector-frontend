@@ -27,7 +27,7 @@ export interface FaceDetectionResult {
 
 export function useFaceApi() {
   const [loaded, setLoaded] = useState(modelsLoaded)
-  const optionsRef = useRef(new faceapi.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.4 }))
+  const optionsRef = useRef(new faceapi.TinyFaceDetectorOptions({ inputSize: 416, scoreThreshold: 0.2 }))
 
   useEffect(() => {
     ensureModelsLoaded().then(() => setLoaded(true)).catch(() => {})

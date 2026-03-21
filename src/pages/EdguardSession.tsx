@@ -5,7 +5,6 @@ import { useEdguardStore } from '@/store/edguardStore'
 import { sessionCheckpoint } from '@/services/edguardApi'
 import type { CheckpointResponse } from '@/services/edguardApi'
 import { useT } from '@/i18n/useLang'
-import { useFaceApi } from '@/hooks/useFaceApi'
 
 const HEX_PATTERN = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='49' viewBox='0 0 28 49'%3E%3Cg fill-rule='evenodd'%3E%3Cg fill='%2300C2FF' fill-opacity='0.03'%3E%3Cpath d='M13.99 9.25l13 7.5v15l-13 7.5L1 31.75v-15l12.99-7.5zM3 17.9v12.7l10.99 6.34 11-6.35V17.9l-11-6.34L3 17.9z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
 
@@ -293,36 +292,19 @@ export function EdguardSession() {
     setPhase('active')
   }, [store])
 
-  const { loaded: faceApiLoaded, detectFace } = useFaceApi()
-
   const runCheckpoint = useCallback(async (cognitiveMs: number) => {
     if (runningCheckpoint) return
     setRunningCheckpoint(true)
     setPhase('active')
 
+    const frame = webcamRef.current?.getScreenshot() ?? ''
     const cogScore = Math.max(0, Math.min(100, Math.round(100 - (cognitiveMs / 10))))
-
-    // Extract face descriptor from webcam video via face-api.js
-    let descriptor: number[] = []
-    const video = webcamRef.current?.video
-    if (video && video.readyState >= 4 && faceApiLoaded) {
-      const detection = await detectFace(video)
-      if (detection?.descriptor) {
-        descriptor = Array.from(detection.descriptor)
-      }
-    }
-
-    if (descriptor.length === 0) {
-      console.warn('[EDGUARD-SESSION] no face descriptor for checkpoint')
-      setRunningCheckpoint(false)
-      return
-    }
 
     const result = await sessionCheckpoint({
       student_id: store.studentId,
       session_id: store.sessionId,
       checkpoint_number: store.checkpointNumber + 1,
-      face_descriptor: descriptor,
+      face_b64: frame,
       cognitive_score: cogScore,
     })
 
@@ -330,7 +312,7 @@ export function EdguardSession() {
     setPulseColor(alertColor(result.alert_level))
     setTimeout(() => setPulseColor(null), 2000)
     setRunningCheckpoint(false)
-  }, [runningCheckpoint, store, faceApiLoaded, detectFace])
+  }, [runningCheckpoint, store])
 
   const handleEnd = useCallback(() => {
     store.endSession()

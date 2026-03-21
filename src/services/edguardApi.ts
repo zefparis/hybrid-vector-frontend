@@ -15,8 +15,8 @@ const client = axios.create({
 export interface EnrollRequest {
   student_id: string
   institution_id: string
-  face_descriptor: number[]
-  identity_confidence: number
+  official_photo_b64: string
+  selfie_b64: string
   cognitive_score_override?: number
 }
 
@@ -35,7 +35,7 @@ export interface EnrollResponse {
 export interface CheckpointRequest {
   student_id: string
   checkpoint_number: number
-  face_descriptor: number[]
+  face_b64: string
   cognitive_score?: number
   session_id: string
 }
@@ -103,7 +103,7 @@ export async function sessionCheckpoint(payload: CheckpointRequest): Promise<Che
 }
 export async function verifyStudent(payload: {
   student_id: string
-  face_descriptor: number[]
+  selfie_b64: string
 }): Promise<{
   success: boolean
   match: boolean

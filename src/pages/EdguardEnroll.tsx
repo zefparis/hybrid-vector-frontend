@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
+import { QRCodeSVG } from 'qrcode.react'
 import { FaceCapture } from '@/components/FaceCapture'
 import { VocalImprint } from '@/components/VocalImprint'
 import { NeuralReflex } from '@/components/NeuralReflex'
@@ -9,8 +10,12 @@ import { enrollStudent } from '@/services/edguardApi'
 import { useSensors } from '@/hooks/useSensors'
 import { computeCognitiveScore, scoreMouseBehavior } from '@/services/api'
 import { useT } from '@/i18n/useLang'
-import { useFaceApi } from '@/hooks/useFaceApi'
 import type { VocalImportData, ReflexResult } from '@/types'
+
+const ENROLLMENT_URL = 'https://hybrid-vector-frontend.vercel.app/edguard/enroll'
+
+const isMobileDevice =
+  /Android|iPhone|iPad/i.test(navigator.userAgent) || 'ontouchstart' in window
 
 type EnrollStep = 1 | 2 | 3 | 4 | 5 | 6 | 'analysis' | 'success' | 'error'
 
@@ -138,37 +143,9 @@ function Step1({ onNext }: { onNext: () => void }) {
 /* ─── Step 2: Official Photo Upload ─── */
 function Step2({ onNext }: { onNext: () => void }) {
   const { t } = useT()
-  const { officialPhotoB64, setOfficialPhoto, setOfficialDescriptor } = useEdguardStore()
-  const { loaded: faceApiLoaded, detectFace } = useFaceApi()
+  const { officialPhotoB64, setOfficialPhoto } = useEdguardStore()
   const inputRef = useRef<HTMLInputElement>(null)
   const [dragOver, setDragOver] = useState(false)
-  const [detecting, setDetecting] = useState(false)
-  const [noFace, setNoFace] = useState(false)
-
-  // Extract face descriptor when official photo is set
-  useEffect(() => {
-    if (!officialPhotoB64 || !faceApiLoaded) return
-    setDetecting(true)
-    setNoFace(false)
-    const img = new Image()
-    img.crossOrigin = 'anonymous'
-    img.onload = async () => {
-      const result = await detectFace(img)
-      setDetecting(false)
-      if (result) {
-        setOfficialDescriptor(result.descriptor)
-        setNoFace(false)
-      } else {
-        setOfficialDescriptor(null)
-        setNoFace(true)
-      }
-    }
-    img.onerror = () => {
-      setDetecting(false)
-      setNoFace(true)
-    }
-    img.src = officialPhotoB64
-  }, [officialPhotoB64, faceApiLoaded, detectFace, setOfficialDescriptor])
 
   const handleFile = useCallback((file: File) => {
     if (!file.type.startsWith('image/')) return
@@ -247,18 +224,11 @@ function Step2({ onNext }: { onNext: () => void }) {
         </div>
       )}
 
-      {detecting && (
-        <p className="text-[10px] font-semibold tracking-wider animate-pulse" style={{ color: '#00C2FF' }}>Détection du visage...</p>
-      )}
-      {noFace && (
-        <p className="text-[10px] font-semibold tracking-wider" style={{ color: '#FF3355' }}>Aucun visage détecté. Choisissez une autre photo.</p>
-      )}
-
       <button
         onClick={onNext}
-        disabled={!officialPhotoB64 || detecting || noFace}
+        disabled={!officialPhotoB64}
         className="w-full py-3.5 rounded-xl font-bold text-sm tracking-wider transition-all duration-300 disabled:opacity-30"
-        style={{ backgroundColor: '#00C2FF', color: '#0A0F1E', boxShadow: officialPhotoB64 && !detecting && !noFace ? '0 0 20px rgba(0,194,255,0.3)' : 'none' }}
+        style={{ backgroundColor: '#00C2FF', color: '#0A0F1E', boxShadow: officialPhotoB64 ? '0 0 20px rgba(0,194,255,0.3)' : 'none' }}
       >
         Continuer →
       </button>
@@ -268,7 +238,7 @@ function Step2({ onNext }: { onNext: () => void }) {
 
 /* ─── Step 3: Live Selfie ─── */
 function Step3({ onNext }: { onNext: () => void }) {
-  const { officialPhotoB64, selfieB64, setSelfie, setSelfieDescriptor } = useEdguardStore()
+  const { officialPhotoB64, selfieB64, setSelfie } = useEdguardStore()
 
   const handleCapture = useCallback((img: string) => {
     setSelfie(img)
@@ -276,14 +246,7 @@ function Step3({ onNext }: { onNext: () => void }) {
 
   const handleRetake = useCallback(() => {
     setSelfie('')
-    setSelfieDescriptor(null)
-  }, [setSelfie, setSelfieDescriptor])
-
-  const handleLivenessComplete = useCallback((_frames: string[], descriptor?: Float32Array) => {
-    if (descriptor) {
-      setSelfieDescriptor(descriptor)
-    }
-  }, [setSelfieDescriptor])
+  }, [setSelfie])
 
   return (
     <div className="flex flex-col gap-4">
@@ -303,7 +266,6 @@ function Step3({ onNext }: { onNext: () => void }) {
         onCapture={handleCapture}
         onRetake={handleRetake}
         onProceed={onNext}
-        onLivenessComplete={handleLivenessComplete}
       />
     </div>
   )
@@ -505,6 +467,70 @@ function ErrorScreen({ errorCode, onRetry }: { errorCode: string; onRetry: () =>
   )
 }
 
+/* ─── Mobile Required Screen ─── */
+function MobileRequiredScreen() {
+  return (
+    <div className="min-h-screen flex items-center justify-center px-4" style={{ backgroundColor: '#0A0F1E' }}>
+      <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: HEX_PATTERN }} />
+      <div className="w-full max-w-md relative">
+        <div
+          className="rounded-2xl p-7 relative overflow-hidden flex flex-col items-center gap-6"
+          style={{ backgroundColor: '#0D1526', border: '1px solid #1E2D45' }}
+        >
+          {/* Header */}
+          <div className="flex items-center gap-2.5">
+            <svg width="16" height="16" viewBox="0 0 28 28">
+              <polygon points="14,2 26,8 26,20 14,26 2,20 2,8" fill="none" stroke="#00C2FF" strokeWidth="2" />
+            </svg>
+            <span className="text-sm font-black tracking-widest" style={{ color: '#F0F4FF' }}>
+              EDGUARD
+            </span>
+          </div>
+
+          {/* Icon */}
+          <div
+            className="w-16 h-16 rounded-full flex items-center justify-center"
+            style={{ backgroundColor: 'rgba(0,194,255,0.1)', border: '1.5px solid rgba(0,194,255,0.3)' }}
+          >
+            <span className="text-2xl">📱</span>
+          </div>
+
+          {/* Title */}
+          <h2 className="text-base font-bold tracking-wider text-center" style={{ color: '#F0F4FF' }}>
+            Mobile Required
+          </h2>
+
+          {/* Description */}
+          <p className="text-xs text-center leading-relaxed max-w-xs" style={{ color: '#8899BB' }}>
+            Enrollment must be completed on your mobile device. Biometric sensors required.
+          </p>
+
+          <div className="h-px w-full" style={{ backgroundColor: '#1E2D45' }} />
+
+          {/* QR Code */}
+          <div className="p-4 rounded-xl" style={{ backgroundColor: '#fff' }}>
+            <QRCodeSVG value={ENROLLMENT_URL} size={180} level="M" />
+          </div>
+
+          {/* CTA */}
+          <p className="text-[10px] font-semibold tracking-widest text-center" style={{ color: '#00C2FF' }}>
+            SCAN QR CODE TO CONTINUE →
+          </p>
+
+          {/* URL hint */}
+          <p className="text-[9px] tracking-wider text-center break-all" style={{ color: '#3D5A75' }}>
+            {ENROLLMENT_URL}
+          </p>
+        </div>
+
+        <p className="text-center text-[10px] mt-4 font-semibold tracking-widest" style={{ color: '#1E2D45' }}>
+          POWERED BY HYBRID VECTOR · ML-KEM FIPS 203/204
+        </p>
+      </div>
+    </div>
+  )
+}
+
 /* ─── Main Enrollment Page ─── */
 export function EdguardEnroll() {
   const [step, setStep] = useState<EnrollStep>(1)
@@ -567,25 +593,10 @@ export function EdguardEnroll() {
     console.log('[EDGUARD] cognitive score:', { raw: cogScore, normalized: cognitiveScoreOverride, isMobile })
 
     try {
-      // Client-side face comparison: use selfie descriptor (from liveness) to enroll
-      // identity_confidence is the compareFaces score between official photo descriptor and selfie descriptor
-      const selfieDesc = store.selfieDescriptor
-      const officialDesc = store.officialDescriptor
-      let identityConfidence = 0.92 // default high if both descriptors exist
-      if (selfieDesc && officialDesc) {
-        // Euclidean distance based similarity (same as useFaceApi.compareFaces)
-        let sum = 0
-        const len = Math.min(selfieDesc.length, officialDesc.length)
-        for (let i = 0; i < len; i++) {
-          const d = selfieDesc[i] - officialDesc[i]
-          sum += d * d
-        }
-        const distance = Math.sqrt(sum)
-        identityConfidence = Math.max(0, 1 - distance / 0.6)
-      }
+      const officialB64 = store.officialPhotoB64 ?? ''
+      const selfieB64 = store.selfieB64 ?? ''
 
-      const descriptor = selfieDesc ? Array.from(selfieDesc) : []
-      if (descriptor.length === 0) {
+      if (!officialB64 || !selfieB64) {
         setErrorCode('EMBEDDING_FAILED')
         setStep('error')
         return
@@ -594,8 +605,8 @@ export function EdguardEnroll() {
       const payload = {
         student_id: store.studentId,
         institution_id: store.institutionId,
-        face_descriptor: descriptor,
-        identity_confidence: identityConfidence,
+        official_photo_b64: officialB64,
+        selfie_b64: selfieB64,
         cognitive_score_override: cognitiveScoreOverride,
       }
       const result = await enrollStudent(payload)
@@ -623,6 +634,8 @@ export function EdguardEnroll() {
   }, [])
 
   const stepNum = typeof step === 'number' ? step : 6
+
+  if (!isMobileDevice) return <MobileRequiredScreen />
 
   return (
     <div className="min-h-screen pt-16 pb-8 px-3 sm:px-4 overflow-x-hidden" style={{ backgroundColor: '#0A0F1E' }}>
