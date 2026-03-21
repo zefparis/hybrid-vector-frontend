@@ -26,8 +26,9 @@ const STEP_CONFIG: Record<Exclude<LivenessStep, 'idle' | 'confirm'>, {
   left:   { labelFr: '← TOURNEZ LENTEMENT À GAUCHE', labelEn: '← TURN SLOWLY TO THE LEFT', index: 2 },
 }
 
-function CornerBrackets({ color }: { color: string }) {
-  const s = { borderColor: color }
+function CornerBrackets({ color, glow }: { color: string; glow?: boolean }) {
+  const filter = glow ? `drop-shadow(0 0 6px ${color}) drop-shadow(0 0 12px ${color})` : 'none'
+  const s = { borderColor: color, filter, transition: 'filter 0.4s ease' }
   return (
     <div className="absolute inset-3 sm:inset-4 pointer-events-none">
       <div className="absolute top-0 left-0 w-5 h-5 border-t-2 border-l-2" style={s} />
@@ -65,63 +66,80 @@ function FaceOvalGuide({ progress }: { progress: number }) {
   )
 }
 
+const scanKeyframes = `@keyframes scanSweep{0%{top:0%}100%{top:100%}}`
+
 function ScanLine() {
   return (
-    <motion.div
-      className="absolute left-0 right-0 h-px pointer-events-none z-10"
-      style={{
-        background: 'linear-gradient(90deg, transparent 5%, #00C2FF 50%, transparent 95%)',
-        boxShadow: '0 0 10px rgba(0,194,255,0.6)',
-      }}
-      animate={{ top: ['0%', '100%'] }}
-      transition={{ duration: 2.5, repeat: Infinity, ease: 'linear' }}
-    />
-  )
-}
-
-function FloatingLabels({ labels }: { labels: string[] }) {
-  const positions = [
-    { top: '18%', left: '8%' },
-    { top: '25%', right: '6%' },
-    { bottom: '30%', left: '5%' },
-    { bottom: '18%', right: '8%' },
-  ]
-  return (
     <>
-      {labels.map((label, i) => (
-        <motion.div
-          key={label}
-          className="absolute pointer-events-none text-[9px] sm:text-[10px] font-semibold tracking-widest"
-          style={{ color: 'rgba(0,194,255,0.6)', ...positions[i] }}
-          initial={{ opacity: 0, x: 10 }}
-          animate={{ opacity: [0, 0.7, 0.7, 0], x: [10, 0, 0, -10] }}
-          transition={{ duration: 3, delay: i * 1.2, repeat: Infinity, repeatDelay: 2 }}
-        >
-          {label}
-        </motion.div>
-      ))}
+      <style>{scanKeyframes}</style>
+      <div
+        className="absolute left-0 right-0 pointer-events-none z-10"
+        style={{
+          height: '2px',
+          background: 'linear-gradient(90deg, transparent 0%, rgba(0,194,255,0.2) 20%, #00C2FF 50%, rgba(0,194,255,0.2) 80%, transparent 100%)',
+          boxShadow: '0 0 12px rgba(0,194,255,0.5), 0 0 40px rgba(0,194,255,0.15)',
+          animation: 'scanSweep 2s linear infinite',
+        }}
+      />
     </>
   )
 }
 
-function SuccessOverlay({ lines }: { lines: string[] }) {
+function StepCircle({ progress }: { progress: number }) {
+  const r = 14
+  const circ = 2 * Math.PI * r
+  const offset = circ * (1 - progress)
+  const done = progress >= 1
+  const color = done ? '#00FF88' : '#00C2FF'
   return (
-    <div className="absolute inset-0 flex flex-col justify-end p-4 sm:p-5 pointer-events-none z-10">
-      <div className="space-y-1.5">
-        {lines.map((line, i) => (
-          <motion.div
-            key={line}
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: i * 0.5 + 0.3, duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
-            className="flex items-center gap-2"
+    <div className="absolute top-3 right-3 z-10 pointer-events-none">
+      <svg width="36" height="36" viewBox="0 0 36 36">
+        <circle cx="18" cy="18" r={r} fill="rgba(10,15,30,0.7)" stroke="#1E2D45" strokeWidth="1.5" />
+        <circle
+          cx="18" cy="18" r={r}
+          fill="none" stroke={color} strokeWidth="2.5"
+          strokeDasharray={circ}
+          strokeDashoffset={offset}
+          strokeLinecap="round"
+          transform="rotate(-90 18 18)"
+          style={{
+            filter: `drop-shadow(0 0 4px ${color})`,
+            transition: 'stroke-dashoffset 0.5s ease-out, stroke 0.3s',
+          }}
+        />
+        <text
+          x="18" y="18" textAnchor="middle" dominantBaseline="central"
+          fill={color} fontSize="9" fontWeight="700"
+          style={{ fontFamily: "'JetBrains Mono', monospace" }}
+        >
+          {done ? '\u2713' : `${Math.round(progress * 100)}`}
+        </text>
+      </svg>
+    </div>
+  )
+}
+
+function DataReadout({ stepIndex, complete }: { stepIndex: number; complete: boolean }) {
+  const stepLabel = complete ? 'COMPLETE' : `STEP ${Math.min(stepIndex + 1, 3)}/3`
+  return (
+    <div className="absolute bottom-3 left-3 z-10 pointer-events-none">
+      <div
+        className="px-2 py-1.5 rounded"
+        style={{ backgroundColor: 'rgba(10,15,30,0.75)', backdropFilter: 'blur(4px)' }}
+      >
+        <div style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+          <span className="text-[9px] tracking-wider" style={{ color: '#8899BB' }}>LIVENESS: </span>
+          <span
+            className="text-[10px] font-bold tracking-wider"
+            style={{ color: complete ? '#00FF88' : '#00C2FF' }}
           >
-            <div className="w-1.5 h-1.5 rounded-full bg-[#00FF88] shrink-0" />
-            <span className="text-[10px] sm:text-xs font-semibold tracking-wider text-[#00FF88]">
-              {line}
-            </span>
-          </motion.div>
-        ))}
+            {stepLabel}
+          </span>
+        </div>
+        <div style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+          <span className="text-[9px] tracking-wider" style={{ color: '#8899BB' }}>CONFIDENCE: </span>
+          <span className="text-[10px] font-bold tracking-wider" style={{ color: '#8899BB' }}>--</span>
+        </div>
       </div>
     </div>
   )
@@ -207,7 +225,7 @@ function LivenessProgress({ step, timer }: { step: number; timer: number }) {
 }
 
 export function FaceCapture({ capturedImage, onCapture, onRetake, onProceed, onLivenessComplete }: FaceCaptureProps) {
-  const { t, tArr } = useT()
+  const { t } = useT()
   const webcamRef = useRef<Webcam>(null)
   const capturePressureRef = useRef<number | undefined>(undefined)
   const [permission, setPermission] = useState<'waiting' | 'granted' | 'denied'>('waiting')
@@ -221,14 +239,11 @@ export function FaceCapture({ capturedImage, onCapture, onRetake, onProceed, onL
   const stepStartRef = useRef(0)
   const livenessStartedRef = useRef(false)
 
-  const floatingLabels = [...tArr('face_labels'), 'NEURAL POINTS']
-  const successLines = [t('face_mapped'), t('face_liveness'), t('face_depth'), t('face_points')]
-
   const lang = t('face_align') === 'ALIGN FACE WITHIN FRAME' ? 'en' : 'fr'
 
   const statusText = useTypewriter(
     capturedImage
-      ? t('face_mapped')
+      ? (lang === 'fr' ? 'CAPTURE TERMINÉE' : 'CAPTURE COMPLETE')
       : livenessStep !== 'idle' && livenessStep !== 'confirm'
         ? STEP_CONFIG[livenessStep][lang === 'fr' ? 'labelFr' : 'labelEn']
         : livenessStep === 'confirm'
@@ -388,10 +403,9 @@ export function FaceCapture({ capturedImage, onCapture, onRetake, onProceed, onL
 
         {!capturedImage && permission === 'granted' && (
           <>
-            <CornerBrackets color={livenessStep === 'confirm' ? '#00FF88' : '#00C2FF'} />
+            <CornerBrackets color={livenessStep === 'confirm' ? '#00FF88' : '#00C2FF'} glow={livenessStep === 'confirm'} />
             <FaceOvalGuide progress={arcProgress} />
-            {livenessStep === 'idle' && <ScanLine />}
-            {livenessStep === 'idle' && <FloatingLabels labels={floatingLabels} />}
+            <ScanLine />
 
             <AnimatePresence mode="wait">
               {(livenessStep === 'center' || livenessStep === 'right' || livenessStep === 'left') && (
@@ -400,7 +414,11 @@ export function FaceCapture({ capturedImage, onCapture, onRetake, onProceed, onL
             </AnimatePresence>
 
             {livenessStep !== 'idle' && (
-              <LivenessProgress step={livenessStepIndex} timer={stepTimer} />
+              <>
+                <LivenessProgress step={livenessStepIndex} timer={stepTimer} />
+                <StepCircle progress={arcProgress} />
+                <DataReadout stepIndex={livenessStepIndex} complete={livenessStep === 'confirm'} />
+              </>
             )}
 
             {livenessStep === 'confirm' && (
@@ -421,9 +439,10 @@ export function FaceCapture({ capturedImage, onCapture, onRetake, onProceed, onL
 
         {capturedImage && showSuccess && (
           <>
-            <CornerBrackets color="#00FF88" />
-            <SuccessOverlay lines={successLines} />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#0A0F1E]/70 via-transparent to-transparent pointer-events-none" />
+            <CornerBrackets color="#00FF88" glow />
+            <StepCircle progress={1} />
+            <DataReadout stepIndex={3} complete />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#0A0F1E]/60 via-transparent to-transparent pointer-events-none" />
           </>
         )}
 
