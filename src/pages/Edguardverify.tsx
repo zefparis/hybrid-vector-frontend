@@ -11,7 +11,7 @@ type VerifyStep = 'id' | 'face' | 'checking' | 'success' | 'error'
 
 export function EdguardVerify() {
   const navigate = useNavigate()
-  const { setStudentInfo } = useEdguardStore()
+  const { institutionId, setStudentInfo } = useEdguardStore()
 
   const [step, setStep] = useState<VerifyStep>('id')
   const [studentId, setStudentId] = useState('')
@@ -47,21 +47,20 @@ export function EdguardVerify() {
         selfie_b64: selfie,
       })
 
-      if (result.success && result.match) {
+      if (result.verified) {
         setConfidence(result.similarity ?? 0)
-        setStudentInfo(studentId.trim(), result.institution_id ?? '')
-        setStep('success')
-        // Auto-redirect to session after 2s
-        setTimeout(() => navigate('/edguard/session'), 2000)
+        setStudentInfo(result.student_id, institutionId)
+        navigate('/edguard/session')
       } else {
-        setErrorMsg(result.error ?? 'IDENTITY_MISMATCH')
+        setConfidence(result.similarity ?? 0)
+        setErrorMsg(`IDENTITY_MISMATCH — similarity ${Math.round((result.similarity ?? 0) * 100)}%`)
         setStep('error')
       }
     } catch {
       setErrorMsg('NETWORK_ERROR')
       setStep('error')
     }
-  }, [studentId, selfieB64, setStudentInfo, navigate])
+  }, [studentId, selfieB64, institutionId, setStudentInfo, navigate])
 
   const handleRetry = useCallback(() => {
     setSelfieB64('')
@@ -316,8 +315,8 @@ export function EdguardVerify() {
                     VERIFICATION FAILED
                   </p>
                   <p className="text-xs max-w-xs" style={{ color: '#8899BB' }}>
-                    {errorMsg === 'IDENTITY_MISMATCH'
-                      ? 'Your face does not match the enrolled identity. Please try again.'
+                    {errorMsg.startsWith('IDENTITY_MISMATCH')
+                      ? `Your face does not match the enrolled identity. ${errorMsg.split('—').slice(1).join('—').trim()}`
                       : errorMsg === 'NOT_ENROLLED'
                       ? 'No biometric profile found for this student ID. Please enroll first.'
                       : 'Service unavailable. Please try again.'}

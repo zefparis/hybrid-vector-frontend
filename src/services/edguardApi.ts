@@ -104,15 +104,15 @@ export async function sessionCheckpoint(payload: CheckpointRequest): Promise<Che
     }
   }
 }
+
 export async function verifyStudent(payload: {
   student_id: string
   selfie_b64: string
 }): Promise<{
-  success: boolean
-  match: boolean
-  similarity?: number
-  institution_id?: string
-  error?: string
+  verified: boolean
+  similarity: number
+  student_id: string
+  first_name: string
 }> {
   const { data } = await client.post('/edguard/verify', payload)
   return data
