@@ -105,6 +105,32 @@ export async function sessionCheckpoint(payload: CheckpointRequest): Promise<Che
   }
 }
 
+export async function lookupStudent(payload: {
+  first_name: string
+  last_name: string
+  tenant_id: string
+}): Promise<{
+  found: boolean
+  student_id?: string
+  first_name?: string
+}> {
+  try {
+    const { data } = await client.post('/edguard/lookup', payload)
+    return data
+  } catch (err: unknown) {
+    if (axios.isAxiosError(err) && err.response?.data) {
+      return err.response.data as {
+        found: boolean
+        student_id?: string
+        first_name?: string
+      }
+    }
+    return {
+      found: false,
+    }
+  }
+}
+
 export async function verifyStudent(payload: {
   student_id: string
   selfie_b64: string
