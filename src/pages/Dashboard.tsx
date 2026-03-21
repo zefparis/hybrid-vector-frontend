@@ -117,7 +117,7 @@ export function Dashboard() {
             <p className="text-hv-muted text-sm mt-1">
               {totalSessions > 0
                 ? `${totalSessions} session${totalSessions !== 1 ? 's' : ''} recorded this session`
-                : 'No sessions yet — run a demo to see results here'}
+                : 'No sessions yet — enroll in EDGUARD to see results here'}
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -182,11 +182,11 @@ export function Dashboard() {
               {t('dash_no_sessions')}
             </p>
             <a
-              href="/demo"
+              href="/edguard"
               className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm bg-hv-cyan text-hv-bg hover:bg-hv-cyan-dark transition-all duration-200"
               style={{ boxShadow: '0 0 16px rgba(0,194,255,0.35)' }}
             >
-              Go to Demo
+              Go to EDGUARD
             </a>
           </motion.div>
         ) : (

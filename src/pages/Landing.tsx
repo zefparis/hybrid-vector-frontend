@@ -137,7 +137,7 @@ export function Landing() {
 
           <motion.div variants={itemVariants} className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <button
-              onClick={() => navigate('/demo')}
+              onClick={() => navigate('/edguard')}
               className="group flex items-center gap-2.5 px-8 py-4 rounded-xl font-bold text-base bg-hv-cyan text-hv-bg transition-all duration-200 hover:bg-hv-cyan-dark"
               style={{ boxShadow: '0 0 24px rgba(0,194,255,0.45), 0 0 48px rgba(0,194,255,0.2)' }}
             >
@@ -355,7 +355,7 @@ export function Landing() {
               Run the full verification pipeline in your browser. No account required.
             </p>
             <button
-              onClick={() => navigate('/demo')}
+              onClick={() => navigate('/edguard')}
               className="group inline-flex items-center gap-2.5 px-8 py-4 rounded-xl font-bold text-base bg-hv-cyan text-hv-bg hover:bg-hv-cyan-dark transition-all duration-200"
               style={{ boxShadow: '0 0 24px rgba(0,194,255,0.45)' }}
             >

@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { createJSONStorage, persist } from 'zustand/middleware'
 import type { EnrollResponse, CheckpointResponse } from '@/services/edguardApi'
 
 type EdguardRole = 'STUDENT' | 'TEACHER' | 'BENEFICIARY'
@@ -65,44 +66,73 @@ const initialState: EdguardState = {
   currentStatus: 'IDLE',
 }
 
-export const useEdguardStore = create<EdguardState & EdguardActions>((set) => ({
-  ...initialState,
+const PERSIST_KEY = 'edguard-store-v1'
 
-  setPersonalInfo: (firstName, lastName, email, role) =>
-    set({ firstName, lastName, email, role }),
+export const useEdguardStore = create<EdguardState & EdguardActions>()(
+  persist(
+    (set) => ({
+      ...initialState,
 
-  setStudentInfo: (id, instId) => set({ studentId: id, institutionId: instId }),
+      setPersonalInfo: (firstName, lastName, email, role) =>
+        set({ firstName, lastName, email, role }),
 
-  setSelfie: (b64) => set({ selfieB64: b64 }),
+      setStudentInfo: (id, instId) => set({ studentId: id, institutionId: instId }),
 
-  setEnrollmentMetrics: (cognitiveScore, stroopAccuracy, reflexVelocity) =>
-    set({ cognitiveScore, stroopAccuracy, reflexVelocity }),
+      setSelfie: (b64) => set({ selfieB64: b64 }),
 
-  setSelfieDescriptor: (d) => set({ selfieDescriptor: d }),
+      setEnrollmentMetrics: (cognitiveScore, stroopAccuracy, reflexVelocity) =>
+        set({ cognitiveScore, stroopAccuracy, reflexVelocity }),
 
-  setEnrollmentResult: (r) => set({ enrollmentResult: r }),
+      setSelfieDescriptor: (d) => set({ selfieDescriptor: d }),
 
-  startSession: () =>
-    set({
-      sessionId: crypto.randomUUID(),
-      sessionActive: true,
-      sessionStartTime: Date.now(),
-      checkpointNumber: 0,
-      checkpoints: [],
-      currentStatus: 'IDLE',
+      setEnrollmentResult: (r) => set({ enrollmentResult: r }),
+
+      startSession: () =>
+        set({
+          sessionId: crypto.randomUUID(),
+          sessionActive: true,
+          sessionStartTime: Date.now(),
+          checkpointNumber: 0,
+          checkpoints: [],
+          currentStatus: 'IDLE',
+        }),
+
+      addCheckpoint: (c) =>
+        set((state) => ({
+          checkpoints: [...state.checkpoints, c],
+          checkpointNumber: state.checkpointNumber + 1,
+          currentStatus: c.alert_level,
+        })),
+
+      endSession: () =>
+        set({
+          sessionActive: false,
+        }),
+
+      reset: () => set({ ...initialState }),
     }),
-
-  addCheckpoint: (c) =>
-    set((state) => ({
-      checkpoints: [...state.checkpoints, c],
-      checkpointNumber: state.checkpointNumber + 1,
-      currentStatus: c.alert_level,
-    })),
-
-  endSession: () =>
-    set({
-      sessionActive: false,
-    }),
-
-  reset: () => set({ ...initialState }),
-}))
+    {
+      name: PERSIST_KEY,
+      storage: createJSONStorage(() => localStorage),
+      partialize: (state) => ({
+        firstName: state.firstName,
+        lastName: state.lastName,
+        email: state.email,
+        role: state.role,
+        studentId: state.studentId,
+        institutionId: state.institutionId,
+        selfieB64: state.selfieB64,
+        enrollmentResult: state.enrollmentResult,
+        cognitiveScore: state.cognitiveScore,
+        stroopAccuracy: state.stroopAccuracy,
+        reflexVelocity: state.reflexVelocity,
+        sessionId: state.sessionId,
+        sessionActive: state.sessionActive,
+        sessionStartTime: state.sessionStartTime,
+        checkpointNumber: state.checkpointNumber,
+        checkpoints: state.checkpoints,
+        currentStatus: state.currentStatus,
+      }),
+    },
+  ),
+)
