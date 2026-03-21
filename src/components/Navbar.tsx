@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Shield, LayoutDashboard, Zap, Menu, X, Home, GraduationCap } from 'lucide-react'
+import { Shield, LayoutDashboard, Menu, X, Home, GraduationCap } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useT, useLangStore } from '@/i18n/useLang'
 
@@ -13,7 +13,6 @@ export function Navbar() {
 
   const navLinks = [
     { to: '/', label: 'Home', icon: Home },
-    { to: '/demo', label: t('nav_live_demo'), icon: Zap },
     { to: '/edguard', label: 'EDGUARD', icon: GraduationCap },
     { to: '/dashboard', label: t('nav_dashboard'), icon: LayoutDashboard },
   ]
@@ -71,9 +70,6 @@ export function Navbar() {
               <div className="w-1.5 h-1.5 rounded-full bg-hv-green animate-pulse" />
               <span className="text-xs text-hv-green font-medium">{t('nav_system_online')}</span>
             </div>
-            <Link to="/demo" className="hidden sm:flex btn-primary text-sm py-2 px-4 rounded-lg font-semibold">
-              {t('nav_try_demo')}
-            </Link>
             <button
               onClick={() => setOpen(o => !o)}
               className="sm:hidden flex items-center justify-center w-10 h-10 rounded-lg border border-white/10 text-hv-muted hover:text-hv-text transition-all duration-200"

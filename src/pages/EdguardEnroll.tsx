@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { QRCodeSVG } from 'qrcode.react'
 import { FaceCapture } from '@/components/FaceCapture'
@@ -345,6 +345,7 @@ function NeuralMetricRow({
 
 /* ─── Success Screen ─── */
 function SuccessScreen() {
+  const navigate = useNavigate()
   const store = useEdguardStore()
   const { enrollmentResult } = store
   const [animate, setAnimate] = useState(false)
@@ -573,6 +574,7 @@ function SuccessScreen() {
           Démarrer une session →
         </Link>
         <button
+          onClick={() => navigate('/edguard/profile')}
           className="w-full py-3 rounded-xl font-bold text-xs tracking-widest transition-all duration-300"
           style={{ border: '1.5px solid rgba(0,194,255,0.3)', color: CYAN, backgroundColor: 'transparent' }}
         >
