@@ -172,6 +172,8 @@ export function Demo() {
   const {
     phase,
     faceImageB64,
+    faceDescriptor,
+    faceConfidence,
     vocalData,
     reflexResult,
     currentSession,
@@ -180,6 +182,7 @@ export function Demo() {
     startAnalysis,
     setResult,
     setFaceImage,
+    setFaceDetection,
     setVocalData,
     setReflexResult,
     reset,
@@ -210,6 +213,11 @@ export function Demo() {
     }
     setFaceImage(img)
   }, [isMobile, recordTap, setFaceImage])
+
+  const handleLivenessComplete = useCallback((_frames: string[], descriptor?: Float32Array) => {
+    const confidence = descriptor ? 0.92 : 0
+    setFaceDetection(descriptor ?? null, confidence)
+  }, [setFaceDetection])
 
   const handleFaceRetake = useCallback(() => {
     setFaceImage('')
@@ -272,7 +280,9 @@ export function Demo() {
       const result = await analyzeSession({
         tenant_id: tenantId,
         user_id: `user-${Date.now()}`,
-        face_image_b64: faceImageB64 ?? '',
+        face_detected: !!faceDescriptor,
+        face_confidence: faceConfidence,
+        face_descriptor: faceDescriptor ? Array.from(faceDescriptor) : undefined,
         cognitive_session_id: crypto.randomUUID(),
         cognitive_score_override: cognitiveScoreOverride,
       })
@@ -283,7 +293,7 @@ export function Demo() {
       setResult(mock)
       playSuccess()
     }
-  }, [vocalData, reflexResult, faceImageB64, startAnalysis, setResult, getSnapshot, stopScan])
+  }, [vocalData, reflexResult, faceDescriptor, faceConfidence, startAnalysis, setResult, getSnapshot, stopScan])
 
   const handleReset = useCallback(() => {
     analysisCalledRef.current = false
@@ -317,6 +327,7 @@ export function Demo() {
                   onCapture={handleFaceCapture}
                   onRetake={handleFaceRetake}
                   onProceed={handleFaceProceed}
+                  onLivenessComplete={handleLivenessComplete}
                 />
               </motion.div>
             )}

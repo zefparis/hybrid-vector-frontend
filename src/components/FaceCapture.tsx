@@ -4,13 +4,14 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { playCapture, playScan } from '@/utils/sounds'
 import { useTypewriter } from '@/hooks/useTypewriter'
 import { useT } from '@/i18n/useLang'
+import { useFaceApi } from '@/hooks/useFaceApi'
 
 interface FaceCaptureProps {
   capturedImage: string | null
   onCapture: (imageSrc: string, pointerPressure?: number) => void
   onRetake: () => void
   onProceed: () => void
-  onLivenessComplete?: (frames: string[]) => void
+  onLivenessComplete?: (frames: string[], descriptor?: Float32Array) => void
 }
 
 type LivenessStep = 'idle' | 'warmup' | 'center' | 'right' | 'left' | 'confirm'
@@ -233,6 +234,13 @@ export function FaceCapture({ capturedImage, onCapture, onRetake, onProceed, onL
   const stepStartRef = useRef(0)
   const livenessStartedRef = useRef(false)
 
+  // face-api.js — client-side face detection
+  const { loaded: faceApiLoaded, detectFace } = useFaceApi()
+  const [faceDetected, setFaceDetected] = useState(false)
+  const [faceScore, setFaceScore] = useState(0)
+  const descriptorRef = useRef<Float32Array | null>(null)
+  const detectionLoopRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
   const lang = t('face_align') === 'ALIGN FACE WITHIN FRAME' ? 'en' : 'fr'
 
   const statusText = useTypewriter(
@@ -248,13 +256,40 @@ export function FaceCapture({ capturedImage, onCapture, onRetake, onProceed, onL
     35,
   )
 
-  // FIX 1: Pre-warm deepface on mount
+  // Real-time face detection loop during active liveness steps
   useEffect(() => {
-    fetch('https://deepface-api-mid3.onrender.com/health', {
-      method: 'GET',
-      signal: AbortSignal.timeout(5000),
-    }).catch(() => {})
-  }, [])
+    const isActiveStep = livenessStep === 'center' || livenessStep === 'right' || livenessStep === 'left'
+    if (!faceApiLoaded || !isActiveStep || capturedImage) {
+      setFaceDetected(false)
+      setFaceScore(0)
+      if (detectionLoopRef.current) clearTimeout(detectionLoopRef.current)
+      return
+    }
+
+    let cancelled = false
+    const runDetection = async () => {
+      const video = webcamRef.current?.video
+      if (video && video.readyState >= 4 && !cancelled) {
+        const result = await detectFace(video)
+        if (!cancelled) {
+          setFaceDetected(!!result)
+          setFaceScore(result?.score ?? 0)
+          if (result?.descriptor) {
+            descriptorRef.current = result.descriptor
+          }
+        }
+      }
+      if (!cancelled) {
+        detectionLoopRef.current = setTimeout(runDetection, 300)
+      }
+    }
+    runDetection()
+
+    return () => {
+      cancelled = true
+      if (detectionLoopRef.current) clearTimeout(detectionLoopRef.current)
+    }
+  }, [livenessStep, faceApiLoaded, capturedImage, detectFace])
 
   useEffect(() => {
     if (capturedImage) setShowSuccess(true)
@@ -298,7 +333,7 @@ export function FaceCapture({ capturedImage, onCapture, onRetake, onProceed, onL
       playScan()
       // Pass center frame (first) to onCapture for backward compat
       onCapture(newFrames[0])
-      onLivenessComplete?.(newFrames)
+      onLivenessComplete?.(newFrames, descriptorRef.current ?? undefined)
     }
   }, [captureFrame, onCapture, onLivenessComplete])
 
@@ -460,12 +495,31 @@ export function FaceCapture({ capturedImage, onCapture, onRetake, onProceed, onL
               )}
             </AnimatePresence>
 
-            {livenessStep !== 'idle' && (
+            {livenessStep !== 'idle' && livenessStep !== 'warmup' && (
               <>
                 <LivenessProgress step={livenessStepIndex} timer={stepTimer} />
                 <StepCircle progress={arcProgress} />
                 {livenessStep !== 'confirm' && <DataReadout stepIndex={livenessStepIndex} />}
               </>
+            )}
+
+            {(livenessStep === 'center' || livenessStep === 'right' || livenessStep === 'left') && (
+              <div className="absolute top-3 left-3 z-10 pointer-events-none">
+                <div className="rounded px-2 py-1" style={{ backgroundColor: 'rgba(10,15,30,0.7)' }}>
+                  <div className="flex items-center gap-1.5" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+                    <div
+                      className="w-2 h-2 rounded-full"
+                      style={{
+                        backgroundColor: faceDetected ? '#00FF88' : '#FF3355',
+                        boxShadow: faceDetected ? '0 0 6px #00FF88' : '0 0 6px #FF3355',
+                      }}
+                    />
+                    <span className="text-[9px] font-bold tracking-wider" style={{ color: faceDetected ? '#00FF88' : '#FF3355' }}>
+                      {faceDetected ? `FACE ${Math.round(faceScore * 100)}%` : 'NO FACE'}
+                    </span>
+                  </div>
+                </div>
+              </div>
             )}
 
             {livenessStep === 'confirm' && (

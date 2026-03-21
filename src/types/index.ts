@@ -25,7 +25,9 @@ export interface TrustScoreBreakdown {
 export interface AnalyzePayload {
   tenant_id: string
   user_id: string
-  face_image_b64: string
+  face_detected: boolean
+  face_confidence: number
+  face_descriptor?: number[]
   cognitive_session_id: string
   cognitive_score_override?: number
 }

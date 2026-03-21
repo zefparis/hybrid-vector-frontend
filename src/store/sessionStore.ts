@@ -7,6 +7,8 @@ interface SessionState {
   sessionHistory: SessionResult[]
   isAnalyzing: boolean
   faceImageB64: string | null
+  faceDescriptor: Float32Array | null
+  faceConfidence: number
   vocalData: VocalImportData | null
   reflexResult: ReflexResult | null
   error: string | null
@@ -17,6 +19,7 @@ interface SessionActions {
   startAnalysis: () => void
   setResult: (result: SessionResult) => void
   setFaceImage: (b64: string) => void
+  setFaceDetection: (descriptor: Float32Array | null, confidence: number) => void
   setVocalData: (data: VocalImportData) => void
   setReflexResult: (result: ReflexResult) => void
   setError: (error: string | null) => void
@@ -29,6 +32,8 @@ const initialState: SessionState = {
   sessionHistory: [],
   isAnalyzing: false,
   faceImageB64: null,
+  faceDescriptor: null,
+  faceConfidence: 0,
   vocalData: null,
   reflexResult: null,
   error: null,
@@ -50,6 +55,8 @@ export const useSessionStore = create<SessionState & SessionActions>((set) => ({
     })),
 
   setFaceImage: (b64) => set({ faceImageB64: b64 }),
+
+  setFaceDetection: (descriptor, confidence) => set({ faceDescriptor: descriptor, faceConfidence: confidence }),
 
   setVocalData: (data) => set({ vocalData: data }),
 
