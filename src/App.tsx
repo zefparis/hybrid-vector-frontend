@@ -6,6 +6,7 @@ import { Dashboard } from '@/pages/Dashboard'
 import { EdguardHome } from '@/pages/EdguardHome'
 import { EdguardEnroll } from '@/pages/EdguardEnroll'
 import { EdguardSession } from '@/pages/EdguardSession'
+import { EdguardVerify } from '@/pages/Edguardverify'
 
 export default function App() {
   return (
@@ -18,6 +19,7 @@ export default function App() {
         <Route path="/edguard/enroll" element={<EdguardEnroll />} />
         <Route path="/edguard/session" element={<EdguardSession />} />
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/edguard/verify" element={<EdguardVerify />} />
       </Routes>
     </div>
   )
