@@ -13,12 +13,14 @@ interface FaceCaptureProps {
   onLivenessComplete?: (frames: string[]) => void
 }
 
-type LivenessStep = 'idle' | 'center' | 'right' | 'left' | 'confirm'
+type LivenessStep = 'idle' | 'warmup' | 'center' | 'right' | 'left' | 'confirm'
 
 const VIDEO_CONSTRAINTS = { width: 640, height: 480, facingMode: 'user' as const }
 const STEP_DURATION_MS = 2000
 
-const STEP_CONFIG: Record<Exclude<LivenessStep, 'idle' | 'confirm'>, {
+const WARMUP_DURATION_MS = 3000
+
+const STEP_CONFIG: Record<Exclude<LivenessStep, 'idle' | 'warmup' | 'confirm'>, {
   labelFr: string; labelEn: string; index: number
 }> = {
   center: { labelFr: 'REGARDEZ DROIT DEVANT', labelEn: 'LOOK STRAIGHT AHEAD', index: 0 },
@@ -236,13 +238,23 @@ export function FaceCapture({ capturedImage, onCapture, onRetake, onProceed, onL
   const statusText = useTypewriter(
     capturedImage
       ? (lang === 'fr' ? 'CAPTURE TERMINÉE' : 'CAPTURE COMPLETE')
-      : livenessStep !== 'idle' && livenessStep !== 'confirm'
+      : livenessStep === 'warmup'
+        ? (lang === 'fr' ? 'INITIALISATION...' : 'INITIALIZING...')
+      : livenessStep === 'confirm'
+        ? (lang === 'fr' ? 'IDENTITÉ CONFIRMÉE ✓' : 'IDENTITY CONFIRMED ✓')
+      : livenessStep !== 'idle'
         ? STEP_CONFIG[livenessStep][lang === 'fr' ? 'labelFr' : 'labelEn']
-        : livenessStep === 'confirm'
-          ? (lang === 'fr' ? 'IDENTITÉ CONFIRMÉE ✓' : 'IDENTITY CONFIRMED ✓')
-          : t('face_align'),
+        : t('face_align'),
     35,
   )
+
+  // FIX 1: Pre-warm deepface on mount
+  useEffect(() => {
+    fetch('https://deepface-api-mid3.onrender.com/health', {
+      method: 'GET',
+      signal: AbortSignal.timeout(5000),
+    }).catch(() => {})
+  }, [])
 
   useEffect(() => {
     if (capturedImage) setShowSuccess(true)
@@ -292,7 +304,7 @@ export function FaceCapture({ capturedImage, onCapture, onRetake, onProceed, onL
 
   // Timer for each liveness step
   useEffect(() => {
-    if (livenessStep === 'idle' || livenessStep === 'confirm') {
+    if (livenessStep === 'idle' || livenessStep === 'warmup' || livenessStep === 'confirm') {
       if (timerRef.current) clearInterval(timerRef.current)
       return
     }
@@ -325,9 +337,28 @@ export function FaceCapture({ capturedImage, onCapture, onRetake, onProceed, onL
   const startLiveness = useCallback(() => {
     if (livenessStartedRef.current || capturedImage) return
     livenessStartedRef.current = true
-    setLivenessStep('center')
+    setLivenessStep('warmup')
     setLivenessFrames([])
   }, [capturedImage])
+
+  // FIX 2: Auto-advance from warmup to center after 3 seconds
+  const [warmupProgress, setWarmupProgress] = useState(0)
+  useEffect(() => {
+    if (livenessStep !== 'warmup') {
+      setWarmupProgress(0)
+      return
+    }
+    const start = Date.now()
+    const iv = setInterval(() => {
+      const elapsed = Date.now() - start
+      setWarmupProgress(Math.min(elapsed / WARMUP_DURATION_MS, 1))
+      if (elapsed >= WARMUP_DURATION_MS) {
+        clearInterval(iv)
+        setLivenessStep('center')
+      }
+    }, 50)
+    return () => clearInterval(iv)
+  }, [livenessStep])
 
   const handleRetake = useCallback(() => {
     livenessStartedRef.current = false
@@ -338,11 +369,11 @@ export function FaceCapture({ capturedImage, onCapture, onRetake, onProceed, onL
     onRetake()
   }, [onRetake])
 
-  const livenessStepIndex = livenessStep === 'idle' ? -1
+  const livenessStepIndex = livenessStep === 'idle' || livenessStep === 'warmup' ? -1
     : livenessStep === 'confirm' ? 3
     : STEP_CONFIG[livenessStep].index
 
-  const arcProgress = livenessStep === 'idle' ? 0
+  const arcProgress = livenessStep === 'idle' || livenessStep === 'warmup' ? 0
     : livenessStep === 'confirm' ? 1
     : livenessStepIndex / 3
 
@@ -391,6 +422,30 @@ export function FaceCapture({ capturedImage, onCapture, onRetake, onProceed, onL
 
         {capturedImage && (
           <img src={capturedImage} alt="Captured" className="w-full h-full object-cover block" />
+        )}
+
+        {!capturedImage && permission === 'granted' && livenessStep === 'warmup' && (
+          <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-4 bg-[#0A0F1E]/80">
+            <motion.div
+              className="w-3 h-3 rounded-full"
+              style={{ backgroundColor: '#00C2FF', filter: 'drop-shadow(0 0 8px #00C2FF)' }}
+              animate={{ scale: [1, 1.6, 1], opacity: [1, 0.5, 1] }}
+              transition={{ duration: 1.2, repeat: Infinity, ease: 'easeInOut' }}
+            />
+            <p className="text-xs font-bold tracking-[0.2em]" style={{ color: '#00C2FF' }}>
+              {lang === 'fr' ? 'INITIALISATION DU MOTEUR BIOMÉTRIQUE...' : 'INITIALIZING BIOMETRIC ENGINE...'}
+            </p>
+            <p className="text-[10px] tracking-wider" style={{ color: '#8899BB' }}>
+              {lang === 'fr' ? 'Calibrage du scanner neural' : 'Calibrating neural scanner'}
+            </p>
+            <div className="w-48 h-1 rounded-full overflow-hidden" style={{ backgroundColor: '#1E2D45' }}>
+              <motion.div
+                className="h-full rounded-full"
+                style={{ backgroundColor: '#00C2FF', width: `${warmupProgress * 100}%` }}
+                transition={{ duration: 0.1 }}
+              />
+            </div>
+          </div>
         )}
 
         {!capturedImage && permission === 'granted' && (
@@ -459,6 +514,21 @@ export function FaceCapture({ capturedImage, onCapture, onRetake, onProceed, onL
         </span>
       </div>
 
+      {!capturedImage && livenessStep === 'warmup' && (
+        <div className="flex items-center justify-center py-3.5">
+          <motion.div
+            className="flex items-center gap-2"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
+            <div className="w-2 h-2 rounded-full bg-[#00C2FF] animate-pulse" />
+            <span className="text-xs font-bold tracking-widest" style={{ color: '#00C2FF' }}>
+              {lang === 'fr' ? 'PRÉPARATION...' : 'PREPARING...'}
+            </span>
+          </motion.div>
+        </div>
+      )}
+
       {!capturedImage && livenessStep === 'idle' && (
         <button
           onClick={startLiveness}
@@ -482,7 +552,7 @@ export function FaceCapture({ capturedImage, onCapture, onRetake, onProceed, onL
         </button>
       )}
 
-      {!capturedImage && livenessStep !== 'idle' && livenessStep !== 'confirm' && (
+      {!capturedImage && livenessStep !== 'idle' && livenessStep !== 'warmup' && livenessStep !== 'confirm' && (
         <div className="flex items-center justify-center py-3.5">
           <motion.div
             className="flex items-center gap-2"
