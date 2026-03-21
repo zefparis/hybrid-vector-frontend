@@ -6,7 +6,7 @@ import { EdguardHome } from '@/pages/EdguardHome'
 import { EdguardEnroll } from '@/pages/EdguardEnroll'
 import { EdguardSession } from '@/pages/EdguardSession'
 import { EdguardVerify } from '@/pages/Edguardverify'
-import { EdguardProfile } from '@/pages/EdguardProfile'
+import { EdguardProfile } from './pages/EdguardProfile'
 
 export default function App() {
   return (
