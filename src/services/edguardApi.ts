@@ -15,7 +15,6 @@ const client = axios.create({
 export interface EnrollRequest {
   student_id: string
   institution_id: string
-  official_photo_b64: string
   selfie_b64: string
   cognitive_score_override?: number
 }

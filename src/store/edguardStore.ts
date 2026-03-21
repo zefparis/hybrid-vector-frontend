@@ -5,9 +5,7 @@ interface EdguardState {
   // Enrollment
   studentId: string
   institutionId: string
-  officialPhotoB64: string | null
   selfieB64: string | null
-  officialDescriptor: Float32Array | null
   selfieDescriptor: Float32Array | null
   enrollmentResult: EnrollResponse | null
 
@@ -22,9 +20,7 @@ interface EdguardState {
 
 interface EdguardActions {
   setStudentInfo: (id: string, instId: string) => void
-  setOfficialPhoto: (b64: string) => void
   setSelfie: (b64: string) => void
-  setOfficialDescriptor: (d: Float32Array | null) => void
   setSelfieDescriptor: (d: Float32Array | null) => void
   setEnrollmentResult: (r: EnrollResponse) => void
   startSession: () => void
@@ -36,9 +32,7 @@ interface EdguardActions {
 const initialState: EdguardState = {
   studentId: '',
   institutionId: (import.meta.env.VITE_INSTITUTION_ID as string) ?? '',
-  officialPhotoB64: null,
   selfieB64: null,
-  officialDescriptor: null,
   selfieDescriptor: null,
   enrollmentResult: null,
   sessionId: '',
@@ -54,11 +48,7 @@ export const useEdguardStore = create<EdguardState & EdguardActions>((set) => ({
 
   setStudentInfo: (id, instId) => set({ studentId: id, institutionId: instId }),
 
-  setOfficialPhoto: (b64) => set({ officialPhotoB64: b64 }),
-
   setSelfie: (b64) => set({ selfieB64: b64 }),
-
-  setOfficialDescriptor: (d) => set({ officialDescriptor: d }),
 
   setSelfieDescriptor: (d) => set({ selfieDescriptor: d }),
 

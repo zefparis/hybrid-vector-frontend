@@ -17,7 +17,7 @@ const ENROLLMENT_URL = 'https://hybrid-vector-frontend.vercel.app/edguard/enroll
 const isMobileDevice =
   /Android|iPhone|iPad/i.test(navigator.userAgent) || 'ontouchstart' in window
 
-type EnrollStep = 1 | 2 | 3 | 4 | 5 | 6 | 'analysis' | 'success' | 'error'
+type EnrollStep = 1 | 2 | 3 | 4 | 5 | 'analysis' | 'success' | 'error'
 
 const HEX_PATTERN = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='49' viewBox='0 0 28 49'%3E%3Cg fill-rule='evenodd'%3E%3Cg fill='%2300C2FF' fill-opacity='0.03'%3E%3Cpath d='M13.99 9.25l13 7.5v15l-13 7.5L1 31.75v-15l12.99-7.5zM3 17.9v12.7l10.99 6.34 11-6.35V17.9l-11-6.34L3 17.9z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
 
@@ -25,7 +25,6 @@ function StepIndicator({ current }: { current: number }) {
   const { t } = useT()
   const steps = [
     t('edguard_student_id'),
-    t('edguard_official_photo'),
     t('edguard_selfie'),
     'VOCAL',
     'RÉFLEXE',
@@ -74,7 +73,7 @@ function EnrollHeader({ step }: { step: number }) {
           </span>
         </div>
         <span className="text-[10px] font-bold tracking-widest" style={{ color: '#00C2FF' }}>
-          {t('edguard_step')} {step}/6
+          {t('edguard_step')} {step}/5
         </span>
       </div>
       <div className="h-px w-full my-3" style={{ backgroundColor: '#1E2D45' }} />
@@ -140,105 +139,9 @@ function Step1({ onNext }: { onNext: () => void }) {
   )
 }
 
-/* ─── Step 2: Official Photo Upload ─── */
-function Step2({ onNext }: { onNext: () => void }) {
-  const { t } = useT()
-  const { officialPhotoB64, setOfficialPhoto } = useEdguardStore()
-  const inputRef = useRef<HTMLInputElement>(null)
-  const [dragOver, setDragOver] = useState(false)
-
-  const handleFile = useCallback((file: File) => {
-    if (!file.type.startsWith('image/')) return
-    const reader = new FileReader()
-    reader.onload = () => {
-      const result = reader.result as string
-      setOfficialPhoto(result)
-    }
-    reader.readAsDataURL(file)
-  }, [setOfficialPhoto])
-
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault()
-    setDragOver(false)
-    const file = e.dataTransfer.files[0]
-    if (file) handleFile(file)
-  }, [handleFile])
-
-  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) handleFile(file)
-  }, [handleFile])
-
-  return (
-    <div className="flex flex-col gap-4">
-      <p className="text-[10px] font-semibold tracking-widest" style={{ color: '#8899BB' }}>
-        {t('edguard_official_photo')} (carte étudiant / CNI)
-      </p>
-      <p className="text-[10px] tracking-wider" style={{ color: '#8899BB' }}>
-        La photo doit être nette et le visage visible
-      </p>
-
-      {!officialPhotoB64 ? (
-        <div
-          onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}
-          onDragLeave={() => setDragOver(false)}
-          onDrop={handleDrop}
-          onClick={() => inputRef.current?.click()}
-          className="w-full rounded-xl flex flex-col items-center justify-center gap-3 py-12 cursor-pointer transition-all duration-300"
-          style={{
-            backgroundColor: '#0A0F1E',
-            border: `2px dashed ${dragOver ? '#00C2FF' : '#1E2D45'}`,
-          }}
-        >
-          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#8899BB" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-            <polyline points="17 8 12 3 7 8" />
-            <line x1="12" y1="3" x2="12" y2="15" />
-          </svg>
-          <span className="text-xs font-semibold tracking-wider" style={{ color: '#8899BB' }}>
-            Glisser-déposer ou cliquer
-          </span>
-          <span className="text-[10px] tracking-wider" style={{ color: '#8899BB' }}>
-            JPEG, PNG
-          </span>
-          <input
-            ref={inputRef}
-            type="file"
-            accept="image/jpeg,image/png"
-            onChange={handleInputChange}
-            className="hidden"
-          />
-        </div>
-      ) : (
-        <div className="relative rounded-xl overflow-hidden" style={{ border: '1px solid #1E2D45' }}>
-          <img src={officialPhotoB64} alt="Official" className="w-full h-48 object-cover" />
-          <div className="absolute inset-0 flex items-end justify-end p-3">
-            <button
-              onClick={() => setOfficialPhoto('')}
-              className="text-[10px] font-semibold tracking-wider px-3 py-1.5 rounded-lg transition-all duration-200"
-              style={{ backgroundColor: 'rgba(10,15,30,0.8)', color: '#8899BB', border: '1px solid #1E2D45' }}
-            >
-              CHANGER
-            </button>
-          </div>
-        </div>
-      )}
-
-      <button
-        onClick={onNext}
-        disabled={!officialPhotoB64}
-        className="w-full py-3.5 rounded-xl font-bold text-sm tracking-wider transition-all duration-300 disabled:opacity-30"
-        style={{ backgroundColor: '#00C2FF', color: '#0A0F1E', boxShadow: officialPhotoB64 ? '0 0 20px rgba(0,194,255,0.3)' : 'none' }}
-      >
-        Continuer →
-      </button>
-    </div>
-  )
-}
-
-/* ─── Step 3: Live Selfie ─── */
-function Step3({ onNext }: { onNext: () => void }) {
-  const { officialPhotoB64, selfieB64, setSelfie } = useEdguardStore()
+/* ─── Step 2: Live Selfie (biometric reference) ─── */
+function Step2Selfie({ onNext }: { onNext: () => void }) {
+  const { selfieB64, setSelfie } = useEdguardStore()
 
   const handleCapture = useCallback((img: string) => {
     setSelfie(img)
@@ -251,15 +154,11 @@ function Step3({ onNext }: { onNext: () => void }) {
   return (
     <div className="flex flex-col gap-4">
       <p className="text-[10px] font-semibold tracking-widest" style={{ color: '#8899BB' }}>
-        ALIGNEZ VOTRE VISAGE COMME SUR LA PHOTO OFFICIELLE
+        CAPTURE BIOMÉTRIQUE — PHOTO DE RÉFÉRENCE
       </p>
-
-      {officialPhotoB64 && (
-        <div className="flex items-center gap-2 mb-1">
-          <img src={officialPhotoB64} alt="Reference" className="w-12 h-12 rounded-lg object-cover" style={{ border: '1px solid #1E2D45' }} />
-          <span className="text-[10px] tracking-wider" style={{ color: '#8899BB' }}>Photo de référence</span>
-        </div>
-      )}
+      <p className="text-[10px] tracking-wider" style={{ color: '#8899BB' }}>
+        Ce selfie sera votre identité biométrique enregistrée
+      </p>
 
       <FaceCapture
         capturedImage={selfieB64}
@@ -546,16 +445,16 @@ export function EdguardEnroll() {
 
   // Start sensor collection when entering selfie step
   useEffect(() => {
-    if (step === 3) startScan()
+    if (step === 2) startScan()
   }, [step, startScan])
 
-  // Step 4: Vocal complete → advance to step 5 (Reflex)
+  // Step 3: Vocal complete → advance to step 4 (Reflex)
   const handleVocalComplete = useCallback((data: VocalImportData) => {
     setVocalData(data)
-    setTimeout(() => setStep(5), 800)
+    setTimeout(() => setStep(4), 800)
   }, [])
 
-  // Step 5: Reflex complete → advance to analysis
+  // Step 4: Reflex complete → advance to analysis
   const handleReflexComplete = useCallback((result: ReflexResult) => {
     setReflexResult(result)
     setTimeout(() => setStep('analysis'), 1000)
@@ -593,10 +492,9 @@ export function EdguardEnroll() {
     console.log('[EDGUARD] cognitive score:', { raw: cogScore, normalized: cognitiveScoreOverride, isMobile })
 
     try {
-      const officialB64 = store.officialPhotoB64 ?? ''
       const selfieB64 = store.selfieB64 ?? ''
 
-      if (!officialB64 || !selfieB64) {
+      if (!selfieB64) {
         setErrorCode('EMBEDDING_FAILED')
         setStep('error')
         return
@@ -605,7 +503,6 @@ export function EdguardEnroll() {
       const payload = {
         student_id: store.studentId,
         institution_id: store.institutionId,
-        official_photo_b64: officialB64,
         selfie_b64: selfieB64,
         cognitive_score_override: cognitiveScoreOverride,
       }
@@ -629,11 +526,11 @@ export function EdguardEnroll() {
     analysisCalledRef.current = false
     setVocalData(null)
     setReflexResult(null)
-    setStep(3)
+    setStep(2)
     setErrorCode('')
   }, [])
 
-  const stepNum = typeof step === 'number' ? step : 6
+  const stepNum = typeof step === 'number' ? step : 5
 
   if (!isMobileDevice) return <MobileRequiredScreen />
 
@@ -658,21 +555,16 @@ export function EdguardEnroll() {
             )}
             {step === 2 && (
               <motion.div key="s2" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }}>
-                <Step2 onNext={() => setStep(3)} />
+                <Step2Selfie onNext={() => setStep(3)} />
               </motion.div>
             )}
             {step === 3 && (
               <motion.div key="s3" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }}>
-                <Step3 onNext={() => setStep(4)} />
+                <VocalImprint onComplete={handleVocalComplete} />
               </motion.div>
             )}
             {step === 4 && (
               <motion.div key="s4" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }}>
-                <VocalImprint onComplete={handleVocalComplete} />
-              </motion.div>
-            )}
-            {step === 5 && (
-              <motion.div key="s5" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }}>
                 <NeuralReflex onComplete={handleReflexComplete} />
               </motion.div>
             )}
