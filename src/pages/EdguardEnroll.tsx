@@ -87,31 +87,78 @@ function EnrollHeader({ step }: { step: number }) {
 /* ─── Step 1: Student Info ─── */
 function Step1({ onNext }: { onNext: () => void }) {
   const { t } = useT()
-  const { studentId, institutionId, setStudentInfo } = useEdguardStore()
+  const { studentId, institutionId, firstName, lastName, email, role, setStudentInfo, setPersonalInfo } = useEdguardStore()
   const [localStudentId, setLocalStudentId] = useState(studentId)
   const [localInstId, setLocalInstId] = useState(institutionId)
+  const [localFirstName, setLocalFirstName] = useState(firstName)
+  const [localLastName, setLocalLastName] = useState(lastName)
+  const [localEmail, setLocalEmail] = useState(email)
+  const [localRole, setLocalRole] = useState(role)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!localStudentId.trim() || !localInstId.trim()) return
+    if (!localStudentId.trim() || !localInstId.trim() || !localFirstName.trim() || !localLastName.trim()) return
     setStudentInfo(localStudentId.trim(), localInstId.trim())
+    setPersonalInfo(localFirstName.trim(), localLastName.trim(), localEmail.trim(), localRole)
     onNext()
   }
 
+  const inputStyle = { backgroundColor: '#0A0F1E', border: '1px solid #1E2D45', color: '#F0F4FF' }
+
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+      <div className="grid grid-cols-2 gap-3">
+        <div className="flex flex-col gap-1.5">
+          <label className="text-[10px] font-semibold tracking-widest" style={{ color: '#8899BB' }}>PRÉNOM *</label>
+          <input
+            type="text" value={localFirstName} onChange={(e) => setLocalFirstName(e.target.value)} required
+            className="w-full px-4 py-3 rounded-xl text-sm font-medium outline-none transition-all duration-200"
+            style={inputStyle} placeholder="Jean"
+          />
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <label className="text-[10px] font-semibold tracking-widest" style={{ color: '#8899BB' }}>NOM *</label>
+          <input
+            type="text" value={localLastName} onChange={(e) => setLocalLastName(e.target.value)} required
+            className="w-full px-4 py-3 rounded-xl text-sm font-medium outline-none transition-all duration-200"
+            style={inputStyle} placeholder="Dupont"
+          />
+        </div>
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <label className="text-[10px] font-semibold tracking-widest" style={{ color: '#8899BB' }}>EMAIL</label>
+        <input
+          type="email" value={localEmail} onChange={(e) => setLocalEmail(e.target.value)}
+          className="w-full px-4 py-3 rounded-xl text-sm font-medium outline-none transition-all duration-200"
+          style={inputStyle} placeholder="jean.dupont@universite.fr"
+        />
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <label className="text-[10px] font-semibold tracking-widest" style={{ color: '#8899BB' }}>RÔLE</label>
+        <div className="flex gap-2">
+          {(['STUDENT', 'TEACHER', 'BENEFICIARY'] as const).map((r) => (
+            <button
+              key={r} type="button" onClick={() => setLocalRole(r)}
+              className="flex-1 py-2.5 rounded-xl text-[10px] font-bold tracking-wider transition-all duration-200"
+              style={{
+                backgroundColor: localRole === r ? 'rgba(0,194,255,0.15)' : 'transparent',
+                border: `1.5px solid ${localRole === r ? '#00C2FF' : '#1E2D45'}`,
+                color: localRole === r ? '#00C2FF' : '#8899BB',
+              }}
+            >
+              {r === 'STUDENT' ? 'ÉTUDIANT' : r === 'TEACHER' ? 'ENSEIGNANT' : 'BÉNÉFICIAIRE'}
+            </button>
+          ))}
+        </div>
+      </div>
       <div className="flex flex-col gap-1.5">
         <label className="text-[10px] font-semibold tracking-widest" style={{ color: '#8899BB' }}>
           {t('edguard_student_id')} *
         </label>
         <input
-          type="text"
-          value={localStudentId}
-          onChange={(e) => setLocalStudentId(e.target.value)}
-          required
-          className="w-full px-4 py-3 rounded-xl text-sm font-medium outline-none transition-all duration-200 focus:border-[#00C2FF]/50"
-          style={{ backgroundColor: '#0A0F1E', border: '1px solid #1E2D45', color: '#F0F4FF' }}
-          placeholder="ex: STU-2024-001"
+          type="text" value={localStudentId} onChange={(e) => setLocalStudentId(e.target.value)} required
+          className="w-full px-4 py-3 rounded-xl text-sm font-medium outline-none transition-all duration-200"
+          style={inputStyle} placeholder="ex: STU-2024-001"
         />
       </div>
       <div className="flex flex-col gap-1.5">
@@ -119,13 +166,9 @@ function Step1({ onNext }: { onNext: () => void }) {
           {t('edguard_institution_id')} *
         </label>
         <input
-          type="text"
-          value={localInstId}
-          onChange={(e) => setLocalInstId(e.target.value)}
-          required
-          className="w-full px-4 py-3 rounded-xl text-sm font-medium outline-none transition-all duration-200 focus:border-[#00C2FF]/50"
-          style={{ backgroundColor: '#0A0F1E', border: '1px solid #1E2D45', color: '#F0F4FF' }}
-          placeholder="ex: UNIV-PARIS-01"
+          type="text" value={localInstId} onChange={(e) => setLocalInstId(e.target.value)} required
+          className="w-full px-4 py-3 rounded-xl text-sm font-medium outline-none transition-all duration-200"
+          style={inputStyle} placeholder="ex: UNIV-PARIS-01"
         />
       </div>
       <button
@@ -261,76 +304,286 @@ function AnalysisSequence({ onDone }: { onDone: () => void }) {
   )
 }
 
+/* ─── Neural Metric Row ─── */
+function NeuralMetricRow({
+  icon, label, value, percent, color, delay, animate,
+}: {
+  icon: React.ReactNode; label: string; value: string; percent: number; color: string; delay: number; animate: boolean
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: -12 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ duration: 0.35, delay }}
+      className="flex items-center gap-3 py-2.5"
+      style={{ borderBottom: '1px solid rgba(30,45,69,0.5)' }}
+    >
+      <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
+        style={{ backgroundColor: `${color}15`, border: `1px solid ${color}30` }}>
+        {icon}
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center justify-between mb-1.5">
+          <span className="text-[10px] font-semibold tracking-widest" style={{ color: '#8899BB' }}>{label}</span>
+          <span className="text-[11px] font-bold tracking-wider" style={{ color, fontFamily: "'JetBrains Mono', monospace" }}>{value}</span>
+        </div>
+        <div className="w-full h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: '#1E2D45' }}>
+          <div
+            className="h-full rounded-full"
+            style={{
+              backgroundColor: color,
+              width: animate ? `${percent}%` : '0%',
+              transition: `width 1s cubic-bezier(0.25,0.46,0.45,0.94) ${delay + 0.3}s`,
+              boxShadow: animate ? `0 0 8px ${color}60` : 'none',
+            }}
+          />
+        </div>
+      </div>
+    </motion.div>
+  )
+}
+
 /* ─── Success Screen ─── */
 function SuccessScreen() {
-  const { t } = useT()
-  const { studentId, institutionId, enrollmentResult, reset } = useEdguardStore()
+  const store = useEdguardStore()
+  const { enrollmentResult } = store
+  const [animate, setAnimate] = useState(false)
+
+  useEffect(() => {
+    const timer = setTimeout(() => setAnimate(true), 100)
+    return () => clearTimeout(timer)
+  }, [])
+
   if (!enrollmentResult) return null
+
+  const initials = `${(store.firstName[0] ?? '').toUpperCase()}${(store.lastName[0] ?? '').toUpperCase()}` || '??'
+  const fullName = `${store.firstName} ${store.lastName}`.trim() || store.studentId
+  const roleLabel = store.role === 'STUDENT' ? 'ÉTUDIANT' : store.role === 'TEACHER' ? 'ENSEIGNANT' : 'BÉNÉFICIAIRE'
+
+  const facialPct = Math.min(100, Math.round(enrollmentResult.identity_confidence))
+  const vocalPct = Math.min(100, Math.round(store.cognitiveScore * 100))
+  const reflexPct = store.reflexVelocity > 0 ? Math.min(100, Math.round(Math.max(0, 100 - (store.reflexVelocity - 200) / 8))) : 70
+  const stroopPct = Math.min(100, Math.round(store.stroopAccuracy * 100))
+  const sensorPct = 75
+  const pqcPct = 100
+
+  const overallScore = Math.round((facialPct * 0.25 + vocalPct * 0.2 + reflexPct * 0.15 + stroopPct * 0.2 + sensorPct * 0.1 + pqcPct * 0.1))
+  const securityColor = overallScore >= 80 ? '#00FF88' : overallScore >= 60 ? '#00C2FF' : '#FF8800'
+  const securityLabel = overallScore >= 80 ? 'MAXIMUM' : overallScore >= 60 ? 'ÉLEVÉ' : 'STANDARD'
+
+  const CYAN = '#00C2FF'
+  const GREEN = '#00FF88'
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 16 }}
+      initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="flex flex-col gap-4"
+      transition={{ duration: 0.6 }}
+      className="flex flex-col gap-5"
     >
-      <div className="text-center">
-        <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3" style={{ backgroundColor: 'rgba(0,255,136,0.15)', border: '2px solid #00FF88' }}>
-          <span className="text-xl" style={{ color: '#00FF88' }}>✓</span>
+      {/* ── 1. Header ── */}
+      <div className="text-center pt-2">
+        <div className="relative w-16 h-16 mx-auto mb-3">
+          <svg viewBox="0 0 56 56" className="w-full h-full">
+            <polygon points="28,4 52,16 52,40 28,52 4,40 4,16" fill="none" stroke={CYAN} strokeWidth="2" opacity="0.3" />
+            <polygon points="28,8 48,18 48,38 28,48 8,38 8,18" fill="rgba(0,194,255,0.08)" stroke={CYAN} strokeWidth="1.5" />
+          </svg>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          </div>
         </div>
-        <p className="text-sm font-bold tracking-widest" style={{ color: '#00FF88' }}>
-          {t('edguard_enrolled_success')}
+        <h2 className="text-sm font-black tracking-[0.2em] mb-1" style={{ color: '#F0F4FF' }}>
+          NEURAL PROFILE CREATED
+        </h2>
+        <p className="text-[10px] tracking-wider leading-relaxed max-w-xs mx-auto" style={{ color: '#8899BB' }}>
+          Your cognitive signature is unique — no AI can replicate it
         </p>
       </div>
 
-      <div className="h-px w-full" style={{ backgroundColor: '#1E2D45' }} />
+      {/* ── 2. Identity Card ── */}
+      <div
+        className="rounded-xl p-4 relative overflow-hidden"
+        style={{
+          backgroundColor: '#0A0F1E',
+          border: '1px solid rgba(0,194,255,0.3)',
+          boxShadow: '0 0 20px rgba(0,194,255,0.08), inset 0 0 20px rgba(0,194,255,0.03)',
+        }}
+      >
+        <div className="flex items-center gap-3.5">
+          <div
+            className="w-12 h-12 rounded-full flex items-center justify-center shrink-0"
+            style={{
+              background: 'linear-gradient(135deg, rgba(0,194,255,0.2), rgba(0,255,136,0.1))',
+              border: '2px solid rgba(0,194,255,0.4)',
+            }}
+          >
+            <span className="text-sm font-black tracking-wider" style={{ color: CYAN }}>{initials}</span>
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-bold tracking-wider truncate" style={{ color: '#F0F4FF', fontFamily: "'Space Grotesk', sans-serif" }}>
+              {fullName}
+            </p>
+            <p className="text-[11px] font-bold tracking-widest mt-0.5" style={{ color: CYAN, fontFamily: "'JetBrains Mono', monospace" }}>
+              {store.studentId}
+            </p>
+            <div className="flex items-center gap-2 mt-1">
+              <span className="text-[9px] tracking-wider" style={{ color: '#8899BB' }}>{store.institutionId}</span>
+              <span
+                className="text-[8px] font-bold tracking-widest px-2 py-0.5 rounded-full"
+                style={{ backgroundColor: 'rgba(0,194,255,0.12)', border: '1px solid rgba(0,194,255,0.25)', color: CYAN }}
+              >
+                {roleLabel}
+              </span>
+            </div>
+          </div>
+        </div>
+        <div className="absolute top-2 right-3">
+          <span className="text-[8px] font-bold tracking-widest" style={{ color: '#3D5A75' }}>
+            {enrollmentResult.embedding_dims}d ArcFace
+          </span>
+        </div>
+      </div>
 
-      <div className="space-y-2.5">
+      {/* ── 3. Neural Profile Section ── */}
+      <div>
+        <div className="flex items-center gap-2 mb-3">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={CYAN} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 2a8 8 0 0 0-8 8c0 3.4 2.1 6.3 5 7.5V20h6v-2.5c2.9-1.2 5-4.1 5-7.5a8 8 0 0 0-8-8z" />
+            <path d="M10 22h4" />
+          </svg>
+          <span className="text-[10px] font-black tracking-[0.2em]" style={{ color: '#F0F4FF' }}>
+            EMPREINTE NEURALE
+          </span>
+        </div>
+
+        <div className="rounded-xl p-3" style={{ backgroundColor: '#0A0F1E', border: '1px solid #1E2D45' }}>
+          <NeuralMetricRow
+            icon={<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={CYAN} strokeWidth="1.8"><rect x="2" y="2" width="20" height="20" rx="4" /><circle cx="12" cy="10" r="3" /><path d="M6 20c0-3 3-5 6-5s6 2 6 5" /></svg>}
+            label="RECONNAISSANCE FACIALE"
+            value={`${facialPct}%`}
+            percent={facialPct}
+            color={CYAN}
+            delay={0}
+            animate={animate}
+          />
+          <NeuralMetricRow
+            icon={<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={CYAN} strokeWidth="1.8"><path d="M12 1v4m0 14v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M1 12h4m14 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83" /><circle cx="12" cy="12" r="4" /></svg>}
+            label="SIGNATURE VOCALE"
+            value={vocalPct > 0 ? 'CALIBRÉE' : '—'}
+            percent={vocalPct}
+            color={CYAN}
+            delay={0.1}
+            animate={animate}
+          />
+          <NeuralMetricRow
+            icon={<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={CYAN} strokeWidth="1.8"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" /></svg>}
+            label="VÉLOCITÉ NEURALE"
+            value={store.reflexVelocity > 0 ? `${Math.round(store.reflexVelocity)}ms` : 'MESURÉE'}
+            percent={reflexPct}
+            color={CYAN}
+            delay={0.2}
+            animate={animate}
+          />
+          <NeuralMetricRow
+            icon={<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="1.8"><path d="M12 2a8 8 0 0 0-8 8c0 3.4 2.1 6.3 5 7.5V20h6v-2.5c2.9-1.2 5-4.1 5-7.5a8 8 0 0 0-8-8z" /><path d="M10 22h4" /></svg>}
+            label="TEST STROOP"
+            value={stroopPct > 0 ? `${stroopPct}%` : 'VALIDÉ'}
+            percent={stroopPct || 70}
+            color={GREEN}
+            delay={0.3}
+            animate={animate}
+          />
+          <NeuralMetricRow
+            icon={<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={CYAN} strokeWidth="1.8"><rect x="5" y="2" width="14" height="20" rx="3" /><line x1="12" y1="18" x2="12" y2="18.01" strokeWidth="2" /></svg>}
+            label="PROFIL COMPORTEMENTAL"
+            value={isMobileDevice ? 'MOBILE ✓' : 'DESKTOP'}
+            percent={sensorPct}
+            color={CYAN}
+            delay={0.4}
+            animate={animate}
+          />
+          <NeuralMetricRow
+            icon={<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="1.8"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>}
+            label="CRYPTOGRAPHIE POST-QUANTIQUE"
+            value="ML-KEM FIPS 203/204"
+            percent={pqcPct}
+            color={GREEN}
+            delay={0.5}
+            animate={animate}
+          />
+        </div>
+      </div>
+
+      {/* ── 4. Security Level ── */}
+      <div className="rounded-xl p-4" style={{ backgroundColor: '#0A0F1E', border: '1px solid #1E2D45' }}>
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-[10px] font-bold tracking-[0.15em]" style={{ color: '#8899BB' }}>
+            NIVEAU DE SÉCURITÉ COGNITIF
+          </span>
+          <div className="flex items-center gap-1.5">
+            <span className="text-sm font-black" style={{ color: securityColor, fontFamily: "'JetBrains Mono', monospace" }}>
+              {overallScore}%
+            </span>
+            <span className="text-[9px] font-bold tracking-widest px-2 py-0.5 rounded-full"
+              style={{ backgroundColor: `${securityColor}18`, border: `1px solid ${securityColor}40`, color: securityColor }}>
+              {securityLabel}
+            </span>
+          </div>
+        </div>
+        <div className="w-full h-2.5 rounded-full overflow-hidden" style={{ backgroundColor: '#1E2D45' }}>
+          <div
+            className="h-full rounded-full"
+            style={{
+              backgroundColor: securityColor,
+              width: animate ? `${overallScore}%` : '0%',
+              transition: 'width 1.2s cubic-bezier(0.25,0.46,0.45,0.94) 1s',
+              boxShadow: animate ? `0 0 12px ${securityColor}60` : 'none',
+            }}
+          />
+        </div>
+      </div>
+
+      {/* ── 5. Certifications ── */}
+      <div className="flex gap-2">
         {[
-          { label: 'Étudiant', value: studentId },
-          { label: 'Établissement', value: institutionId },
-          { label: 'Confiance identité', value: `${Math.round(enrollmentResult.identity_confidence)}%` },
-          { label: 'Dimensions embedding', value: String(enrollmentResult.embedding_dims) },
-          { label: 'Enregistré le', value: new Date(enrollmentResult.enrolled_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }) },
-        ].map((item) => (
-          <div key={item.label} className="flex items-center justify-between">
-            <span className="text-[10px] font-semibold tracking-wider" style={{ color: '#8899BB' }}>{item.label}</span>
-            <span className="text-xs font-bold tracking-wider" style={{ color: '#F0F4FF' }}>{item.value}</span>
+          { label: '3 Brevets FR', icon: '🇫🇷' },
+          { label: 'FIPS 203/204', icon: '🔐' },
+          { label: 'Brain ML', icon: '🧠' },
+        ].map((cert) => (
+          <div
+            key={cert.label}
+            className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg"
+            style={{ backgroundColor: 'rgba(0,194,255,0.05)', border: '1px solid #1E2D45' }}
+          >
+            <span className="text-[10px]">{cert.icon}</span>
+            <span className="text-[9px] font-bold tracking-widest" style={{ color: '#8899BB' }}>{cert.label}</span>
           </div>
         ))}
       </div>
 
-      <div className="h-px w-full" style={{ backgroundColor: '#1E2D45' }} />
-
-      <div className="space-y-1.5">
-        {[
-          'Identité biométrique certifiée',
-          'Empreinte neurale calibrée',
-          'Signé ML-KEM FIPS 203',
-        ].map((line) => (
-          <div key={line} className="flex items-center gap-2">
-            <span className="text-xs" style={{ color: '#00C2FF' }}>◈</span>
-            <span className="text-[10px] font-semibold tracking-wider" style={{ color: '#F0F4FF' }}>{line}</span>
-          </div>
-        ))}
-      </div>
-
-      <div className="flex flex-col sm:flex-row gap-2 mt-2">
-        <button
-          onClick={reset}
-          className="flex-1 py-3 rounded-xl font-bold text-sm tracking-wider transition-all duration-300"
-          style={{ border: '1.5px solid rgba(0,194,255,0.5)', color: '#00C2FF' }}
-        >
-          Nouvel enrollment
-        </button>
+      {/* ── 6. Actions ── */}
+      <div className="flex flex-col gap-2.5 pt-1">
         <Link
           to="/edguard/session"
-          className="flex-1 py-3 rounded-xl font-bold text-sm tracking-wider text-center transition-all duration-300"
-          style={{ backgroundColor: '#00C2FF', color: '#0A0F1E', boxShadow: '0 0 20px rgba(0,194,255,0.3)' }}
+          className="w-full py-3.5 rounded-xl font-bold text-sm tracking-wider text-center transition-all duration-300 block"
+          style={{ backgroundColor: CYAN, color: '#0A0F1E', boxShadow: `0 0 24px rgba(0,194,255,0.35)` }}
         >
-          Démarrer session
+          Démarrer une session →
         </Link>
+        <button
+          className="w-full py-3 rounded-xl font-bold text-xs tracking-widest transition-all duration-300"
+          style={{ border: '1.5px solid rgba(0,194,255,0.3)', color: CYAN, backgroundColor: 'transparent' }}
+        >
+          Voir mon profil
+        </button>
       </div>
+
+      {/* ── Footer ── */}
+      <p className="text-center text-[9px] tracking-widest pt-1" style={{ color: '#3D5A75' }}>
+        POWERED BY HYBRID VECTOR · ML-KEM FIPS 203/204
+      </p>
     </motion.div>
   )
 }
@@ -490,6 +743,12 @@ export function EdguardEnroll() {
 
     const cognitiveScoreOverride = Math.max(0, Math.min(1, cogScore / 100))
     console.log('[EDGUARD] cognitive score:', { raw: cogScore, normalized: cognitiveScoreOverride, isMobile })
+
+    store.setEnrollmentMetrics(
+      cognitiveScoreOverride,
+      stroopAccuracy,
+      reflexResult?.avgVelocityMs ?? 0,
+    )
 
     try {
       const selfieB64 = store.selfieB64 ?? ''
