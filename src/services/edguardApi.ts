@@ -17,11 +17,7 @@ export interface EnrollRequest {
   institution_id: string
   official_photo_b64: string
   selfie_b64: string
-  cognitive_baseline?: {
-    stroop_score: number
-    reaction_time_ms: number
-    nback_score: number
-  }
+  cognitive_score_override?: number
 }
 
 export interface EnrollResponse {

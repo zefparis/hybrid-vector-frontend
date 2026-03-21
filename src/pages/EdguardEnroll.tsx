@@ -2,20 +2,18 @@ import { useState, useRef, useCallback, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FaceCapture } from '@/components/FaceCapture'
+import { VocalImprint } from '@/components/VocalImprint'
+import { NeuralReflex } from '@/components/NeuralReflex'
 import { useEdguardStore } from '@/store/edguardStore'
 import { enrollStudent } from '@/services/edguardApi'
+import { useSensors } from '@/hooks/useSensors'
+import { computeCognitiveScore, scoreMouseBehavior } from '@/services/api'
 import { useT } from '@/i18n/useLang'
+import type { VocalImportData, ReflexResult } from '@/types'
 
-type EnrollStep = 1 | 2 | 3 | 4 | 'success' | 'error'
+type EnrollStep = 1 | 2 | 3 | 4 | 5 | 6 | 'analysis' | 'success' | 'error'
 
 const HEX_PATTERN = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='49' viewBox='0 0 28 49'%3E%3Cg fill-rule='evenodd'%3E%3Cg fill='%2300C2FF' fill-opacity='0.03'%3E%3Cpath d='M13.99 9.25l13 7.5v15l-13 7.5L1 31.75v-15l12.99-7.5zM3 17.9v12.7l10.99 6.34 11-6.35V17.9l-11-6.34L3 17.9z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
-
-/* ─── Stroop mini colors ─── */
-const STROOP_ITEMS: Array<{ word: string; color: string; correctAnswer: string }> = [
-  { word: 'ROUGE', color: '#00C2FF', correctAnswer: 'bleu' },
-  { word: 'VERT', color: '#FF3355', correctAnswer: 'rouge' },
-  { word: 'BLEU', color: '#00FF88', correctAnswer: 'vert' },
-]
 
 function StepIndicator({ current }: { current: number }) {
   const { t } = useT()
@@ -23,7 +21,9 @@ function StepIndicator({ current }: { current: number }) {
     t('edguard_student_id'),
     t('edguard_official_photo'),
     t('edguard_selfie'),
-    t('edguard_cognitive'),
+    'VOCAL',
+    'RÉFLEXE',
+    'ANALYSE',
   ]
   return (
     <div className="flex items-center gap-1 sm:gap-2 mb-5">
@@ -68,7 +68,7 @@ function EnrollHeader({ step }: { step: number }) {
           </span>
         </div>
         <span className="text-[10px] font-bold tracking-widest" style={{ color: '#00C2FF' }}>
-          {t('edguard_step')} {step}/4
+          {t('edguard_step')} {step}/6
         </span>
       </div>
       <div className="h-px w-full my-3" style={{ backgroundColor: '#1E2D45' }} />
@@ -265,157 +265,93 @@ function Step3({ onNext }: { onNext: () => void }) {
   )
 }
 
-/* ─── Step 4: Cognitive Baseline ─── */
-function Step4({ onSkip, onComplete }: { onSkip: () => void; onComplete: (stroop: number, reaction: number) => void }) {
+/* ─── Analysis Sequence (reused from Demo) ─── */
+function AnalysisSequence({ onDone }: { onDone: () => void }) {
   const { t } = useT()
-  const [phase, setPhase] = useState<'intro' | 'reaction' | 'stroop' | 'done'>('intro')
-  const [reactionTimes, setReactionTimes] = useState<number[]>([])
-  const [reactionStep, setReactionStep] = useState(0)
-  const [showCircle, setShowCircle] = useState(false)
-  const circleShownAt = useRef(0)
-  const [stroopStep, setStroopStep] = useState(0)
-  const [stroopCorrect, setStroopCorrect] = useState(0)
-  const reactionTotal = 5
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const ANALYSIS_LINES = [
+    t('analysis_facial'),
+    t('analysis_liveness'),
+    t('analysis_vocal'),
+    t('analysis_cognitive'),
+    t('analysis_behavioral'),
+    t('analysis_pqc'),
+    t('analysis_computing'),
+  ]
 
-  // Reaction time test
-  useEffect(() => {
-    if (phase !== 'reaction' || reactionStep >= reactionTotal) return
-    const delay = 1500 + Math.random() * 2500
-    timeoutRef.current = setTimeout(() => {
-      setShowCircle(true)
-      circleShownAt.current = performance.now()
-    }, delay)
-    return () => { if (timeoutRef.current) clearTimeout(timeoutRef.current) }
-  }, [phase, reactionStep])
-
-  const handleReactionClick = useCallback(() => {
-    if (!showCircle) return
-    const rt = Math.round(performance.now() - circleShownAt.current)
-    setReactionTimes((prev) => [...prev, rt])
-    setShowCircle(false)
-    const next = reactionStep + 1
-    setReactionStep(next)
-    if (next >= reactionTotal) {
-      setTimeout(() => setPhase('stroop'), 600)
-    }
-  }, [showCircle, reactionStep])
-
-  // Stroop
-  const handleStroopAnswer = useCallback((correct: boolean) => {
-    if (correct) setStroopCorrect((c) => c + 1)
-    const next = stroopStep + 1
-    setStroopStep(next)
-    if (next >= STROOP_ITEMS.length) {
-      setPhase('done')
-    }
-  }, [stroopStep])
+  const [lineIdx, setLineIdx] = useState(0)
+  const [progress, setProgress] = useState<number[]>([])
 
   useEffect(() => {
-    if (phase !== 'done') return
-    const avgRt = reactionTimes.length > 0
-      ? Math.round(reactionTimes.reduce((a, b) => a + b, 0) / reactionTimes.length)
-      : 0
-    const stroopScore = Math.round((stroopCorrect / STROOP_ITEMS.length) * 100)
-    const timer = setTimeout(() => onComplete(stroopScore, avgRt), 800)
-    return () => clearTimeout(timer)
-  }, [phase, reactionTimes, stroopCorrect, onComplete])
+    if (lineIdx >= ANALYSIS_LINES.length) {
+      const timer = setTimeout(onDone, 600)
+      return () => clearTimeout(timer)
+    }
 
-  if (phase === 'intro') {
-    return (
-      <div className="flex flex-col gap-4">
-        <p className="text-xs font-bold tracking-widest" style={{ color: '#00C2FF' }}>
-          {t('edguard_cognitive')}
-        </p>
-        <p className="text-xs leading-relaxed" style={{ color: '#8899BB' }}>
-          Ces données servent de référence pour détecter les anomalies cognitives pendant les examens.
-        </p>
-        <button
-          onClick={() => setPhase('reaction')}
-          className="w-full py-3.5 rounded-xl font-bold text-sm tracking-wider transition-all duration-300"
-          style={{ backgroundColor: '#00C2FF', color: '#0A0F1E', boxShadow: '0 0 20px rgba(0,194,255,0.3)' }}
-        >
-          Commencer la calibration →
-        </button>
-        <button
-          onClick={onSkip}
-          className="w-full py-2 text-xs font-semibold tracking-wider transition-all duration-200"
-          style={{ color: '#8899BB' }}
-        >
-          {t('edguard_skip')}
-        </button>
-      </div>
-    )
-  }
+    const dur = lineIdx < ANALYSIS_LINES.length - 2 ? 350 : 500
+    const timer2 = setTimeout(() => {
+      setProgress((p) => [...p, 100])
+      setLineIdx((i) => i + 1)
+    }, dur)
+    return () => clearTimeout(timer2)
+  }, [lineIdx, onDone, ANALYSIS_LINES.length])
 
-  if (phase === 'reaction') {
-    return (
-      <div className="flex flex-col gap-4 items-center">
-        <p className="text-[10px] font-semibold tracking-widest" style={{ color: '#8899BB' }}>
-          TEMPS DE RÉACTION — {reactionStep}/{reactionTotal}
-        </p>
-        <div className="w-full h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: '#1E2D45' }}>
-          <div className="h-full rounded-full transition-all duration-300" style={{ backgroundColor: '#00C2FF', width: `${(reactionStep / reactionTotal) * 100}%` }} />
-        </div>
-        <div
-          onClick={handleReactionClick}
-          className="w-48 h-48 rounded-full flex items-center justify-center cursor-pointer transition-all duration-200 touch-manipulation"
-          style={{
-            backgroundColor: showCircle ? '#00FF88' : '#0A0F1E',
-            border: `2px solid ${showCircle ? '#00FF88' : '#1E2D45'}`,
-            boxShadow: showCircle ? '0 0 40px rgba(0,255,136,0.4)' : 'none',
-          }}
-        >
-          <span className="text-xs font-bold tracking-widest" style={{ color: showCircle ? '#0A0F1E' : '#8899BB' }}>
-            {showCircle ? 'CLIQUEZ !' : 'ATTENDEZ...'}
-          </span>
-        </div>
-      </div>
-    )
-  }
+  useEffect(() => {
+    if (lineIdx < ANALYSIS_LINES.length) {
+      setProgress((p) => {
+        const next = [...p]
+        next[lineIdx] = 0
+        return next
+      })
+      const timer3 = setTimeout(() => {
+        setProgress((p) => {
+          const next = [...p]
+          next[lineIdx] = lineIdx < ANALYSIS_LINES.length - 2 ? 100 : 60
+          return next
+        })
+      }, 50)
+      return () => clearTimeout(timer3)
+    }
+  }, [lineIdx, ANALYSIS_LINES.length])
 
-  if (phase === 'stroop') {
-    const item = STROOP_ITEMS[stroopStep]
-    if (!item) return null
-    return (
-      <div className="flex flex-col gap-4 items-center">
-        <p className="text-[10px] font-semibold tracking-widest" style={{ color: '#8899BB' }}>
-          TEST STROOP — {stroopStep + 1}/{STROOP_ITEMS.length}
-        </p>
-        <p className="text-[10px] tracking-wider" style={{ color: '#8899BB' }}>
-          Dites la COULEUR de l&apos;encre, pas le mot
-        </p>
-        <div className="py-8">
-          <span className="text-4xl font-black tracking-widest" style={{ color: item.color }}>
-            {item.word}
-          </span>
-        </div>
-        <div className="flex gap-3">
-          {['rouge', 'bleu', 'vert'].map((c) => {
-            const colorMap: Record<string, string> = { rouge: '#FF3355', bleu: '#00C2FF', vert: '#00FF88' }
-            return (
-              <button
-                key={c}
-                onClick={() => handleStroopAnswer(c === item.correctAnswer)}
-                className="px-5 py-2.5 rounded-xl font-bold text-xs tracking-wider transition-all duration-200 touch-manipulation"
-                style={{ border: `1.5px solid ${colorMap[c]}`, color: colorMap[c] }}
-              >
-                {c.toUpperCase()}
-              </button>
-            )
-          })}
-        </div>
-      </div>
-    )
-  }
-
-  // done
   return (
-    <div className="flex flex-col items-center gap-3 py-4">
-      <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: 'rgba(0,255,136,0.15)', border: '1.5px solid #00FF88' }}>
-        <span style={{ color: '#00FF88' }}>✓</span>
+    <div className="flex flex-col gap-3 py-4">
+      <p className="text-xs font-bold tracking-widest text-center mb-2" style={{ color: '#00C2FF' }}>
+        HYBRID TRUST SCORE COMPUTING
+      </p>
+      <div className="h-px w-full" style={{ backgroundColor: '#1E2D45' }} />
+      <div className="space-y-2 py-2">
+        {ANALYSIS_LINES.map((line, i) => {
+          if (i > lineIdx) return null
+          const p = progress[i] ?? 0
+          const done = p >= 100
+          return (
+            <motion.div
+              key={line}
+              initial={{ opacity: 0, x: 10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.25 }}
+              className="flex items-center gap-3"
+            >
+              <span className="text-[10px] sm:text-xs font-semibold tracking-wider flex-1 whitespace-nowrap overflow-hidden text-ellipsis"
+                style={{ color: done ? '#F0F4FF' : '#8899BB' }}>
+                {line}
+              </span>
+              <div className="w-20 sm:w-28 h-1.5 rounded-full overflow-hidden shrink-0" style={{ backgroundColor: '#1E2D45' }}>
+                <motion.div
+                  className="h-full rounded-full"
+                  style={{ backgroundColor: done ? '#00FF88' : '#00C2FF' }}
+                  animate={{ width: `${p}%` }}
+                  transition={{ duration: 0.3 }}
+                />
+              </div>
+              <span className="text-[9px] font-bold tracking-wider w-16 text-right shrink-0"
+                style={{ color: done ? '#00FF88' : '#8899BB' }}>
+                {done ? 'COMPLETE' : '...'}
+              </span>
+            </motion.div>
+          )
+        })}
       </div>
-      <p className="text-xs font-bold tracking-widest" style={{ color: '#00FF88' }}>CALIBRATION TERMINÉE</p>
     </div>
   )
 }
@@ -532,18 +468,67 @@ export function EdguardEnroll() {
   const [errorCode, setErrorCode] = useState('')
   const store = useEdguardStore()
 
-  const submitEnrollment = useCallback(async (stroopScore?: number, reactionTime?: number) => {
-    if (isSubmitting) return
+  // Behavioral data collection (same as Demo.tsx)
+  const { recordTap, getSnapshot, startScan, stopScan, isMobile } = useSensors()
+  const [vocalData, setVocalData] = useState<VocalImportData | null>(null)
+  const [reflexResult, setReflexResult] = useState<ReflexResult | null>(null)
+  const analysisCalledRef = useRef(false)
+
+  // Start sensor collection when entering selfie step
+  useEffect(() => {
+    if (step === 3) startScan()
+  }, [step, startScan])
+
+  // Step 4: Vocal complete → advance to step 5 (Reflex)
+  const handleVocalComplete = useCallback((data: VocalImportData) => {
+    setVocalData(data)
+    setTimeout(() => setStep(5), 800)
+  }, [])
+
+  // Step 5: Reflex complete → advance to analysis
+  const handleReflexComplete = useCallback((result: ReflexResult) => {
+    setReflexResult(result)
+    setTimeout(() => setStep('analysis'), 1000)
+  }, [])
+
+  // Analysis done → compute cognitive score & submit enrollment
+  const handleAnalysisDone = useCallback(async () => {
+    if (analysisCalledRef.current || isSubmitting) return
+    analysisCalledRef.current = true
     setIsSubmitting(true)
+
+    stopScan()
+    const sensors = getSnapshot()
+
+    // Compute cognitive score exactly like Demo.tsx
+    const stroopRounds = vocalData?.rounds.filter((r) => r.isStroop) ?? []
+    const stroopCorrectCount = stroopRounds.filter((r) => r.stroopCorrect).length
+    const stroopAccuracy = stroopRounds.length > 0 ? stroopCorrectCount / stroopRounds.length : 0
+    const mouseScore = sensors.mouseBehavior ? scoreMouseBehavior(sensors.mouseBehavior) : undefined
+
+    const cogScore = computeCognitiveScore({
+      vocalReactionTime: vocalData?.avgReactionMs ?? 800,
+      stroopAccuracy,
+      reflexAccuracy: reflexResult ? reflexResult.intercepted / reflexResult.total : 0.5,
+      reflexVelocity: reflexResult?.avgVelocityMs ?? 600,
+      sensorVariance: sensors.deviceMotionVariance,
+      accelerometer: sensors.accelerometer,
+      gyroscope: sensors.gyroscope,
+      touchPressure: sensors.touchPressure,
+      tapTimings: sensors.tapTimings,
+      mouseHumanScore: mouseScore,
+    })
+
+    const cognitiveScoreOverride = Math.max(0, Math.min(1, cogScore / 100))
+    console.log('[EDGUARD] cognitive score:', { raw: cogScore, normalized: cognitiveScoreOverride, isMobile })
+
     try {
       const payload = {
         student_id: store.studentId,
         institution_id: store.institutionId,
         official_photo_b64: store.officialPhotoB64 ?? '',
         selfie_b64: store.selfieB64 ?? '',
-        cognitive_baseline: stroopScore != null && reactionTime != null
-          ? { stroop_score: stroopScore, reaction_time_ms: reactionTime, nback_score: 0 }
-          : undefined,
+        cognitive_score_override: cognitiveScoreOverride,
       }
       const result = await enrollStudent(payload)
       if (result.success && result.enrolled) {
@@ -559,22 +544,17 @@ export function EdguardEnroll() {
     } finally {
       setIsSubmitting(false)
     }
-  }, [isSubmitting, store])
-
-  const handleStep4Complete = useCallback((stroopScore: number, reactionTime: number) => {
-    submitEnrollment(stroopScore, reactionTime)
-  }, [submitEnrollment])
-
-  const handleStep4Skip = useCallback(() => {
-    submitEnrollment()
-  }, [submitEnrollment])
+  }, [isSubmitting, store, vocalData, reflexResult, getSnapshot, stopScan, isMobile])
 
   const handleRetry = useCallback(() => {
+    analysisCalledRef.current = false
+    setVocalData(null)
+    setReflexResult(null)
     setStep(3)
     setErrorCode('')
   }, [])
 
-  const stepNum = typeof step === 'number' ? step : 1
+  const stepNum = typeof step === 'number' ? step : 6
 
   return (
     <div className="min-h-screen pt-16 pb-8 px-3 sm:px-4 overflow-x-hidden" style={{ backgroundColor: '#0A0F1E' }}>
@@ -582,7 +562,7 @@ export function EdguardEnroll() {
 
       <div className="max-w-2xl mx-auto relative w-full pt-6 sm:pt-8">
         <div className="rounded-2xl p-5 sm:p-7 relative overflow-hidden" style={{ backgroundColor: '#0D1526', border: '1px solid #1E2D45' }}>
-          {step !== 'success' && step !== 'error' && (
+          {step !== 'success' && step !== 'error' && step !== 'analysis' && (
             <>
               <EnrollHeader step={stepNum} />
               <StepIndicator current={stepNum} />
@@ -607,7 +587,17 @@ export function EdguardEnroll() {
             )}
             {step === 4 && (
               <motion.div key="s4" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }}>
-                <Step4 onSkip={handleStep4Skip} onComplete={handleStep4Complete} />
+                <VocalImprint onComplete={handleVocalComplete} />
+              </motion.div>
+            )}
+            {step === 5 && (
+              <motion.div key="s5" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }}>
+                <NeuralReflex onComplete={handleReflexComplete} />
+              </motion.div>
+            )}
+            {step === 'analysis' && (
+              <motion.div key="analysis" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }}>
+                <AnalysisSequence onDone={handleAnalysisDone} />
               </motion.div>
             )}
             {step === 'success' && (
