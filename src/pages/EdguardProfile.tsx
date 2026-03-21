@@ -101,10 +101,9 @@ export function EdguardProfile() {
   const initials = `${(store.firstName[0] ?? '').toUpperCase()}${(store.lastName[0] ?? '').toUpperCase()}` || '??'
   const fullName = `${store.firstName} ${store.lastName}`.trim() || store.studentId
   const roleLabel = store.role === 'STUDENT' ? 'ÉTUDIANT' : store.role === 'TEACHER' ? 'ENSEIGNANT' : 'BÉNÉFICIAIRE'
+  const faceIdShort = enrollmentResult.faceId?.slice(0, 8).toUpperCase() || '—'
 
-  const facialPct = enrollmentResult.identity_confidence <= 1
-    ? Math.min(100, Math.round(enrollmentResult.identity_confidence * 100))
-    : Math.min(100, Math.round(enrollmentResult.identity_confidence))
+  const facialPct = Math.min(100, Math.round(enrollmentResult.confidence))
   const vocalPct = Math.min(100, Math.round(store.cognitiveScore * 100))
   const reflexPct = store.reflexVelocity > 0 ? Math.min(100, Math.round(Math.max(0, 100 - (store.reflexVelocity - 200) / 8))) : 70
   const stroopPct = Math.min(100, Math.round(store.stroopAccuracy * 100))
@@ -200,9 +199,9 @@ export function EdguardProfile() {
               <span className="text-[11px] font-medium" style={{ color: '#F0F4FF' }}>{enrolledDate}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-semibold tracking-widest" style={{ color: '#8899BB' }}>EMBEDDING</span>
+              <span className="text-[10px] font-semibold tracking-widest" style={{ color: '#8899BB' }}>FACE ID</span>
               <span className="text-[10px] font-bold tracking-wider" style={{ color: '#3D5A75' }}>
-                {enrollmentResult.embedding_dims}d ArcFace
+                {faceIdShort}
               </span>
             </div>
           </div>
@@ -229,7 +228,7 @@ export function EdguardProfile() {
           <div className="rounded-xl p-3" style={{ backgroundColor: '#0A0F1E', border: '1px solid #1E2D45' }}>
             <MetricRow
               icon={<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={CYAN} strokeWidth="1.8"><rect x="2" y="2" width="20" height="20" rx="4" /><circle cx="12" cy="10" r="3" /><path d="M6 20c0-3 3-5 6-5s6 2 6 5" /></svg>}
-              label="RECONNAISSANCE FACIALE"
+              label="ANALYSE AWS REKOGNITION"
               value={`${facialPct}%`}
               percent={facialPct}
               color={CYAN}

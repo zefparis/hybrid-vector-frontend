@@ -56,15 +56,14 @@ export function EdguardVerify() {
   }, [firstName, lastName, tenantId])
 
   // Step 2 — face captured → verify
-  const handleCapture = useCallback(async (img: string) => {
+  const handleCapture = useCallback((img: string) => {
     setSelfieB64(img)
   }, [])
 
-  const handleLivenessComplete = useCallback(async (frames: string[]) => {
-    // Use last captured frame as selfie for verification
-    const selfie = selfieB64 || frames[frames.length - 1] || ''
+  const handleProceed = useCallback(async () => {
+    const selfie = selfieB64 || ''
     if (!selfie) {
-      setErrorMsg('EMBEDDING_FAILED')
+      setErrorMsg('Capture failed — please center your face and try again.')
       setStep('error')
       return
     }
@@ -76,20 +75,23 @@ export function EdguardVerify() {
         selfie_b64: selfie,
       })
 
-      if (result.verified) {
-        setConfidence(result.similarity ?? 0)
+      const similarityPct = Math.min(100, Math.round(result.similarity ?? 0))
+      const matched = similarityPct >= 80
+
+      setConfidence(similarityPct)
+
+      if (matched) {
         setStudentInfo(result.student_id, institutionId)
-        navigate('/edguard/session')
+        setStep('success')
       } else {
-        setConfidence(result.similarity ?? 0)
-        setErrorMsg(`IDENTITY_MISMATCH — similarity ${Math.round((result.similarity ?? 0) * 100)}%`)
+        setErrorMsg(`Similarité: ${similarityPct}% (seuil: 80%)`)
         setStep('error')
       }
     } catch {
       setErrorMsg('NETWORK_ERROR')
       setStep('error')
     }
-  }, [studentId, selfieB64, institutionId, setStudentInfo, navigate])
+  }, [studentId, selfieB64, institutionId, setStudentInfo])
 
   const handleRetry = useCallback(() => {
     setSelfieB64('')
@@ -105,6 +107,10 @@ export function EdguardVerify() {
     setErrorMsg('')
     setStep('id')
   }, [])
+
+  const handleSuccessContinue = useCallback(() => {
+    navigate('/edguard/session')
+  }, [navigate])
 
   return (
     <div
@@ -271,10 +277,10 @@ export function EdguardVerify() {
               >
                 <div className="text-center mb-4">
                   <h2 className="text-base font-bold tracking-wider mb-1" style={{ color: '#F0F4FF' }}>
-                    Look at the Camera
+                    Center your face
                   </h2>
                   <p className="text-xs" style={{ color: '#8899BB' }}>
-                    Align your face with your profile photo
+                    Capture one clean selfie, then proceed
                   </p>
                 </div>
 
@@ -282,8 +288,7 @@ export function EdguardVerify() {
                   capturedImage={selfieB64}
                   onCapture={handleCapture}
                   onRetake={() => setSelfieB64('')}
-                  onProceed={() => {}}
-                  onLivenessComplete={handleLivenessComplete}
+                  onProceed={handleProceed}
                 />
 
                 <button
@@ -368,10 +373,10 @@ export function EdguardVerify() {
                     style={{ backgroundColor: 'rgba(0,255,136,0.1)', border: '1px solid rgba(0,255,136,0.2)' }}
                   >
                     <span className="text-[10px] font-bold tracking-widest" style={{ color: '#00FF88' }}>
-                      SIMILARITY
+                      SIMILARITÉ
                     </span>
                     <span className="text-sm font-black" style={{ color: '#00FF88', fontFamily: 'monospace' }}>
-                      {Math.round(confidence * 100)}%
+                      {Math.round(confidence)}%
                     </span>
                   </div>
                 </div>
@@ -379,6 +384,13 @@ export function EdguardVerify() {
                 <p className="text-xs" style={{ color: '#3D5A75' }}>
                   Redirecting to session...
                 </p>
+                <button
+                  onClick={handleSuccessContinue}
+                  className="mt-2 px-4 py-2 rounded-xl font-bold text-xs tracking-wider"
+                  style={{ backgroundColor: '#00C2FF', color: '#0A0F1E' }}
+                >
+                  Continue
+                </button>
               </motion.div>
             )}
 
@@ -402,15 +414,15 @@ export function EdguardVerify() {
                     VERIFICATION FAILED
                   </p>
                   <p className="text-xs max-w-xs" style={{ color: '#8899BB' }}>
-                    {errorMsg.startsWith('IDENTITY_MISMATCH')
-                      ? `Your face does not match the enrolled identity. ${errorMsg.split('—').slice(1).join('—').trim()}`
-                      : errorMsg === 'LOOKUP_NOT_FOUND'
+                    {errorMsg === 'LOOKUP_NOT_FOUND'
                       ? 'No biometric profile found for this name pair. Please check spelling or enroll first.'
                       : errorMsg === 'LOOKUP_FAILED'
                       ? 'Could not resolve your profile right now. Please try again.'
                       : errorMsg === 'NOT_ENROLLED'
                       ? 'No biometric profile found for this student ID. Please enroll first.'
-                      : 'Service unavailable. Please try again.'}
+                      : errorMsg === 'NETWORK_ERROR'
+                      ? 'Service unavailable. Please try again.'
+                      : errorMsg}
                   </p>
                 </div>
 
@@ -426,6 +438,7 @@ export function EdguardVerify() {
                   >
                     Try Again
                   </button>
+
                   <button
                     onClick={handleReset}
                     className="flex-1 py-3 rounded-xl font-bold text-sm tracking-wider"

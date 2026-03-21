@@ -28,8 +28,8 @@ export interface EnrollResponse {
   student_id: string
   institution_id: string
   enrolled: boolean
-  identity_confidence: number
-  embedding_dims: number
+  faceId: string
+  confidence: number
   enrolled_at: string
   error?: string
   message?: string
@@ -71,8 +71,8 @@ export async function enrollStudent(payload: EnrollRequest): Promise<EnrollRespo
       student_id: payload.student_id,
       institution_id: payload.institution_id,
       enrolled: false,
-      identity_confidence: 0,
-      embedding_dims: 0,
+      faceId: '',
+      confidence: 0,
       enrolled_at: '',
       error: 'NETWORK_ERROR',
       message: 'Service indisponible. Réessayez.',

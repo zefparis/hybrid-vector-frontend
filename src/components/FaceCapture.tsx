@@ -14,18 +14,14 @@ interface FaceCaptureProps {
   onLivenessComplete?: (frames: string[], descriptor?: Float32Array) => void
 }
 
-type LivenessStep = 'idle' | 'warmup' | 'center' | 'right' | 'left' | 'confirm'
+type LivenessStep = 'idle' | 'warmup' | 'center' | 'confirm'
 
 const STEP_DURATION_MS = 2000
 
 const WARMUP_DURATION_MS = 3000
 
-const STEP_CONFIG: Record<Exclude<LivenessStep, 'idle' | 'warmup' | 'confirm'>, {
-  labelFr: string; labelEn: string; index: number
-}> = {
+const STEP_CONFIG: Record<'center', { labelFr: string; labelEn: string; index: number }> = {
   center: { labelFr: 'REGARDEZ DROIT DEVANT', labelEn: 'LOOK STRAIGHT AHEAD', index: 0 },
-  right:  { labelFr: 'TOURNEZ LENTEMENT À DROITE →', labelEn: 'TURN SLOWLY TO THE RIGHT →', index: 1 },
-  left:   { labelFr: '← TOURNEZ LENTEMENT À GAUCHE', labelEn: '← TURN SLOWLY TO THE LEFT', index: 2 },
 }
 
 function CornerBrackets({ color, glow }: { color: string; glow?: boolean }) {
@@ -129,9 +125,9 @@ function DataReadout({ stepIndex }: { stepIndex: number }) {
         style={{ padding: '4px 8px', backgroundColor: 'rgba(10,15,30,0.6)' }}
       >
         <div style={{ fontFamily: "'JetBrains Mono', monospace" }}>
-          <span className="text-[9px] tracking-wider" style={{ color: '#8899BB' }}>LIVENESS: </span>
+          <span className="text-[9px] tracking-wider" style={{ color: '#8899BB' }}>ANALYSE AWS REKOGNITION: </span>
           <span className="text-[9px] font-bold tracking-wider" style={{ color: '#00C2FF' }}>
-            STEP {Math.min(stepIndex + 1, 3)}/3
+            STEP {Math.min(stepIndex + 1, 1)}/1
           </span>
         </div>
       </div>
@@ -139,58 +135,31 @@ function DataReadout({ stepIndex }: { stepIndex: number }) {
   )
 }
 
-function DirectionArrow({ direction }: { direction: 'center' | 'right' | 'left' }) {
-  if (direction === 'center') {
-    return (
-      <motion.div
-        className="absolute inset-0 flex items-center justify-center pointer-events-none z-10"
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.8 }}
-        transition={{ duration: 0.3 }}
-      >
-        <motion.div
-          animate={{ scale: [1, 1.15, 1] }}
-          transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
-        >
-          <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
-            <circle cx="24" cy="24" r="20" stroke="#00C2FF" strokeWidth="2" opacity="0.4" />
-            <circle cx="24" cy="24" r="6" fill="#00C2FF" opacity="0.8" />
-            <circle cx="24" cy="24" r="3" fill="#00C2FF" />
-          </svg>
-        </motion.div>
-      </motion.div>
-    )
-  }
-
-  const isRight = direction === 'right'
+function DirectionArrow() {
   return (
     <motion.div
-      className="absolute inset-0 flex items-center pointer-events-none z-10"
-      style={{ justifyContent: isRight ? 'flex-end' : 'flex-start', padding: '0 24px' }}
-      initial={{ opacity: 0, x: isRight ? -20 : 20 }}
+      className="absolute inset-0 flex items-center justify-center pointer-events-none z-10"
+      initial={{ opacity: 0, scale: 0.8 }}
       animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: isRight ? 20 : -20 }}
+      exit={{ opacity: 0, scale: 0.8 }}
       transition={{ duration: 0.3 }}
     >
-      <motion.svg
-        width="56" height="56" viewBox="0 0 56 56" fill="none"
-        animate={{ x: isRight ? [0, 8, 0] : [0, -8, 0] }}
-        transition={{ duration: 1.2, repeat: Infinity, ease: 'easeInOut' }}
-        style={{ filter: 'drop-shadow(0 0 12px rgba(0,194,255,0.6))' }}
+      <motion.div
+        animate={{ scale: [1, 1.15, 1] }}
+        transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
       >
-        {isRight ? (
-          <path d="M16 28H40M40 28L30 18M40 28L30 38" stroke="#00C2FF" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-        ) : (
-          <path d="M40 28H16M16 28L26 18M16 28L26 38" stroke="#00C2FF" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-        )}
-      </motion.svg>
+        <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+          <circle cx="24" cy="24" r="20" stroke="#00C2FF" strokeWidth="2" opacity="0.4" />
+          <circle cx="24" cy="24" r="6" fill="#00C2FF" opacity="0.8" />
+          <circle cx="24" cy="24" r="3" fill="#00C2FF" />
+        </svg>
+      </motion.div>
     </motion.div>
   )
 }
 
 function LivenessProgress({ step, timer }: { step: number; timer: number }) {
-  const total = 3
+  const total = 1
   return (
     <div className="absolute bottom-3 left-4 right-4 z-10 pointer-events-none">
       <div className="flex gap-1.5">
@@ -292,15 +261,15 @@ export function FaceCapture({ capturedImage, onCapture, onRetake, onProceed, onL
         ? (lang === 'fr' ? 'INITIALISATION...' : 'INITIALIZING...')
       : livenessStep === 'confirm'
         ? (lang === 'fr' ? 'IDENTITÉ CONFIRMÉE ✓' : 'IDENTITY CONFIRMED ✓')
-      : livenessStep !== 'idle'
-        ? STEP_CONFIG[livenessStep][lang === 'fr' ? 'labelFr' : 'labelEn']
+      : livenessStep === 'center'
+        ? STEP_CONFIG.center[lang === 'fr' ? 'labelFr' : 'labelEn']
         : t('face_align'),
     35,
   )
 
   // Real-time face detection loop during active liveness steps
   useEffect(() => {
-    const isActiveStep = livenessStep === 'center' || livenessStep === 'right' || livenessStep === 'left'
+    const isActiveStep = livenessStep === 'center'
     if (!faceApiLoaded || !isActiveStep || capturedImage) {
       setFaceDetected(false)
       setFaceScore(0)
@@ -392,13 +361,8 @@ export function FaceCapture({ capturedImage, onCapture, onRetake, onProceed, onL
     setLivenessFrames(newFrames)
 
     if (currentStep === 'center') {
-      setLivenessStep('right')
-    } else if (currentStep === 'right') {
-      setLivenessStep('left')
-    } else if (currentStep === 'left') {
       setLivenessStep('confirm')
       playScan()
-      // Pass center frame (first) to onCapture for backward compat
       onCapture(newFrames[0])
       onLivenessComplete?.(newFrames, descriptorRef.current ?? undefined)
     }
@@ -421,9 +385,7 @@ export function FaceCapture({ capturedImage, onCapture, onRetake, onProceed, onL
       if (elapsed >= STEP_DURATION_MS) {
         if (timerRef.current) clearInterval(timerRef.current)
         setStepTimer(STEP_DURATION_MS)
-        // Use functional state to get latest frames
         setLivenessFrames((prevFrames) => {
-          // Schedule advance on next tick to avoid state conflicts
           setTimeout(() => advanceStep(livenessStep, prevFrames), 50)
           return prevFrames
         })
@@ -443,7 +405,6 @@ export function FaceCapture({ capturedImage, onCapture, onRetake, onProceed, onL
     setLivenessFrames([])
   }, [capturedImage])
 
-  // FIX 2: Auto-advance from warmup to center after 3 seconds
   const [warmupProgress, setWarmupProgress] = useState(0)
   useEffect(() => {
     if (livenessStep !== 'warmup') {
@@ -471,13 +432,13 @@ export function FaceCapture({ capturedImage, onCapture, onRetake, onProceed, onL
     onRetake()
   }, [onRetake])
 
-  const livenessStepIndex = livenessStep === 'idle' || livenessStep === 'warmup' ? -1
-    : livenessStep === 'confirm' ? 3
-    : STEP_CONFIG[livenessStep].index
+  const livenessStepIndex = livenessStep === 'confirm' ? 1
+    : livenessStep === 'center' ? 0
+    : -1
 
   const arcProgress = livenessStep === 'idle' || livenessStep === 'warmup' ? 0
     : livenessStep === 'confirm' ? 1
-    : livenessStepIndex / 3
+    : 0
 
   if (permission === 'denied') {
     return (
@@ -566,9 +527,7 @@ export function FaceCapture({ capturedImage, onCapture, onRetake, onProceed, onL
             <ScanLine />
 
             <AnimatePresence mode="wait">
-              {(livenessStep === 'center' || livenessStep === 'right' || livenessStep === 'left') && (
-                <DirectionArrow key={livenessStep} direction={livenessStep} />
-              )}
+              {livenessStep === 'center' && <DirectionArrow key={livenessStep} />}
             </AnimatePresence>
 
             {livenessStep !== 'idle' && livenessStep !== 'warmup' && (
@@ -579,7 +538,7 @@ export function FaceCapture({ capturedImage, onCapture, onRetake, onProceed, onL
               </>
             )}
 
-            {(livenessStep === 'center' || livenessStep === 'right' || livenessStep === 'left') && (
+            {livenessStep === 'center' && (
               <div className="absolute top-3 left-3 z-10 pointer-events-none">
                 <div className="rounded px-2 py-1" style={{ backgroundColor: 'rgba(10,15,30,0.7)' }}>
                   <div className="flex items-center gap-1.5" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
@@ -682,7 +641,7 @@ export function FaceCapture({ capturedImage, onCapture, onRetake, onProceed, onL
         </button>
       )}
 
-      {!capturedImage && livenessStep !== 'idle' && livenessStep !== 'warmup' && livenessStep !== 'confirm' && (
+      {!capturedImage && livenessStep === 'center' && (
         <div className="flex items-center justify-center py-3.5">
           <motion.div
             className="flex items-center gap-2"
@@ -691,7 +650,7 @@ export function FaceCapture({ capturedImage, onCapture, onRetake, onProceed, onL
           >
             <div className="w-2 h-2 rounded-full bg-[#00C2FF] animate-pulse" />
             <span className="text-xs font-bold tracking-widest" style={{ color: '#00C2FF' }}>
-              {lang === 'fr' ? 'ANALYSE DE VIE EN COURS...' : 'LIVENESS SCAN IN PROGRESS...'}
+              {lang === 'fr' ? 'ANALYSE AWS REKOGNITION EN COURS...' : 'AWS REKOGNITION ANALYSIS IN PROGRESS...'}
             </span>
           </motion.div>
         </div>
