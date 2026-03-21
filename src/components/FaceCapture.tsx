@@ -242,16 +242,30 @@ export function FaceCapture({ capturedImage, onCapture, onRetake, onProceed, onL
   }, [capturedImage])
 
   const captureFrame = useCallback((): string | null => {
-    return webcamRef.current?.getScreenshot() ?? null
+    const video = webcamRef.current?.video
+    if (!video || video.readyState < 4) {
+      console.warn('[FACE] video not ready, readyState:', video?.readyState)
+      return null
+    }
+    const img = webcamRef.current?.getScreenshot() ?? null
+    if (img) {
+      const b64 = img.replace(/^data:image\/\w+;base64,/, '')
+      console.log('[FACE] captured frame length:', b64.length, 'starts:', b64.substring(0, 20))
+    }
+    return img
   }, [])
 
   const advanceStep = useCallback((currentStep: LivenessStep, frames: string[]) => {
+    // Capture BEFORE flash to avoid grabbing white overlay
+    const frame = captureFrame()
+    if (!frame) {
+      console.warn('[FACE] capture failed at step:', currentStep)
+      return
+    }
+
     setFlashVisible(true)
     playCapture()
     setTimeout(() => setFlashVisible(false), 150)
-
-    const frame = captureFrame()
-    if (!frame) return
 
     const newFrames = [...frames, frame]
     setLivenessFrames(newFrames)
