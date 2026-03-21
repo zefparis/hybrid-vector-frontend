@@ -16,7 +16,6 @@ interface FaceCaptureProps {
 
 type LivenessStep = 'idle' | 'warmup' | 'center' | 'right' | 'left' | 'confirm'
 
-const VIDEO_CONSTRAINTS = { width: 640, height: 480, facingMode: 'user' as const }
 const STEP_DURATION_MS = 2000
 
 const WARMUP_DURATION_MS = 3000
@@ -224,8 +223,51 @@ export function FaceCapture({ capturedImage, onCapture, onRetake, onProceed, onL
   const webcamRef = useRef<Webcam>(null)
   const capturePressureRef = useRef<number | undefined>(undefined)
   const [permission, setPermission] = useState<'waiting' | 'granted' | 'denied'>('waiting')
+  const [cameraError, setCameraError] = useState<string | null>(null)
+  const [videoConstraints, setVideoConstraints] = useState<MediaTrackConstraints | null>(null)
   const [flashVisible, setFlashVisible] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
+
+  // Probe camera on mount — try exact:'user' (Samsung Browser) then fallback
+  useEffect(() => {
+    let cancelled = false
+    const probeCamera = async () => {
+      // FIX 3: exact:'user' forces front camera on Samsung Browser
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: { exact: 'user' }, width: { ideal: 640 }, height: { ideal: 480 } }
+        })
+        stream.getTracks().forEach(t => t.stop())
+        if (!cancelled) {
+          console.log('[FACE] camera probe OK — exact:user')
+          setVideoConstraints({ facingMode: { exact: 'user' }, width: { ideal: 640 }, height: { ideal: 480 } })
+        }
+        return
+      } catch (e) {
+        console.warn('[FACE] exact:user failed, trying fallback:', (e as Error).message)
+      }
+      // Fallback to simple 'user'
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } }
+        })
+        stream.getTracks().forEach(t => t.stop())
+        if (!cancelled) {
+          console.log('[FACE] camera probe OK — facingMode:user')
+          setVideoConstraints({ facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } })
+        }
+        return
+      } catch (e) {
+        console.error('[FACE] camera access failed:', e)
+        if (!cancelled) {
+          setPermission('denied')
+          setCameraError((e as Error).message || 'Camera access denied')
+        }
+      }
+    }
+    probeCamera()
+    return () => { cancelled = true }
+  }, [])
 
   const [livenessStep, setLivenessStep] = useState<LivenessStep>('idle')
   const [livenessFrames, setLivenessFrames] = useState<string[]>([])
@@ -297,23 +339,48 @@ export function FaceCapture({ capturedImage, onCapture, onRetake, onProceed, onL
 
   const captureFrame = useCallback((): string | null => {
     const video = webcamRef.current?.video
-    if (!video || video.readyState < 4) {
-      console.warn('[FACE] video not ready, readyState:', video?.readyState)
+    // FIX 5: Ensure video is fully ready
+    if (!video || video.readyState < 4 || video.videoWidth === 0) {
+      console.warn('[FACE] video not ready — readyState:', video?.readyState, 'videoWidth:', video?.videoWidth)
       return null
     }
-    const img = webcamRef.current?.getScreenshot() ?? null
-    if (img) {
-      const b64 = img.replace(/^data:image\/\w+;base64,/, '')
-      console.log('[FACE] captured frame length:', b64.length, 'starts:', b64.substring(0, 20))
+
+    // FIX 1: Capture at full video resolution via canvas
+    const canvas = document.createElement('canvas')
+    canvas.width = video.videoWidth || 640
+    canvas.height = video.videoHeight || 480
+    const ctx = canvas.getContext('2d')
+    if (!ctx) {
+      console.warn('[FACE] canvas context unavailable')
+      return null
     }
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+
+    // FIX 2: High JPEG quality
+    const img = canvas.toDataURL('image/jpeg', 0.92)
+
+    const b64 = img.replace(/^data:image\/\w+;base64,/, '')
+    console.log('[FACE] captured frame — resolution:', canvas.width, 'x', canvas.height, 'b64 length:', b64.length)
+
+    // FIX 4: Minimum size check
+    if (b64.length < 50000) {
+      console.warn('[FACE] frame too small:', b64.length, '— need 50000+')
+      return null
+    }
+
     return img
   }, [])
 
-  const advanceStep = useCallback((currentStep: LivenessStep, frames: string[]) => {
+  const advanceStep = useCallback((currentStep: LivenessStep, frames: string[], retryCount = 0) => {
     // Capture BEFORE flash to avoid grabbing white overlay
     const frame = captureFrame()
     if (!frame) {
-      console.warn('[FACE] capture failed at step:', currentStep)
+      if (retryCount < 3) {
+        console.warn('[FACE] capture failed at step:', currentStep, '— retry', retryCount + 1)
+        setTimeout(() => advanceStep(currentStep, frames, retryCount + 1), 500)
+        return
+      }
+      console.error('[FACE] capture failed after 3 retries at step:', currentStep)
       return
     }
 
@@ -422,8 +489,13 @@ export function FaceCapture({ capturedImage, onCapture, onRetake, onProceed, onL
         </div>
         <p className="text-[#F0F4FF] font-bold text-sm">CAMERA ACCESS REQUIRED</p>
         <p className="text-[#8899BB] text-xs max-w-xs">
-          Enable camera permissions in your browser settings, then reload.
+          {lang === 'fr'
+            ? 'Activez les permissions caméra dans les paramètres de votre navigateur, puis rechargez.'
+            : 'Camera access denied — please allow camera in browser settings, then reload.'}
         </p>
+        {cameraError && (
+          <p className="text-[#FF3355]/60 text-[10px] font-mono max-w-xs">{cameraError}</p>
+        )}
         <button onClick={() => window.location.reload()}
           className="text-xs font-semibold tracking-wider text-[#00C2FF] border border-[#1E2D45] px-4 py-2 rounded-lg hover:border-[#00C2FF]/40 transition-all duration-300">
           RELOAD
@@ -444,13 +516,17 @@ export function FaceCapture({ capturedImage, onCapture, onRetake, onProceed, onL
           </div>
         )}
 
-        {!capturedImage && (
+        {!capturedImage && videoConstraints && (
           <Webcam
             ref={webcamRef} audio={false}
             screenshotFormat="image/jpeg" screenshotQuality={0.92}
-            videoConstraints={VIDEO_CONSTRAINTS}
+            videoConstraints={videoConstraints}
             onUserMedia={() => setPermission('granted')}
-            onUserMediaError={() => setPermission('denied')}
+            onUserMediaError={(err) => {
+              console.error('[FACE] Webcam error:', err)
+              setPermission('denied')
+              setCameraError(typeof err === 'string' ? err : err.message || 'Camera failed to start')
+            }}
             className="w-full h-full object-cover block"
           />
         )}
@@ -460,7 +536,7 @@ export function FaceCapture({ capturedImage, onCapture, onRetake, onProceed, onL
         )}
 
         {!capturedImage && permission === 'granted' && livenessStep === 'warmup' && (
-          <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-4 bg-[#0A0F1E]/80">
+          <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-4 bg-[#0A0F1E]/60">
             <motion.div
               className="w-3 h-3 rounded-full"
               style={{ backgroundColor: '#00C2FF', filter: 'drop-shadow(0 0 8px #00C2FF)' }}
