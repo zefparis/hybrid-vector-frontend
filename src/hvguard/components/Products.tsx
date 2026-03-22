@@ -24,7 +24,7 @@ export function Products() {
       icon: '⛑️',
       title: 'Worker attendance verification',
       desc: 'Prevent ghost workers on construction sites',
-      stat: '1€ / worker / month',
+      stat: 'R18 / worker / month',
       href: 'https://workguard.vercel.app',
       glowClass: styles.glowCyan,
     },
@@ -35,7 +35,7 @@ export function Products() {
       icon: '🛡️',
       title: 'Biometric payroll validation',
       desc: 'Confirm salary receipt with your face',
-      stat: '0.50€ / transaction',
+      stat: 'R9 / transaction',
       href: 'https://payguard-one.vercel.app',
       glowClass: styles.glowGreen,
     },
@@ -46,7 +46,7 @@ export function Products() {
       icon: '🎓',
       title: 'Academic identity shield',
       desc: 'Continuous exam monitoring',
-      stat: '2€ / exam session',
+      stat: 'R36 / exam session',
       href: 'https://edguard-v2.vercel.app',
       glowClass: styles.glowBlue,
     },
@@ -57,7 +57,7 @@ export function Products() {
       icon: '🔒',
       title: 'Physical access control',
       desc: 'QR + biometrics for secure sites',
-      stat: '50€ / access point / month',
+      stat: 'R900 / access point / month',
       href: 'https://accessguard-cyan.vercel.app',
       glowClass: styles.glowAmber,
     },
@@ -68,7 +68,7 @@ export function Products() {
       icon: '✒️',
       title: 'Biometric document signing',
       desc: 'Post-quantum certified contracts',
-      stat: '5€ / signed document',
+      stat: 'R90 / signed document',
       href: 'https://signguard-one.vercel.app',
       glowClass: styles.glowPurple,
     },
@@ -123,6 +123,12 @@ export function Products() {
               </div>
             </a>
           ))}
+        </div>
+
+        <div style={{ marginTop: 18, textAlign: 'center' }}>
+          <p className={styles.muted} style={{ fontSize: 12, lineHeight: 1.6 }}>
+            Pricing in ZAR. EUR pricing available for international clients.
+          </p>
         </div>
 
         <style>{`
