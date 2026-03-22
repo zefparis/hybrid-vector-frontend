@@ -87,7 +87,7 @@ export function HowItWorks() {
           <style>{`
             @media (max-width: 768px) {
               #how .${styles.container} > div[style*="grid-template-columns"] { grid-template-columns: 1fr; }
-              #how [aria-hidden] { display:none; }
+              #how [aria-hidden] { display: none; }
             }
           `}</style>
         </div>

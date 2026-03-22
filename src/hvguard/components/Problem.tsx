@@ -63,7 +63,7 @@ export function Problem() {
 
         <style>{`
           @media (max-width: 768px) {
-            .${styles.container} > div[style*="grid-template-columns"] { grid-template-columns: 1fr; }
+            .${styles.container} > div[style*="grid-template-columns: repeat"] { grid-template-columns: 1fr; }
           }
         `}</style>
       </div>

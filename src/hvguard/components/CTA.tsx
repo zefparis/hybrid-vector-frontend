@@ -42,7 +42,7 @@ export function CTA() {
                   value={name}
                   onChange={e => setName(e.target.value)}
                   required
-                  style={{ width: '100%', marginTop: 8, background: 'rgba(3,7,18,0.6)', border: '1px solid var(--border)', borderRadius: 12, padding: '12px 12px', color: 'var(--white)' }}
+                  style={{ width: '100%', marginTop: 8, background: 'rgba(3,7,18,0.6)', border: '1px solid var(--border)', borderRadius: 12, padding: '12px 12px', color: 'var(--white)', fontSize: '16px' }}
                 />
               </div>
               <div>
@@ -53,7 +53,7 @@ export function CTA() {
                   value={company}
                   onChange={e => setCompany(e.target.value)}
                   required
-                  style={{ width: '100%', marginTop: 8, background: 'rgba(3,7,18,0.6)', border: '1px solid var(--border)', borderRadius: 12, padding: '12px 12px', color: 'var(--white)' }}
+                  style={{ width: '100%', marginTop: 8, background: 'rgba(3,7,18,0.6)', border: '1px solid var(--border)', borderRadius: 12, padding: '12px 12px', color: 'var(--white)', fontSize: '16px' }}
                 />
               </div>
             </div>
@@ -67,7 +67,7 @@ export function CTA() {
                 type="email"
                 onChange={e => setEmail(e.target.value)}
                 required
-                style={{ width: '100%', marginTop: 8, background: 'rgba(3,7,18,0.6)', border: '1px solid var(--border)', borderRadius: 12, padding: '12px 12px', color: 'var(--white)' }}
+                style={{ width: '100%', marginTop: 8, background: 'rgba(3,7,18,0.6)', border: '1px solid var(--border)', borderRadius: 12, padding: '12px 12px', color: 'var(--white)', fontSize: '16px' }}
               />
             </div>
 
@@ -88,6 +88,7 @@ export function CTA() {
         <style>{`
           @media (max-width: 768px) {
             #contact form .${styles.card} > div[style*="grid-template-columns"] { grid-template-columns: 1fr; }
+            #contact form input { font-size: 16px; }
           }
         `}</style>
       </div>

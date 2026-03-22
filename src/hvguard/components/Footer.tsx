@@ -41,7 +41,7 @@ export function Footer() {
 
       <style>{`
         @media (max-width: 768px) {
-          footer .${styles.container} { grid-template-columns: 1fr; }
+          footer .${styles.container} { grid-template-columns: 1fr; gap: 24px; }
         }
       `}</style>
     </footer>

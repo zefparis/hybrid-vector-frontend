@@ -45,7 +45,7 @@ export function TrustSignals() {
 
         <style>{`
           @media (max-width: 768px) {
-            #root .${styles.container} > div[style*="grid-template-columns: 1fr 1fr"] { grid-template-columns: 1fr; }
+            .${styles.container} > div[style*="grid-template-columns: 1fr 1fr"] { grid-template-columns: 1fr; }
           }
         `}</style>
       </div>

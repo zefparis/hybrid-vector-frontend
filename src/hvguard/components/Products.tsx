@@ -96,9 +96,12 @@ export function Products() {
               className={`${styles.card} ${styles.lift} ${p.glowClass} ${styles.fadeUp} ${inView ? styles.fadeUpVisible : ''}`}
               style={{
                 textDecoration: 'none',
-                display: 'block',
+                display: 'flex',
+                flexDirection: 'column',
                 borderTop: `3px solid ${p.color}`,
                 transitionDelay: inView ? `${idx * 90}ms` : '0ms',
+                minHeight: '100%',
+                gridColumn: idx >= 3 ? (idx === 3 ? '2 / 3' : '3 / 4') : undefined,
               }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12 }}>
@@ -108,7 +111,7 @@ export function Products() {
                 <div style={{ fontSize: 22 }}>{p.icon}</div>
               </div>
 
-              <div style={{ marginTop: 12 }}>
+              <div style={{ marginTop: 12, flex: 1 }}>
                 <div style={{ fontFamily: 'Syne, system-ui, sans-serif', fontWeight: 800, letterSpacing: '0.04em' }}>{p.name}</div>
                 <div style={{ marginTop: 6, fontWeight: 900 }}>{p.title}</div>
                 <div className={styles.muted} style={{ marginTop: 10, fontSize: 14, lineHeight: 1.6 }}>{p.desc}</div>
@@ -123,6 +126,9 @@ export function Products() {
         </div>
 
         <style>{`
+          @media (max-width: 1024px) {
+            #products .${styles.container} > div[style*="grid-template-columns"] { grid-template-columns: repeat(2, 1fr); }
+          }
           @media (max-width: 768px) {
             #products .${styles.container} > div[style*="grid-template-columns"] { grid-template-columns: 1fr; }
           }

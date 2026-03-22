@@ -104,19 +104,19 @@ export function Hero() {
             </span>
           </div>
 
-          <h1 className={styles.headline} style={{ fontSize: 64, lineHeight: 0.98, marginTop: 22 }}>
+          <h1 className={styles.headline} style={{ fontSize: 'clamp(2.5rem, 8vw, 6rem)', lineHeight: 0.98, marginTop: 22 }}>
             Identity Beyond
             <br />
             <span style={{ color: 'var(--cyan)' }}>Biometrics.</span>
           </h1>
 
-          <p className={styles.muted} style={{ fontSize: 18, lineHeight: 1.7, marginTop: 18 }}>
+          <p className={styles.muted} style={{ fontSize: 'clamp(1rem, 2.5vw, 1.25rem)', lineHeight: 1.7, marginTop: 18 }}>
             The only platform combining facial recognition, voice biometrics, cognitive testing, behavioral analysis, and post-quantum cryptography.
             <br />
             Built for Africa. Certified for the world.
           </p>
 
-          <div style={{ display: 'flex', gap: 12, justifyContent: 'center', marginTop: 26, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: 12, justifyContent: 'center', marginTop: 26, flexWrap: 'wrap', flexDirection: 'column', alignItems: 'center' }}>
             <button
               className={`${styles.btn} ${styles.btnPrimary}`}
               onClick={() => document.querySelector('#products')?.scrollIntoView({ behavior: 'smooth' })}
