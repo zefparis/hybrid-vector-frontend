@@ -1,6 +1,5 @@
 import { Routes, Route } from 'react-router-dom'
-import { Navbar } from '@/components/Navbar'
-import { Landing } from '@/pages/Landing'
+import { HVGuardLanding } from './hvguard/HVGuardLanding'
 import { Dashboard } from '@/pages/Dashboard'
 import { EdguardHome } from '@/pages/EdguardHome'
 import { EdguardEnroll } from '@/pages/EdguardEnroll'
@@ -10,10 +9,9 @@ import { EdguardProfile } from './pages/EdguardProfile'
 
 export default function App() {
   return (
-    <div className="min-h-screen bg-hv-bg">
-      <Navbar />
+    <div>
       <Routes>
-        <Route path="/" element={<Landing />} />
+        <Route path="/" element={<HVGuardLanding />} />
         <Route path="/edguard" element={<EdguardHome />} />
         <Route path="/edguard/enroll" element={<EdguardEnroll />} />
         <Route path="/edguard/session" element={<EdguardSession />} />
