@@ -11,7 +11,7 @@ type Stat = {
   prefix?: string
 }
 
-const PARTICLE_COUNT = 46
+const PARTICLE_COUNT = 30
 
 type Particle = { id: number; left: number; top: number; size: number; delay: number; duration: number; opacity: number }
 
@@ -54,10 +54,12 @@ export function Hero() {
 
   return (
     <section id="top" className={styles.hero}>
+      {/* Backgrounds */}
       <div className={`${styles.heroBackdrop} ${styles.gridBg}`} style={{ opacity: 0.9 }} />
       <div className={styles.heroBackdrop} style={{ background: 'radial-gradient(ellipse at 50% 30%, rgba(0,194,255,0.14) 0%, transparent 60%)' }} />
       <div className={styles.scanLine} />
 
+      {/* Particles */}
       <div className={styles.heroBackdrop}>
         {particles.map(p => (
           <div
@@ -75,69 +77,99 @@ export function Hero() {
             }}
           />
         ))}
-
         <style>{`
           @keyframes hvFloat {
-            0% { transform: translateY(30px); opacity: 0; }
-            10% { opacity: 1; }
+            0%   { transform: translateY(30px); opacity: 0; }
+            10%  { opacity: 1; }
             100% { transform: translateY(-60px); opacity: 0; }
           }
         `}</style>
       </div>
 
+      {/* Content */}
       <div className={styles.container}>
-        <div style={{ maxWidth: 840, margin: '0 auto', textAlign: 'center' }}>
+        <div style={{ maxWidth: 800, margin: '0 auto', textAlign: 'center' }}>
+
+          {/* Badge */}
           <div
             className={styles.card}
             style={{
               display: 'inline-flex',
               alignItems: 'center',
               gap: 10,
-              padding: '10px 14px',
+              padding: '8px 14px',
               background: 'rgba(17,24,39,0.45)',
               borderColor: 'rgba(34,197,94,0.25)',
             }}
           >
             <span className={styles.pulseDot} />
-            <span style={{ fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', fontSize: 12, color: 'rgba(249,250,251,0.9)' }}>
+            <span style={{ fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', fontSize: 11, color: 'rgba(249,250,251,0.9)' }}>
               Live in production
             </span>
           </div>
 
-          <h1 className={styles.headline} style={{ fontSize: 'clamp(2.5rem, 8vw, 6rem)', lineHeight: 0.98, marginTop: 22 }}>
+          {/* H1 */}
+          <h1
+            className={styles.headline}
+            style={{
+              fontSize: 'clamp(2.25rem, 8vw, 5.5rem)',
+              lineHeight: 1,
+              marginTop: '1.25rem',
+            }}
+          >
             Identity Beyond
             <br />
             <span style={{ color: 'var(--cyan)' }}>Biometrics.</span>
           </h1>
 
-          <p className={styles.muted} style={{ fontSize: 'clamp(1rem, 2.5vw, 1.25rem)', lineHeight: 1.7, marginTop: 18 }}>
+          {/* Subtext */}
+          <p
+            className={styles.muted}
+            style={{
+              fontSize: 'clamp(0.9375rem, 2.5vw, 1.125rem)',
+              lineHeight: 1.7,
+              marginTop: '1.125rem',
+              maxWidth: 640,
+              marginLeft: 'auto',
+              marginRight: 'auto',
+            }}
+          >
             The only platform combining facial recognition, voice biometrics, cognitive testing, behavioral analysis, and post-quantum cryptography.
-            <br />
             Built for Africa. Certified for the world.
           </p>
 
-          <div style={{ display: 'flex', gap: 12, justifyContent: 'center', marginTop: 26, flexWrap: 'wrap', flexDirection: 'column', alignItems: 'center' }}>
+          {/* CTAs */}
+          <div style={{
+            display: 'flex',
+            gap: '0.75rem',
+            justifyContent: 'center',
+            marginTop: '1.75rem',
+            flexWrap: 'wrap',
+          }}>
             <button
               className={`${styles.btn} ${styles.btnPrimary}`}
+              style={{ minWidth: 180 }}
               onClick={() => document.querySelector('#products')?.scrollIntoView({ behavior: 'smooth' })}
             >
               See Our Products ↓
             </button>
             <button
               className={`${styles.btn} ${styles.btnOutline}`}
+              style={{ minWidth: 180 }}
               onClick={() => window.open('https://www.youtube.com', '_blank', 'noopener,noreferrer')}
             >
               Watch 2-min Demo
             </button>
           </div>
 
+          {/* Stats */}
           <div ref={statsRef} className={styles.statsGrid}>
             {stats.map((s, idx) => (
               <div key={s.label} className={styles.card} style={{ textAlign: 'left', background: 'rgba(17,24,39,0.55)' }}>
-                <div className={styles.mono} style={{ fontSize: 28, fontWeight: 800, color: 'var(--cyan)' }}>
+                <div className={styles.mono} style={{ fontSize: 'clamp(1.25rem, 4vw, 1.75rem)', fontWeight: 800, color: 'var(--cyan)' }}>
                   {fmt(s, values[idx] ?? 0)}
                 </div>
-                <div style={{ fontWeight: 800, marginTop: 6 }}>{s.label}</div>
+                <div style={{ fontWeight: 700, marginTop: 6, fontSize: '0.8125rem' }}>{s.label}</div>
               </div>
             ))}
           </div>

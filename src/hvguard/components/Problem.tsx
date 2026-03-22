@@ -27,22 +27,16 @@ export function Problem() {
   return (
     <section className={`${styles.section} ${styles.surface}`}>
       <div className={styles.container}>
-        <div
-          ref={ref}
-          className={`${styles.scanIn} ${inView ? styles.scanInVisible : ''}`}
-          style={{ maxWidth: 880 }}
-        >
-          <h2 className={styles.headline} style={{ fontSize: 44, lineHeight: 1.05 }}>
-            Identity fraud costs Africa
-            <br />
-            billions every year.
+        <div ref={ref} className={`${styles.scanIn} ${inView ? styles.scanInVisible : ''}`} style={{ maxWidth: 720 }}>
+          <h2 className={styles.headline}>
+            Identity fraud costs Africa billions every year.
           </h2>
-          <p className={styles.muted} style={{ marginTop: 14, fontSize: 16, lineHeight: 1.7 }}>
+          <p className={styles.muted} style={{ marginTop: '0.875rem', fontSize: '1rem', lineHeight: 1.7 }}>
             Traditional solutions use passwords, ID cards, or basic face scans. We use 5 layers.
           </p>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginTop: 26 }}>
+        <div className="problemGrid" style={{ marginTop: '1.75rem' }}>
           {pains.map((p, idx) => (
             <div
               key={p.title}
@@ -52,9 +46,9 @@ export function Problem() {
                 transitionDelay: inView ? `${idx * 90}ms` : '0ms',
               }}
             >
-              <div style={{ fontSize: 22 }}>{p.icon}</div>
-              <div style={{ fontWeight: 900, marginTop: 10, fontSize: 15 }}>{p.title}</div>
-              <div className={styles.muted} style={{ marginTop: 8, fontSize: 14, lineHeight: 1.6 }}>
+              <div style={{ fontSize: 20 }}>{p.icon}</div>
+              <div style={{ fontWeight: 700, marginTop: '0.625rem', fontSize: '0.9375rem' }}>{p.title}</div>
+              <div className={styles.muted} style={{ marginTop: '0.5rem', fontSize: '0.8125rem', lineHeight: 1.6 }}>
                 {p.desc}
               </div>
             </div>
@@ -62,8 +56,13 @@ export function Problem() {
         </div>
 
         <style>{`
+          .problemGrid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+          }
           @media (max-width: 768px) {
-            .${styles.container} > div[style*="grid-template-columns: repeat"] { grid-template-columns: 1fr; }
+            .problemGrid { grid-template-columns: 1fr; }
           }
         `}</style>
       </div>

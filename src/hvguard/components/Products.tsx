@@ -78,15 +78,16 @@ export function Products() {
     <section id="products" className={styles.section}>
       <div className={styles.container}>
         <div ref={ref} className={`${styles.scanIn} ${inView ? styles.scanInVisible : ''}`}>
-          <h2 className={styles.headline} style={{ fontSize: 44, lineHeight: 1.06 }}>
+          <h2 className={styles.headline}>
             One identity. Five applications.
           </h2>
-          <p className={styles.muted} style={{ marginTop: 12, fontSize: 16, lineHeight: 1.7, maxWidth: 860 }}>
+          <p className={styles.muted} style={{ marginTop: '0.75rem', fontSize: '1rem', lineHeight: 1.7, maxWidth: 640 }}>
             HV-GUARD is a family of systems built on the same 5-layer identity engine.
           </p>
         </div>
 
-        <div style={{ marginTop: 26, display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
+        {/* Products grid — 3 cols desktop, 2 tablet, 1 mobile */}
+        <div className="productsGrid" style={{ marginTop: '1.75rem' }}>
           {products.map((p, idx) => (
             <a
               key={p.name}
@@ -100,43 +101,46 @@ export function Products() {
                 flexDirection: 'column',
                 borderTop: `3px solid ${p.color}`,
                 transitionDelay: inView ? `${idx * 90}ms` : '0ms',
-                minHeight: '100%',
-                gridColumn: idx >= 3 ? (idx === 3 ? '2 / 3' : '3 / 4') : undefined,
               }}
             >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12 }}>
-                <div style={{ fontFamily: 'Syne, system-ui, sans-serif', fontWeight: 800, opacity: 0.18, fontSize: 40, lineHeight: 1 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
+                <div style={{ fontFamily: 'Syne, system-ui, sans-serif', fontWeight: 800, opacity: 0.18, fontSize: 36, lineHeight: 1 }}>
                   {p.num}
                 </div>
-                <div style={{ fontSize: 22 }}>{p.icon}</div>
+                <div style={{ fontSize: 20 }}>{p.icon}</div>
               </div>
 
-              <div style={{ marginTop: 12, flex: 1 }}>
-                <div style={{ fontFamily: 'Syne, system-ui, sans-serif', fontWeight: 800, letterSpacing: '0.04em' }}>{p.name}</div>
-                <div style={{ marginTop: 6, fontWeight: 900 }}>{p.title}</div>
-                <div className={styles.muted} style={{ marginTop: 10, fontSize: 14, lineHeight: 1.6 }}>{p.desc}</div>
+              <div style={{ marginTop: '0.75rem', flex: 1 }}>
+                <div style={{ fontFamily: 'Syne, system-ui, sans-serif', fontWeight: 800, letterSpacing: '0.04em', fontSize: '0.875rem' }}>{p.name}</div>
+                <div style={{ marginTop: 4, fontWeight: 700, fontSize: '0.9375rem' }}>{p.title}</div>
+                <div className={styles.muted} style={{ marginTop: 8, fontSize: '0.8125rem', lineHeight: 1.6 }}>{p.desc}</div>
               </div>
 
-              <div style={{ marginTop: 14, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
-                <div className={styles.mono} style={{ fontSize: 13, color: 'rgba(249,250,251,0.9)' }}>{p.stat}</div>
-                <div className={styles.mono} style={{ fontSize: 13, color: p.color }}>Live Demo →</div>
+              <div style={{ marginTop: '0.875rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                <div className={styles.mono} style={{ fontSize: '0.75rem', color: 'rgba(249,250,251,0.9)' }}>{p.stat}</div>
+                <div className={styles.mono} style={{ fontSize: '0.75rem', color: p.color, whiteSpace: 'nowrap' }}>Live Demo →</div>
               </div>
             </a>
           ))}
         </div>
 
-        <div style={{ marginTop: 18, textAlign: 'center' }}>
-          <p className={styles.muted} style={{ fontSize: 12, lineHeight: 1.6 }}>
+        <div style={{ marginTop: '1.125rem', textAlign: 'center' }}>
+          <p className={styles.muted} style={{ fontSize: '0.75rem', lineHeight: 1.6 }}>
             Pricing in ZAR. EUR pricing available for international clients.
           </p>
         </div>
 
         <style>{`
-          @media (max-width: 1024px) {
-            #products .${styles.container} > div[style*="grid-template-columns"] { grid-template-columns: repeat(2, 1fr); }
+          .productsGrid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
           }
-          @media (max-width: 768px) {
-            #products .${styles.container} > div[style*="grid-template-columns"] { grid-template-columns: 1fr; }
+          @media (max-width: 1024px) {
+            .productsGrid { grid-template-columns: repeat(2, 1fr); }
+          }
+          @media (max-width: 640px) {
+            .productsGrid { grid-template-columns: 1fr; }
           }
         `}</style>
       </div>
