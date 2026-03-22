@@ -26,39 +26,6 @@ function generateParticles(): Particle[] {
   }))
 }
 
-const features = [
-  {
-    icon: Fingerprint,
-    title: 'Neural Face Recognition',
-    description:
-      'Multi-layer liveness detection with PAD (Presentation Attack Detection) powered by our proprietary 3D depth analysis pipeline.',
-    badge: 'PATENT FR-2024-001',
-    color: '#00C2FF',
-  },
-  {
-    icon: Brain,
-    title: 'Cognitive Biometric Engine',
-    description:
-      'Real-time analysis of micro-behavioral patterns, reaction timing, and decision entropy to build a unique cognitive fingerprint.',
-    badge: 'PATENT FR-2024-002',
-    color: '#a78bfa',
-  },
-  {
-    icon: Lock,
-    title: 'Post-Quantum Cryptography',
-    description:
-      'CRYSTALS-Kyber and CRYSTALS-Dilithium lattice-based cryptography ensuring identity proofs are future-proof against quantum attacks.',
-    badge: 'PATENT FR-2024-003',
-    color: '#34d399',
-  },
-]
-
-const stats = [
-  { value: '100%', label: 'AI Agent Block Rate', sublabel: 'vs synthetic identities', icon: Shield },
-  { value: '3', label: 'French Patents', sublabel: 'Filed 2024', icon: Cpu },
-  { value: '<500ms', label: 'Verification Time', sublabel: 'end-to-end pipeline', icon: Zap },
-]
-
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: { opacity: 1, transition: { staggerChildren: 0.12 } },
@@ -73,6 +40,34 @@ export function Landing() {
   const { t } = useT()
   const navigate = useNavigate()
   const particles = useMemo(generateParticles, [])
+  const features = [
+    {
+      icon: Fingerprint,
+      title: t('landing_feature_face_title'),
+      description: t('landing_feature_face_desc_long'),
+      badge: 'PATENT FR-2024-001',
+      color: '#00C2FF',
+    },
+    {
+      icon: Brain,
+      title: t('landing_feature_cognitive_title'),
+      description: t('landing_feature_cognitive_desc_long'),
+      badge: 'PATENT FR-2024-002',
+      color: '#a78bfa',
+    },
+    {
+      icon: Lock,
+      title: t('landing_feature_pqc_title'),
+      description: t('landing_feature_pqc_desc_long'),
+      badge: 'PATENT FR-2024-003',
+      color: '#34d399',
+    },
+  ]
+  const stats = [
+    { value: '100%', label: t('landing_stats_agent'), sublabel: t('landing_stats_agent_sub'), icon: Shield },
+    { value: '3', label: t('landing_stats_patents'), sublabel: t('landing_stats_patents_sub'), icon: Cpu },
+    { value: '<500ms', label: t('landing_stats_time'), sublabel: t('landing_stats_time_sub'), icon: Zap },
+  ]
 
   return (
     <div className="min-h-screen bg-hv-bg overflow-hidden">
@@ -114,7 +109,7 @@ export function Landing() {
             <div className="flex items-center gap-2 px-4 py-2 rounded-full glass border-hv-cyan/20">
               <div className="w-1.5 h-1.5 rounded-full bg-hv-cyan animate-pulse" />
               <span className="text-xs font-semibold tracking-widest text-hv-cyan uppercase">
-                Next-Gen Identity Platform
+                {t('landing_platform_tag')}
               </span>
               <ChevronRight size={12} className="text-hv-muted" />
             </div>
@@ -148,16 +143,16 @@ export function Landing() {
               href="#features"
               className="flex items-center gap-2 px-8 py-4 rounded-xl font-medium text-base border border-white/10 text-hv-muted hover:text-hv-text hover:border-white/20 transition-all duration-200"
             >
-              Learn More
+              {t('landing_learn_more')}
             </a>
           </motion.div>
 
           <motion.div variants={itemVariants} className="flex flex-wrap justify-center gap-x-8 gap-y-3 pt-4">
             {[
-              'Enterprise-grade security',
-              'GDPR compliant',
-              'On-premise deployable',
-              'REST API',
+              t('landing_enterprise_security'),
+              t('landing_gdpr_compliant'),
+              t('landing_on_premise'),
+              t('landing_rest_api'),
             ].map((tag) => (
               <div key={tag} className="flex items-center gap-1.5">
                 <div className="w-1 h-1 rounded-full bg-hv-cyan" />
@@ -230,7 +225,7 @@ export function Landing() {
             <div className="mt-6 p-4 rounded-xl bg-hv-bg border border-white/5 font-mono text-xs">
               <div className="flex items-center gap-2 mb-3">
                 <span className="text-hv-green">✓</span>
-                <span className="text-hv-muted">Trust Score Computed</span>
+                <span className="text-hv-muted">{t('landing_trust_score_computed')}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-hv-cyan font-bold text-2xl">87</span>
@@ -254,14 +249,13 @@ export function Landing() {
             className="text-center mb-16 space-y-4"
           >
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-white/10 text-xs font-semibold tracking-widest text-hv-muted uppercase">
-              Core Technology
+              {t('landing_core_technology')}
             </div>
             <h2 className="font-black text-3xl sm:text-4xl text-gradient-white">
-              Three Layers of Certainty
+              {t('landing_three_layers')}
             </h2>
             <p className="text-hv-muted max-w-xl mx-auto">
-              Each verification pillar is independently patented and operates in parallel,
-              producing a composite Hybrid Trust Score in under 500ms.
+              {t('landing_three_layers_desc')}
             </p>
           </motion.div>
 
@@ -349,17 +343,17 @@ export function Landing() {
             className="space-y-4"
           >
             <h2 className="font-black text-3xl sm:text-4xl text-gradient-white">
-              Experience It Live
+              {t('landing_experience_live')}
             </h2>
             <p className="text-hv-muted">
-              Run the full verification pipeline in your browser. No account required.
+              {t('landing_experience_live_desc')}
             </p>
             <button
               onClick={() => navigate('/edguard')}
               className="group inline-flex items-center gap-2.5 px-8 py-4 rounded-xl font-bold text-base bg-hv-cyan text-hv-bg hover:bg-hv-cyan-dark transition-all duration-200"
               style={{ boxShadow: '0 0 24px rgba(0,194,255,0.45)' }}
             >
-              Start Verification
+              {t('landing_start_verification')}
               <ArrowRight size={18} className="transition-transform duration-200 group-hover:translate-x-1" />
             </button>
           </motion.div>
@@ -374,9 +368,9 @@ export function Landing() {
             <span>— {t('landing_hero_title')}</span>
           </div>
           <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-1">
-            <span>3 Patents Filed · France 2024</span>
-            <span>GDPR Compliant</span>
-            <span>SOC 2 Ready</span>
+            <span>{t('landing_footer_patents')}</span>
+            <span>{t('landing_footer_gdpr')}</span>
+            <span>{t('landing_footer_soc2')}</span>
           </div>
         </div>
       </footer>

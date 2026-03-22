@@ -35,6 +35,7 @@ function polarToXY(angle: number, distance: number, size: number) {
 }
 
 function SignalShape({ type, intercepted }: { type: Signal['type']; intercepted: boolean }) {
+  const { t } = useT()
   if (intercepted) {
     return (
       <motion.div
@@ -43,9 +44,7 @@ function SignalShape({ type, intercepted }: { type: Signal['type']; intercepted:
         transition={{ duration: 0.4 }}
         className="w-full h-full flex items-center justify-center"
       >
-        <span className="text-[9px] font-black tracking-wider" style={{ color: '#00FF88' }}>
-          INTERCEPTED
-        </span>
+        <span className="text-[9px] font-black tracking-wider" style={{ color: '#00FF88' }}>{t('reflex_intercepted')}</span>
       </motion.div>
     )
   }
@@ -111,13 +110,13 @@ function RadarGrid({ size }: { size: number }) {
 function CompletionScreen({ result }: { result: ReflexResult }) {
   const { t } = useT()
   const velocityLabel =
-    result.avgVelocityMs < 350 ? 'EXCEPTIONAL' :
-      result.avgVelocityMs < 500 ? 'OPTIMAL' : 'STANDARD'
+    result.avgVelocityMs < 350 ? t('reflex_velocity_exceptional') :
+      result.avgVelocityMs < 500 ? t('reflex_velocity_optimal') : t('reflex_velocity_standard')
 
   const lines = [
     `${result.intercepted}/${result.total} ${t('reflex_intercepted').toLowerCase()}`,
     `${t('reflex_velocity')}: ${result.avgVelocityMs}ms \u2014 ${velocityLabel}`,
-    `False positive rate: ${result.falsePositives > 0 ? result.falsePositives : '0'}%`,
+    `${t('reflex_false_positive_rate')}: ${result.falsePositives > 0 ? result.falsePositives : '0'}%`,
     t('reflex_complete_locked').replace('✓ ', ''),
   ]
 
@@ -391,19 +390,19 @@ export function NeuralReflex({ onComplete }: NeuralReflexProps) {
           <svg width="12" height="12" viewBox="0 0 28 28">
             <polygon points="14,2 26,8 26,20 14,26 2,20 2,8" fill="none" stroke="#00C2FF" strokeWidth="2" />
           </svg>
-          VALID
+          {t('reflex_valid')}
         </div>
         <div className="flex items-center gap-1.5">
           <svg width="12" height="12" viewBox="0 0 28 28">
             <rect x="4" y="4" width="20" height="20" fill="none" stroke="#FF3355" strokeWidth="2" transform="rotate(45 14 14)" />
           </svg>
-          NOISE
+          {t('reflex_noise')}
         </div>
         <div className="flex items-center gap-1.5">
           <svg width="12" height="12" viewBox="0 0 28 28">
             <circle cx="14" cy="14" r="8" fill="none" stroke="#8899BB" strokeWidth="1.5" strokeDasharray="3 3" />
           </svg>
-          GHOST
+          {t('reflex_ghost')}
         </div>
       </div>
     </div>

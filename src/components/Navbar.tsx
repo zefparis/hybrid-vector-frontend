@@ -12,8 +12,8 @@ export function Navbar() {
   const { lang, toggle } = useLangStore()
 
   const navLinks = [
-    { to: '/', label: 'Home', icon: Home },
-    { to: '/edguard', label: 'EDGUARD', icon: GraduationCap },
+    { to: '/', label: t('nav_home'), icon: Home },
+    { to: '/edguard', label: t('nav_edguard'), icon: GraduationCap },
     { to: '/dashboard', label: t('nav_dashboard'), icon: LayoutDashboard },
   ]
 
@@ -73,7 +73,7 @@ export function Navbar() {
             <button
               onClick={() => setOpen(o => !o)}
               className="sm:hidden flex items-center justify-center w-10 h-10 rounded-lg border border-white/10 text-hv-muted hover:text-hv-text transition-all duration-200"
-              aria-label="Toggle menu"
+              aria-label={t('nav_toggle_menu')}
             >
               {open ? <X size={20} /> : <Menu size={20} />}
             </button>

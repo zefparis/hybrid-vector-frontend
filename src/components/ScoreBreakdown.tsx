@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { Eye, Brain, Shield, Sparkles, type LucideIcon } from 'lucide-react'
+import { useT } from '@/i18n/useLang'
 
 interface ScoreMetric {
   label: string
@@ -34,6 +35,7 @@ export function ScoreBreakdown({
   behavioralBonus,
 }: ScoreBreakdownProps) {
   const [animated, setAnimated] = useState(false)
+  const { t } = useT()
 
   useEffect(() => {
     const t = setTimeout(() => setAnimated(true), 100)
@@ -42,32 +44,32 @@ export function ScoreBreakdown({
 
   const metrics: ScoreMetric[] = [
     {
-      label: 'Facial Liveness',
+      label: t('score_metric_facial_liveness'),
       value: toPercent(facialLiveness),
       icon: Eye,
       color: getBarColor(toPercent(facialLiveness)),
-      description: 'Anti-spoofing liveness verification',
+      description: t('score_metric_facial_liveness_desc'),
     },
     {
-      label: 'Facial Confidence',
+      label: t('score_metric_facial_confidence'),
       value: toPercent(facialConfidence),
       icon: Shield,
       color: getBarColor(toPercent(facialConfidence)),
-      description: 'Biometric match confidence',
+      description: t('score_metric_facial_confidence_desc'),
     },
     {
-      label: 'Cognitive Score',
+      label: t('score_metric_cognitive_score'),
       value: toPercent(cognitiveScore),
       icon: Brain,
       color: getBarColor(toPercent(cognitiveScore)),
-      description: 'Human reaction pattern analysis',
+      description: t('score_metric_cognitive_score_desc'),
     },
     {
-      label: 'Behavioral Bonus',
+      label: t('score_metric_behavioral_bonus'),
       value: toPercent(behavioralBonus),
       icon: Sparkles,
       color: getBarColor(toPercent(behavioralBonus)),
-      description: 'Interaction entropy factor',
+      description: t('score_metric_behavioral_bonus_desc'),
     },
   ]
 

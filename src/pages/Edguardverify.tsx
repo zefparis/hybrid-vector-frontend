@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FaceCapture } from '@/components/FaceCapture'
 import { verifyStudent } from '@/services/edguardApi'
+import { useT } from '@/i18n/useLang'
 
 const HEX_PATTERN = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='49' viewBox='0 0 28 49'%3E%3Cg fill-rule='evenodd'%3E%3Cg fill='%2300C2FF' fill-opacity='0.03'%3E%3Cpath d='M13.99 9.25l13 7.5v15l-13 7.5L1 31.75v-15l12.99-7.5zM3 17.9v12.7l10.99 6.34 11-6.35V17.9l-11-6.34L3 17.9z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
 
@@ -10,6 +11,7 @@ type VerifyStep = 1 | 2 | 'success' | 'error'
 
 export function EdguardVerify() {
   const navigate = useNavigate()
+  const { t } = useT()
 
   const [step, setStep] = useState<VerifyStep>(1)
   const [firstName, setFirstName] = useState('')
@@ -37,7 +39,7 @@ export function EdguardVerify() {
 
   const handleProceed = useCallback(async () => {
     if (!selfieB64) {
-      setErrorMsg('Capture failed — please center your face and try again.')
+      setErrorMsg(t('edguard_verify_capture_failed'))
       setStep('error')
       return
     }
@@ -58,16 +60,16 @@ export function EdguardVerify() {
       if (result.verified) {
         setStep('success')
       } else {
-        setErrorMsg(`Similarité: ${similarityPct}% — Seuil requis: 80%`)
+        setErrorMsg(t('edguard_verify_similarity_error').replace('{similarity}', String(similarityPct)))
         setStep('error')
       }
     } catch {
-      setErrorMsg('Service indisponible. Réessayez.')
+      setErrorMsg(t('edguard_verify_service_unavailable'))
       setStep('error')
     } finally {
       setIsSubmitting(false)
     }
-  }, [selfieB64, firstName, lastName])
+  }, [selfieB64, firstName, lastName, t])
 
   const handleRetry = useCallback(() => {
     setSelfieB64('')
@@ -105,36 +107,40 @@ export function EdguardVerify() {
                     </svg>
                   </div>
                   <h2 className="text-base font-bold tracking-wider mb-1" style={{ color: '#F0F4FF' }}>
-                    Vérification d’identité
+                    {t('edguard_verify_title')}
                   </h2>
                   <p className="text-xs" style={{ color: '#8899BB' }}>
-                    Renseignez votre prénom et votre nom pour continuer
+                    {t('edguard_verify_subtitle')}
                   </p>
                 </div>
 
                 <form onSubmit={handleIdentitySubmit} className="flex flex-col gap-4">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="flex flex-col gap-1.5">
-                      <label className="text-[10px] font-semibold tracking-widest" style={{ color: '#8899BB' }}>PRÉNOM *</label>
+                      <label className="text-[10px] font-semibold tracking-widest" style={{ color: '#8899BB' }}>{t('edguard_verify_first_name')} *</label>
+
                       <input
                         type="text"
                         value={firstName}
                         onChange={(e) => setFirstName(e.target.value)}
                         required
                         autoFocus
-                        placeholder="Jean"
+                        placeholder={t('edguard_verify_first_name').toLowerCase()}
+
                         className="w-full px-4 py-3 rounded-xl text-sm font-medium outline-none transition-all duration-200"
                         style={{ backgroundColor: '#0A0F1E', border: '1px solid #1E2D45', color: '#F0F4FF' }}
                       />
                     </div>
                     <div className="flex flex-col gap-1.5">
-                      <label className="text-[10px] font-semibold tracking-widest" style={{ color: '#8899BB' }}>NOM *</label>
+                      <label className="text-[10px] font-semibold tracking-widest" style={{ color: '#8899BB' }}>{t('edguard_verify_last_name')} *</label>
+
                       <input
                         type="text"
                         value={lastName}
                         onChange={(e) => setLastName(e.target.value)}
                         required
-                        placeholder="Dupont"
+                        placeholder={t('edguard_verify_last_name').toLowerCase()}
+
                         className="w-full px-4 py-3 rounded-xl text-sm font-medium outline-none transition-all duration-200"
                         style={{ backgroundColor: '#0A0F1E', border: '1px solid #1E2D45', color: '#F0F4FF' }}
                       />
@@ -146,7 +152,8 @@ export function EdguardVerify() {
                     className="w-full py-3.5 rounded-xl font-bold text-sm tracking-wider transition-all duration-300"
                     style={{ backgroundColor: '#00C2FF', color: '#0A0F1E', boxShadow: '0 0 20px rgba(0,194,255,0.3)' }}
                   >
-                    Continuer →
+                    {t('edguard_verify_continue')}
+
                   </button>
                 </form>
               </motion.div>
@@ -156,10 +163,10 @@ export function EdguardVerify() {
               <motion.div key="verify-face" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.3 }}>
                 <div className="text-center mb-4">
                   <h2 className="text-base font-bold tracking-wider mb-1" style={{ color: '#F0F4FF' }}>
-                    Centrez votre visage
+                    {t('edguard_verify_center_face')}
                   </h2>
                   <p className="text-xs" style={{ color: '#8899BB' }}>
-                    Capturez un selfie net pour vérifier votre identité
+                    {t('edguard_verify_center_face_desc')}
                   </p>
                 </div>
 
@@ -168,7 +175,7 @@ export function EdguardVerify() {
                   onCapture={handleCapture}
                   onRetake={handleRetake}
                   onProceed={handleProceed}
-                  proceedLabel="Me connecter"
+                  proceedLabel={t('edguard_verify_connect')}
                 />
 
                 <button
@@ -176,13 +183,19 @@ export function EdguardVerify() {
                   className="w-full mt-3 text-[10px] font-semibold tracking-wider py-2"
                   style={{ color: '#3D5A75' }}
                 >
-                  ← Changer d’identité
+                  {t('edguard_verify_change_identity')}
                 </button>
               </motion.div>
             )}
 
             {step === 'success' && (
-              <motion.div key="verify-success" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="flex flex-col items-center gap-4 py-6">
+              <motion.div
+                key="verify-success"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0 }}
+                className="flex flex-col items-center gap-4 py-6"
+              >
                 <motion.div
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
@@ -195,14 +208,17 @@ export function EdguardVerify() {
 
                 <div className="text-center">
                   <p className="text-sm font-bold tracking-widest mb-1" style={{ color: '#00FF88' }}>
-                    IDENTITÉ CONFIRMÉE
+                    {t('edguard_verify_identity_confirmed')}
                   </p>
                   <p className="text-xs mb-3" style={{ color: '#8899BB' }}>
                     {`${firstName} ${lastName}`.trim()}
                   </p>
-                  <div className="inline-flex items-center gap-2 px-4 py-2 rounded-lg" style={{ backgroundColor: 'rgba(0,255,136,0.1)', border: '1px solid rgba(0,255,136,0.2)' }}>
+                  <div
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg"
+                    style={{ backgroundColor: 'rgba(0,255,136,0.1)', border: '1px solid rgba(0,255,136,0.2)' }}
+                  >
                     <span className="text-[10px] font-bold tracking-widest" style={{ color: '#00FF88' }}>
-                      SIMILARITÉ
+                      {t('edguard_verify_similarity')}
                     </span>
                     <span className="text-sm font-black" style={{ color: '#00FF88', fontFamily: 'monospace' }}>
                       {Math.round(confidence)}%
@@ -211,27 +227,32 @@ export function EdguardVerify() {
                 </div>
 
                 <p className="text-xs" style={{ color: '#3D5A75' }}>
-                  Redirection vers la session...
+                  {t('edguard_verify_redirecting')}
                 </p>
                 <button
                   onClick={handleSuccessContinue}
                   className="mt-2 px-4 py-2 rounded-xl font-bold text-xs tracking-wider"
                   style={{ backgroundColor: '#00C2FF', color: '#0A0F1E' }}
                 >
-                  Accéder à la session →
+                  {t('edguard_verify_access_session')}
                 </button>
               </motion.div>
             )}
 
             {step === 'error' && (
-              <motion.div key="verify-error" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center gap-4 py-6">
+              <motion.div
+                key="verify-error"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="flex flex-col items-center gap-4 py-6"
+              >
                 <div className="w-20 h-20 rounded-full flex items-center justify-center" style={{ backgroundColor: 'rgba(255,51,85,0.1)', border: '2px solid #FF3355' }}>
                   <span className="text-3xl" style={{ color: '#FF3355' }}>✗</span>
                 </div>
 
                 <div className="text-center">
                   <p className="text-sm font-bold tracking-widest mb-2" style={{ color: '#FF3355' }}>
-                    VÉRIFICATION ÉCHOUÉE
+                    {t('edguard_verify_failed')}
                   </p>
                   <p className="text-xs max-w-xs" style={{ color: '#8899BB' }}>
                     {errorMsg}
@@ -244,14 +265,14 @@ export function EdguardVerify() {
                     className="flex-1 py-3 rounded-xl font-bold text-sm tracking-wider"
                     style={{ backgroundColor: '#00C2FF', color: '#0A0F1E', boxShadow: '0 0 20px rgba(0,194,255,0.3)' }}
                   >
-                    Réessayer
+                    {t('edguard_verify_retry')}
                   </button>
                   <button
                     onClick={handleReset}
                     className="flex-1 py-3 rounded-xl font-bold text-sm tracking-wider"
                     style={{ border: '1px solid #1E2D45', color: '#8899BB' }}
                   >
-                    Changer d’identité
+                    {t('edguard_verify_change_identity')}
                   </button>
                 </div>
               </motion.div>
@@ -262,7 +283,7 @@ export function EdguardVerify() {
             <div className="absolute inset-0 flex items-center justify-center z-20 rounded-2xl" style={{ backgroundColor: 'rgba(10,15,30,0.85)' }}>
               <div className="flex flex-col items-center gap-3">
                 <div className="w-8 h-8 rounded-full border-2 border-[#1E2D45] border-t-[#00C2FF] animate-spin" />
-                <span className="text-xs font-semibold tracking-widest" style={{ color: '#00C2FF' }}>VÉRIFICATION EN COURS...</span>
+                <span className="text-xs font-semibold tracking-widest" style={{ color: '#00C2FF' }}>{t('edguard_verify_progress')}</span>
               </div>
             </div>
           )}

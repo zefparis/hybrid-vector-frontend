@@ -176,7 +176,7 @@ export function TrustScore({ session, onReset }: TrustScoreProps) {
         <p className="text-[10px] font-bold tracking-widest" style={{ color: '#8899BB' }}>
           {t('score_certified')}
         </p>
-        {['ML-KEM FIPS 203/204', '3 Brevets Fran\u00e7ais', 'Celestial Entropy'].map((cert) => (
+        {[t('score_cert_mlkem'), t('score_cert_french_patents'), t('score_cert_entropy')].map((cert) => (
           <div key={cert} className="flex items-center gap-2">
             <svg width="12" height="12" viewBox="0 0 28 28">
               <polygon points="14,2 26,8 26,20 14,26 2,20 2,8" fill="none" stroke="#00C2FF" strokeWidth="2" />
@@ -200,7 +200,7 @@ export function TrustScore({ session, onReset }: TrustScoreProps) {
           }}
         >
           <span className="text-base">&#8599;</span>
-          {copied ? 'COPIED ✓' : t('score_share')}
+          {copied ? t('score_copy') : t('score_share')}
         </button>
         <button
           onClick={onReset}

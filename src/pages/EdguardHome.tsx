@@ -58,7 +58,7 @@ export function EdguardHome() {
             {t('edguard_subtitle')}
           </p>
           <p className="text-xs sm:text-sm max-w-xl mx-auto leading-relaxed" style={{ color: '#8899BB' }}>
-            Choisissez un parcours pour enregistrer ou vérifier une identité faciale.
+            {t('edguard_home_choose_path')}
           </p>
         </motion.div>
 
@@ -82,13 +82,13 @@ export function EdguardHome() {
                   {t('edguard_enroll')}
                 </h2>
                 <p className="text-xs leading-relaxed mb-5" style={{ color: '#8899BB' }}>
-                  Commencer l’enregistrement avec formulaire d’identité puis selfie
+                  {t('edguard_home_enroll_desc')}
                 </p>
                 <div
                   className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm tracking-wider transition-all duration-300 group-hover:shadow-[0_0_20px_rgba(0,194,255,0.2)]"
                   style={{ border: '1.5px solid rgba(0,194,255,0.5)', color: '#00C2FF' }}
                 >
-                  Démarrer l’enregistrement →
+                  {t('edguard_home_enroll_cta')}
                 </div>
               </div>
             </Link>
@@ -110,16 +110,16 @@ export function EdguardHome() {
                   </div>
                 </div>
                 <h2 className="text-base sm:text-lg font-bold tracking-wider mb-2" style={{ color: '#F0F4FF' }}>
-                  Vérification d’identité
+                  {t('edguard_home_verify_title')}
                 </h2>
                 <p className="text-xs leading-relaxed mb-5" style={{ color: '#8899BB' }}>
-                  Vérifier une identité existante avec prénom, nom et selfie
+                  {t('edguard_home_verify_desc')}
                 </p>
                 <div
                   className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm tracking-wider transition-all duration-300 group-hover:shadow-[0_0_20px_rgba(0,194,255,0.2)]"
                   style={{ border: '1.5px solid rgba(0,194,255,0.5)', color: '#00C2FF' }}
                 >
-                  Démarrer la vérification →
+                  {t('edguard_home_verify_cta')}
                 </div>
               </div>
             </Link>

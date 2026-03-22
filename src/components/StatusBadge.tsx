@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion'
 import { CheckCircle2, XCircle, Loader2, type LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useT } from '@/i18n/useLang'
 
 type BadgeStatus = 'HUMAN' | 'BOT' | 'ANALYZING'
 
@@ -16,19 +17,19 @@ const config: Record<BadgeStatus, {
   glowClass: string
 }> = {
   HUMAN: {
-    label: 'HUMAN VERIFIED',
+    label: 'status_human_verified',
     icon: CheckCircle2,
     classes: 'border-hv-green/40 bg-hv-green/10 text-hv-green',
     glowClass: 'shadow-green-glow',
   },
   BOT: {
-    label: 'BOT DETECTED',
+    label: 'status_bot_detected',
     icon: XCircle,
     classes: 'border-hv-red/40 bg-hv-red/10 text-hv-red',
     glowClass: 'shadow-red-glow',
   },
   ANALYZING: {
-    label: 'ANALYZING',
+    label: 'status_analyzing',
     icon: Loader2,
     classes: 'border-hv-cyan/40 bg-hv-cyan/10 text-hv-cyan',
     glowClass: 'shadow-cyan-glow-sm',
@@ -37,6 +38,7 @@ const config: Record<BadgeStatus, {
 
 export function StatusBadge({ status, large = false }: StatusBadgeProps) {
   const { label, icon: Icon, classes, glowClass } = config[status]
+  const { t } = useT()
   const isAnalyzing = status === 'ANALYZING'
 
   return (
@@ -55,7 +57,7 @@ export function StatusBadge({ status, large = false }: StatusBadgeProps) {
         size={large ? 20 : 14}
         className={cn(isAnalyzing && 'animate-spin')}
       />
-      {label}
+      {t(label as any)}
     </motion.div>
   )
 }

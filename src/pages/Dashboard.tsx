@@ -78,32 +78,32 @@ export function Dashboard() {
 
   const stats = [
     {
-      label: 'Total Sessions',
+      label: t('dash_total_sessions'),
       value: String(totalSessions),
       icon: BarChart3,
       color: '#00C2FF',
-      sub: 'All time',
+      sub: t('dash_all_time'),
     },
     {
-      label: 'Human Rate',
+      label: t('dash_human_rate'),
       value: `${humanRate}%`,
       icon: Users,
       color: '#22C55E',
-      sub: `${humanSessions} verified`,
+      sub: `${humanSessions} ${t('dash_verified')}`,
     },
     {
-      label: 'Avg Trust Score',
+      label: t('dash_avg_trust_score'),
       value: String(avgScore),
       icon: ShieldCheck,
       color: avgScore >= 75 ? '#00C2FF' : avgScore >= 40 ? '#F97316' : '#EF4444',
-      sub: 'out of 100',
+      sub: t('dash_out_of_100'),
     },
     {
-      label: 'Avg Processing',
+      label: t('dash_avg_processing'),
       value: `${avgProcessing}ms`,
       icon: Clock,
       color: '#a78bfa',
-      sub: 'end-to-end',
+      sub: t('dash_end_to_end'),
     },
   ]
 
@@ -116,8 +116,8 @@ export function Dashboard() {
             <h1 className="font-black text-2xl sm:text-3xl text-hv-text">{t('dash_title')}</h1>
             <p className="text-hv-muted text-sm mt-1">
               {totalSessions > 0
-                ? `${totalSessions} session${totalSessions !== 1 ? 's' : ''} recorded this session`
-                : 'No sessions yet — enroll in EDGUARD to see results here'}
+                ? `${totalSessions} ${t('dash_total_sessions').toLowerCase()} ${t('dash_recorded_this_session')}`
+                : t('dash_no_sessions_here')}
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -186,7 +186,7 @@ export function Dashboard() {
               className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm bg-hv-cyan text-hv-bg hover:bg-hv-cyan-dark transition-all duration-200"
               style={{ boxShadow: '0 0 16px rgba(0,194,255,0.35)' }}
             >
-              Go to EDGUARD
+              {t('dash_go_to_edguard')}
             </a>
           </motion.div>
         ) : (
@@ -198,15 +198,15 @@ export function Dashboard() {
           >
             <div className="p-4 border-b border-white/5 flex items-center justify-between">
               <h2 className="font-bold text-hv-text text-sm tracking-wider uppercase">
-                Session History
+                {t('dash_session_history')}
               </h2>
-              <span className="text-xs text-hv-muted">{totalSessions} records</span>
+              <span className="text-xs text-hv-muted">{totalSessions} {t('dash_records')}</span>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-white/5">
-                    {['Timestamp', 'Session ID', 'Trust Score', 'Status', 'Confidence', 'Facial Live.', 'Cognitive', 'Time'].map(
+                    {[t('dash_table_timestamp'), t('dash_table_session_id'), t('dash_table_trust_score'), t('dash_table_status'), t('dash_table_confidence'), t('dash_table_facial_live'), t('dash_table_cognitive'), t('dash_table_time')].map(
                       (col) => (
                         <th
                           key={col}

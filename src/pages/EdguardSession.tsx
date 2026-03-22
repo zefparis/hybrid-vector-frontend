@@ -27,6 +27,7 @@ function formatDuration(ms: number): string {
 
 /* ─── Mini Reaction Test (3 stimuli, overlay) ─── */
 function MiniReactionTest({ onDone }: { onDone: (avgMs: number) => void }) {
+  const { t } = useT()
   const [step, setStep] = useState(0)
   const [showCircle, setShowCircle] = useState(false)
   const circleAt = useRef(0)
@@ -66,7 +67,7 @@ function MiniReactionTest({ onDone }: { onDone: (avgMs: number) => void }) {
       style={{ backgroundColor: 'rgba(10,15,30,0.92)' }}
     >
       <p className="text-[10px] font-semibold tracking-widest" style={{ color: '#8899BB' }}>
-        CHECKPOINT COGNITIF — {step}/{total}
+        {t('session_checkpoint_cognitive').replace('{step}', String(step)).replace('{total}', String(total))}
       </p>
       <div
         onClick={handleClick}
@@ -78,7 +79,7 @@ function MiniReactionTest({ onDone }: { onDone: (avgMs: number) => void }) {
         }}
       >
         <span className="text-[10px] font-bold tracking-widest" style={{ color: showCircle ? '#0A0F1E' : '#8899BB' }}>
-          {showCircle ? 'TAP' : '...'}
+          {showCircle ? t('session_tap') : t('session_wait')}
         </span>
       </div>
     </motion.div>
@@ -90,7 +91,7 @@ function CheckpointItem({ cp }: { cp: CheckpointResponse }) {
   const { t } = useT()
   const color = alertColor(cp.alert_level)
   return (
-    <div className="flex items-center gap-3 py-2">
+    <div className="flex items-center gap-1 sm:gap-2 mb-5">
       <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: color }} />
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between">
@@ -129,7 +130,7 @@ function SessionSetup({ onStart }: { onStart: (studentId: string, examName: stri
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       <div className="text-center mb-2">
         <p className="text-xs font-bold tracking-widest" style={{ color: '#00C2FF' }}>
-          {t('edguard_title')} — SESSION
+          {t('edguard_title')} — ENROLLMENT
         </p>
         <div className="h-px w-full mt-3" style={{ backgroundColor: '#1E2D45' }} />
       </div>
@@ -150,7 +151,7 @@ function SessionSetup({ onStart }: { onStart: (studentId: string, examName: stri
 
       <div className="flex flex-col gap-1.5">
         <label className="text-[10px] font-semibold tracking-widest" style={{ color: '#8899BB' }}>
-          NOM DE L&apos;EXAMEN (optionnel)
+          {t('session_exam_name_optional')}
         </label>
         <input
           type="text"
@@ -158,7 +159,7 @@ function SessionSetup({ onStart }: { onStart: (studentId: string, examName: stri
           onChange={(e) => setExamName(e.target.value)}
           className="w-full px-4 py-3 rounded-xl text-sm font-medium outline-none transition-all duration-200 focus:border-[#00C2FF]/50"
           style={{ backgroundColor: '#0A0F1E', border: '1px solid #1E2D45', color: '#F0F4FF' }}
-          placeholder="ex: Algèbre Linéaire S2"
+          placeholder={t('session_exam_placeholder')}
         />
       </div>
 
@@ -167,7 +168,7 @@ function SessionSetup({ onStart }: { onStart: (studentId: string, examName: stri
         className="w-full py-3.5 rounded-xl font-bold text-sm tracking-wider transition-all duration-300"
         style={{ backgroundColor: '#00C2FF', color: '#0A0F1E', boxShadow: '0 0 20px rgba(0,194,255,0.3)' }}
       >
-        {t('edguard_start_session')} →
+        {t('session_continue')}
       </button>
     </form>
   )
@@ -187,14 +188,14 @@ function SessionSummary({ checkpoints, duration }: { checkpoints: CheckpointResp
     const w = window.open('', '_blank')
     if (!w) return
     w.document.write(`
-      <html><head><title>EDGUARD Session Report</title>
+      <html><head><title>${t('session_report_title')}</title>
       <style>body{font-family:Inter,sans-serif;background:#0A0F1E;color:#F0F4FF;padding:40px}
       h1{color:#00C2FF;letter-spacing:3px}table{width:100%;border-collapse:collapse;margin-top:20px}
       th,td{padding:8px 12px;border:1px solid #1E2D45;text-align:left;font-size:12px}
       th{background:#0D1526;color:#00C2FF;letter-spacing:2px}</style></head><body>
-      <h1>EDGUARD — SESSION REPORT</h1>
-      <p>Duration: ${formatDuration(duration)} | Checkpoints: ${checkpoints.length} | Average: ${avgScore}% | Alerts: ${alertCount}</p>
-      <table><tr><th>#</th><th>TIME</th><th>SCORE</th><th>STATUS</th><th>FLAGS</th></tr>
+      <h1>${t('session_report_title')}</h1>
+      <p>${t('session_report_duration')}: ${formatDuration(duration)} | ${t('session_report_checkpoints')}: ${checkpoints.length} | ${t('session_report_average')}: ${avgScore}% | ${t('session_report_alerts')}: ${alertCount}</p>
+      <table><tr><th>#</th><th>${t('session_report_time')}</th><th>${t('session_report_score')}</th><th>${t('session_report_status')}</th><th>${t('session_report_flags')}</th></tr>
       ${checkpoints.map((c) => `<tr><td>${c.checkpoint_number}</td><td>${new Date(c.timestamp).toLocaleTimeString('fr-FR')}</td><td>${c.trust_score}%</td><td>${c.alert_level}</td><td>${c.flags.join(', ') || '—'}</td></tr>`).join('')}
       </table></body></html>
     `)
@@ -206,16 +207,16 @@ function SessionSummary({ checkpoints, duration }: { checkpoints: CheckpointResp
     <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col gap-4">
       <div className="text-center">
         <p className="text-sm font-bold tracking-widest" style={{ color: verdictColor }}>{verdict}</p>
-        <p className="text-[10px] tracking-wider mt-1" style={{ color: '#8899BB' }}>SESSION TERMINÉE</p>
+        <p className="text-[10px] tracking-wider mt-1" style={{ color: '#8899BB' }}>{t('session_terminated').toUpperCase()}</p>
       </div>
       <div className="h-px w-full" style={{ backgroundColor: '#1E2D45' }} />
 
       <div className="grid grid-cols-2 gap-3">
         {[
-          { label: 'Durée', value: formatDuration(duration) },
-          { label: 'Checkpoints', value: String(checkpoints.length) },
-          { label: 'Score moyen', value: `${avgScore}%` },
-          { label: 'Alertes', value: String(alertCount) },
+          { label: t('session_duration'), value: formatDuration(duration) },
+          { label: t('session_checkpoints'), value: String(checkpoints.length) },
+          { label: t('session_average_score'), value: `${avgScore}%` },
+          { label: t('session_alerts'), value: String(alertCount) },
         ].map((s) => (
           <div key={s.label} className="rounded-xl p-3 text-center" style={{ backgroundColor: '#0A0F1E', border: '1px solid #1E2D45' }}>
             <p className="text-lg font-bold" style={{ color: '#F0F4FF' }}>{s.value}</p>
@@ -227,7 +228,7 @@ function SessionSummary({ checkpoints, duration }: { checkpoints: CheckpointResp
       {/* Timeline */}
       {checkpoints.length > 0 && (
         <div className="rounded-xl p-4" style={{ backgroundColor: '#0A0F1E', border: '1px solid #1E2D45' }}>
-          <p className="text-[10px] font-semibold tracking-widest mb-3" style={{ color: '#8899BB' }}>TIMELINE</p>
+          <p className="text-[10px] font-semibold tracking-widest mb-3" style={{ color: '#8899BB' }}>{t('session_timeline').toUpperCase()}</p>
           <div className="flex items-end gap-1 h-20">
             {checkpoints.map((cp) => {
               const h = Math.max(8, (cp.trust_score / 100) * 80)
@@ -360,7 +361,7 @@ export function EdguardSession() {
                     <polygon points="14,2 26,8 26,20 14,26 2,20 2,8" fill="none" stroke="#00C2FF" strokeWidth="2" />
                   </svg>
                   <span className="text-xs sm:text-sm font-black tracking-widest" style={{ color: '#F0F4FF' }}>
-                    {t('edguard_title')} — SESSION
+                    {t('session_title')}
                   </span>
                 </div>
                 <span className="font-mono text-sm font-bold tabular-nums tracking-wider" style={{ color: '#00C2FF' }}>
@@ -392,11 +393,11 @@ export function EdguardSession() {
 
                 {/* Status */}
                 <div className="flex flex-col gap-2">
-                  <p className="text-[10px] font-semibold tracking-widest" style={{ color: '#8899BB' }}>STATUT COURANT</p>
+                  <p className="text-[10px] font-semibold tracking-widest" style={{ color: '#8899BB' }}>{t('session_current_status').toUpperCase()}</p>
                   {[
-                    { label: 'Identité vérifiée', ok: store.currentStatus !== 'ALERT' },
-                    { label: 'Liveness confirmée', ok: store.currentStatus !== 'ALERT' },
-                    { label: 'Profil cognitif stable', ok: store.currentStatus === 'CLEAR' || store.currentStatus === 'IDLE' },
+                    { label: t('session_identity_verified'), ok: store.currentStatus !== 'ALERT' },
+                    { label: t('session_liveness_confirmed'), ok: store.currentStatus !== 'ALERT' },
+                    { label: t('session_cognitive_stable'), ok: store.currentStatus === 'CLEAR' || store.currentStatus === 'IDLE' },
                   ].map((s) => (
                     <div key={s.label} className="flex items-center gap-2">
                       <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: s.ok ? '#00FF88' : '#FF3355' }} />
@@ -412,7 +413,7 @@ export function EdguardSession() {
                     className="mt-2 px-4 py-2 rounded-xl text-[10px] font-bold tracking-widest transition-all duration-200 disabled:opacity-40"
                     style={{ border: '1px solid #1E2D45', color: '#00C2FF' }}
                   >
-                    CHECKPOINT MANUEL
+                    {t('session_manual_checkpoint').toUpperCase()}
                   </button>
                 </div>
               </div>
@@ -422,7 +423,7 @@ export function EdguardSession() {
                 <div>
                   <div className="h-px w-full mb-3" style={{ backgroundColor: '#1E2D45' }} />
                   <p className="text-[10px] font-semibold tracking-widest mb-2" style={{ color: '#8899BB' }}>
-                    HISTORIQUE ({store.checkpoints.length})
+                    {t('session_history').toUpperCase()} ({store.checkpoints.length})
                   </p>
                   <div className="max-h-40 overflow-y-auto space-y-0.5">
                     {[...store.checkpoints].reverse().map((cp) => (

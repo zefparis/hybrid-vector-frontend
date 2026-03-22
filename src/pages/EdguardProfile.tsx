@@ -84,14 +84,14 @@ export function EdguardProfile() {
             {t('edguard_title')} — PROFIL
           </h2>
           <p className="text-xs text-center max-w-xs leading-relaxed" style={{ color: '#8899BB' }}>
-            Aucun profil enregistr&eacute;. Inscrivez-vous d'abord.
+            {t('edguard_profile_no_profile_desc')}
           </p>
           <Link
             to="/edguard/enroll"
             className="px-6 py-3 rounded-xl font-bold text-sm tracking-wider transition-all duration-300"
             style={{ backgroundColor: CYAN, color: '#0A0F1E', boxShadow: '0 0 20px rgba(0,194,255,0.3)' }}
           >
-            S'inscrire →
+            {t('edguard_profile_register_first')} →
           </Link>
         </motion.div>
       </div>
@@ -100,7 +100,11 @@ export function EdguardProfile() {
 
   const initials = `${(store.firstName[0] ?? '').toUpperCase()}${(store.lastName[0] ?? '').toUpperCase()}` || '??'
   const fullName = `${store.firstName} ${store.lastName}`.trim() || store.studentId
-  const roleLabel = store.role === 'STUDENT' ? 'ÉTUDIANT' : store.role === 'TEACHER' ? 'ENSEIGNANT' : 'BÉNÉFICIAIRE'
+  const roleLabel = store.role === 'STUDENT'
+    ? t('edguard_profile_role_student')
+    : store.role === 'TEACHER'
+      ? t('edguard_profile_role_teacher')
+      : t('edguard_profile_role_beneficiary')
   const faceIdShort = enrollmentResult.faceId?.slice(0, 8).toUpperCase() || '—'
 
   const facialPct = Math.min(100, Math.round(enrollmentResult.confidence))
@@ -112,7 +116,7 @@ export function EdguardProfile() {
 
   const overallScore = Math.round((facialPct * 0.25 + vocalPct * 0.2 + reflexPct * 0.15 + stroopPct * 0.2 + sensorPct * 0.1 + pqcPct * 0.1))
   const securityColor = overallScore >= 80 ? GREEN : overallScore >= 60 ? CYAN : '#FF8800'
-  const securityLabel = overallScore >= 80 ? 'MAXIMUM' : overallScore >= 60 ? 'ÉLEVÉ' : 'STANDARD'
+  const securityLabel = overallScore >= 80 ? t('edguard_profile_security_max') : overallScore >= 60 ? t('edguard_profile_security_high') : t('edguard_profile_security_standard')
 
   const enrolledDate = enrollmentResult.enrolled_at
     ? new Date(enrollmentResult.enrolled_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })
@@ -136,12 +140,12 @@ export function EdguardProfile() {
               <polygon points="14,2 26,8 26,20 14,26 2,20 2,8" fill="none" stroke={CYAN} strokeWidth="2" />
             </svg>
             <span className="text-xs sm:text-sm font-black tracking-widest" style={{ color: '#F0F4FF' }}>
-              {t('edguard_title')} — MON PROFIL
+              {t('edguard_profile_title')}
             </span>
           </div>
           <div className="flex items-center gap-1.5">
             <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: GREEN }} />
-            <span className="text-[10px] font-bold tracking-widest" style={{ color: GREEN }}>ACTIF</span>
+            <span className="text-[10px] font-bold tracking-widest" style={{ color: GREEN }}>{t('edguard_profile_active')}</span>
           </div>
         </motion.div>
 
@@ -190,16 +194,16 @@ export function EdguardProfile() {
           <div className="mt-4 pt-3 flex flex-col gap-2" style={{ borderTop: '1px solid #1E2D45' }}>
             {store.email && (
               <div className="flex items-center justify-between">
-                <span className="text-[10px] font-semibold tracking-widest" style={{ color: '#8899BB' }}>EMAIL</span>
+                <span className="text-[10px] font-semibold tracking-widest" style={{ color: '#8899BB' }}>{t('edguard_profile_email_label')}</span>
                 <span className="text-[11px] font-medium" style={{ color: '#F0F4FF', fontFamily: "'JetBrains Mono', monospace" }}>{store.email}</span>
               </div>
             )}
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-semibold tracking-widest" style={{ color: '#8899BB' }}>INSCRIT LE</span>
+              <span className="text-[10px] font-semibold tracking-widest" style={{ color: '#8899BB' }}>{t('edguard_profile_enrolled_label')}</span>
               <span className="text-[11px] font-medium" style={{ color: '#F0F4FF' }}>{enrolledDate}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-semibold tracking-widest" style={{ color: '#8899BB' }}>FACE ID</span>
+              <span className="text-[10px] font-semibold tracking-widest" style={{ color: '#8899BB' }}>{t('edguard_profile_face_id_label')}</span>
               <span className="text-[10px] font-bold tracking-wider" style={{ color: '#3D5A75' }}>
                 {faceIdShort}
               </span>
@@ -221,14 +225,14 @@ export function EdguardProfile() {
               <path d="M10 22h4" />
             </svg>
             <span className="text-[10px] font-black tracking-[0.2em]" style={{ color: '#F0F4FF' }}>
-              EMPREINTE NEURALE
+              {t('edguard_profile_neural_imprint')}
             </span>
           </div>
 
           <div className="rounded-xl p-3" style={{ backgroundColor: '#0A0F1E', border: '1px solid #1E2D45' }}>
             <MetricRow
               icon={<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={CYAN} strokeWidth="1.8"><rect x="2" y="2" width="20" height="20" rx="4" /><circle cx="12" cy="10" r="3" /><path d="M6 20c0-3 3-5 6-5s6 2 6 5" /></svg>}
-              label="ANALYSE AWS REKOGNITION"
+              label={t('edguard_profile_analysis_rekognition')}
               value={`${facialPct}%`}
               percent={facialPct}
               color={CYAN}
@@ -237,8 +241,8 @@ export function EdguardProfile() {
             />
             <MetricRow
               icon={<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={CYAN} strokeWidth="1.8"><path d="M12 1v4m0 14v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M1 12h4m14 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83" /><circle cx="12" cy="12" r="4" /></svg>}
-              label="SIGNATURE VOCALE"
-              value={vocalPct > 0 ? 'CALIBRÉE' : '—'}
+              label={t('edguard_profile_vocal_signature')}
+              value={vocalPct > 0 ? t('edguard_profile_calibrated') : '—'}
               percent={vocalPct}
               color={CYAN}
               delay={0.1}
@@ -246,8 +250,8 @@ export function EdguardProfile() {
             />
             <MetricRow
               icon={<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={CYAN} strokeWidth="1.8"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" /></svg>}
-              label="VÉLOCITÉ NEURALE"
-              value={store.reflexVelocity > 0 ? `${Math.round(store.reflexVelocity)}ms` : 'MESURÉE'}
+              label={t('edguard_profile_neural_velocity')}
+              value={store.reflexVelocity > 0 ? `${Math.round(store.reflexVelocity)}ms` : t('edguard_profile_measured')}
               percent={reflexPct}
               color={CYAN}
               delay={0.2}
@@ -255,8 +259,8 @@ export function EdguardProfile() {
             />
             <MetricRow
               icon={<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="1.8"><path d="M12 2a8 8 0 0 0-8 8c0 3.4 2.1 6.3 5 7.5V20h6v-2.5c2.9-1.2 5-4.1 5-7.5a8 8 0 0 0-8-8z" /><path d="M10 22h4" /></svg>}
-              label="TEST STROOP"
-              value={stroopPct > 0 ? `${stroopPct}%` : 'VALIDÉ'}
+              label={t('edguard_profile_stroop_test')}
+              value={stroopPct > 0 ? `${stroopPct}%` : t('edguard_profile_validated')}
               percent={stroopPct || 70}
               color={GREEN}
               delay={0.3}
@@ -264,8 +268,8 @@ export function EdguardProfile() {
             />
             <MetricRow
               icon={<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={CYAN} strokeWidth="1.8"><rect x="5" y="2" width="14" height="20" rx="3" /><line x1="12" y1="18" x2="12" y2="18.01" strokeWidth="2" /></svg>}
-              label="PROFIL COMPORTEMENTAL"
-              value={isMobileDevice ? 'MOBILE ✓' : 'DESKTOP'}
+              label={t('edguard_profile_behavioral_profile')}
+              value={isMobileDevice ? t('edguard_profile_mobile') : t('edguard_profile_desktop')}
               percent={sensorPct}
               color={CYAN}
               delay={0.4}
@@ -273,8 +277,8 @@ export function EdguardProfile() {
             />
             <MetricRow
               icon={<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="1.8"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>}
-              label="CRYPTOGRAPHIE POST-QUANTIQUE"
-              value="ML-KEM FIPS 203/204"
+              label={t('edguard_profile_pqc')}
+              value={t('edguard_profile_pqc_value')}
               percent={pqcPct}
               color={GREEN}
               delay={0.5}
@@ -293,7 +297,7 @@ export function EdguardProfile() {
         >
           <div className="flex items-center justify-between mb-2">
             <span className="text-[10px] font-bold tracking-[0.15em]" style={{ color: '#8899BB' }}>
-              NIVEAU DE SÉCURITÉ COGNITIF
+              {t('edguard_profile_security_level')}
             </span>
             <div className="flex items-center gap-1.5">
               <span className="text-sm font-black" style={{ color: securityColor, fontFamily: "'JetBrains Mono', monospace" }}>
@@ -326,9 +330,9 @@ export function EdguardProfile() {
           className="flex gap-2"
         >
           {[
-            { label: '3 Brevets FR', icon: '🇫🇷' },
-            { label: 'FIPS 203/204', icon: '🔐' },
-            { label: 'Brain ML', icon: '🧠' },
+            { label: t('edguard_profile_cert_fr'), icon: '🇫🇷' },
+            { label: t('edguard_profile_cert_pqc'), icon: '🔐' },
+            { label: t('edguard_profile_cert_brain'), icon: '🧠' },
           ].map((cert) => (
             <div
               key={cert.label}
@@ -353,27 +357,27 @@ export function EdguardProfile() {
             className="w-full py-3.5 rounded-xl font-bold text-sm tracking-wider text-center transition-all duration-300 block"
             style={{ backgroundColor: CYAN, color: '#0A0F1E', boxShadow: '0 0 24px rgba(0,194,255,0.35)' }}
           >
-            Démarrer une session →
+            {t('edguard_profile_start_session')} →
           </Link>
           <Link
             to="/edguard/verify"
             className="w-full py-3 rounded-xl font-bold text-xs tracking-widest text-center transition-all duration-300 block"
             style={{ border: '1.5px solid rgba(0,194,255,0.3)', color: CYAN, backgroundColor: 'transparent' }}
           >
-            Vérifier mon identité
+            {t('edguard_profile_verify_identity')}
           </Link>
           <button
             onClick={() => { store.reset(); navigate('/edguard/enroll') }}
             className="w-full py-3 rounded-xl font-bold text-xs tracking-widest transition-all duration-300"
             style={{ border: '1.5px solid rgba(255,51,85,0.2)', color: '#FF3355', backgroundColor: 'transparent' }}
           >
-            Réinitialiser le profil
+            {t('edguard_profile_reset')}
           </button>
         </motion.div>
 
         {/* ── Footer ── */}
         <p className="text-center text-[9px] tracking-widest pt-1 pb-4" style={{ color: '#3D5A75' }}>
-          POWERED BY HYBRID VECTOR · ML-KEM FIPS 203/204
+          POWERED BY HYBRID VECTOR · {t('edguard_profile_pqc_value')}
         </p>
       </div>
     </div>

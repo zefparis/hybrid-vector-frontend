@@ -189,7 +189,7 @@ function LivenessProgress({ step, timer }: { step: number; timer: number }) {
 }
 
 export function FaceCapture({ capturedImage, onCapture, onRetake, onProceed, proceedLabel, onLivenessComplete }: FaceCaptureProps) {
-  const { t } = useT()
+  const { t, lang } = useT()
   const webcamRef = useRef<Webcam>(null)
   const capturePressureRef = useRef<number | undefined>(undefined)
   const [permission, setPermission] = useState<'waiting' | 'granted' | 'denied'>('waiting')
@@ -253,15 +253,13 @@ export function FaceCapture({ capturedImage, onCapture, onRetake, onProceed, pro
   const descriptorRef = useRef<Float32Array | null>(null)
   const detectionLoopRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const lang = t('face_align') === 'ALIGN FACE WITHIN FRAME' ? 'en' : 'fr'
-
   const statusText = useTypewriter(
     capturedImage
-      ? (lang === 'fr' ? 'CAPTURE TERMINÉE' : 'CAPTURE COMPLETE')
+      ? t('face_capture_complete')
       : livenessStep === 'warmup'
-        ? (lang === 'fr' ? 'INITIALISATION...' : 'INITIALIZING...')
+        ? t('face_initializing_engine')
       : livenessStep === 'confirm'
-        ? (lang === 'fr' ? 'IDENTITÉ CONFIRMÉE ✓' : 'IDENTITY CONFIRMED ✓')
+        ? t('face_identity_confirmed')
       : livenessStep === 'center'
         ? STEP_CONFIG.center[lang === 'fr' ? 'labelFr' : 'labelEn']
         : t('face_align'),
@@ -449,18 +447,16 @@ export function FaceCapture({ capturedImage, onCapture, onRetake, onProceed, pro
           style={{ border: '2px solid #FF3355', backgroundColor: 'rgba(255,51,85,0.1)' }}>
           <span className="text-xl" style={{ color: '#FF3355' }}>✗</span>
         </div>
-        <p className="text-[#F0F4FF] font-bold text-sm">CAMERA ACCESS REQUIRED</p>
+        <p className="text-[#F0F4FF] font-bold text-sm">{t('face_camera_access_required')}</p>
         <p className="text-[#8899BB] text-xs max-w-xs">
-          {lang === 'fr'
-            ? 'Activez les permissions caméra dans les paramètres de votre navigateur, puis rechargez.'
-            : 'Camera access denied — please allow camera in browser settings, then reload.'}
+          {t('face_camera_access_denied')}
         </p>
         {cameraError && (
           <p className="text-[#FF3355]/60 text-[10px] font-mono max-w-xs">{cameraError}</p>
         )}
         <button onClick={() => window.location.reload()}
           className="text-xs font-semibold tracking-wider text-[#00C2FF] border border-[#1E2D45] px-4 py-2 rounded-lg hover:border-[#00C2FF]/40 transition-all duration-300">
-          RELOAD
+          {t('face_reload')}
         </button>
       </motion.div>
     )
@@ -474,7 +470,7 @@ export function FaceCapture({ capturedImage, onCapture, onRetake, onProceed, pro
         {permission === 'waiting' && !capturedImage && (
           <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 bg-[#0A0F1E]">
             <div className="w-8 h-8 rounded-full border-2 border-[#1E2D45] border-t-[#00C2FF] animate-spin" />
-            <p className="text-[#8899BB] text-xs tracking-wider">INITIALIZING SENSOR...</p>
+            <p className="text-[#8899BB] text-xs tracking-wider">{t('face_initializing_sensor')}</p>
           </div>
         )}
 
@@ -506,10 +502,10 @@ export function FaceCapture({ capturedImage, onCapture, onRetake, onProceed, pro
               transition={{ duration: 1.2, repeat: Infinity, ease: 'easeInOut' }}
             />
             <p className="text-xs font-bold tracking-[0.2em]" style={{ color: '#00C2FF' }}>
-              {lang === 'fr' ? 'INITIALISATION DU MOTEUR BIOMÉTRIQUE...' : 'INITIALIZING BIOMETRIC ENGINE...'}
+              {t('face_initializing_engine')}
             </p>
             <p className="text-[10px] tracking-wider" style={{ color: '#8899BB' }}>
-              {lang === 'fr' ? 'Calibrage du scanner neural' : 'Calibrating neural scanner'}
+              {t('face_calibrating_scanner')}
             </p>
             <div className="w-48 h-1 rounded-full overflow-hidden" style={{ backgroundColor: '#1E2D45' }}>
               <motion.div
@@ -551,7 +547,9 @@ export function FaceCapture({ capturedImage, onCapture, onRetake, onProceed, pro
                       }}
                     />
                     <span className="text-[9px] font-bold tracking-wider" style={{ color: faceDetected ? '#00FF88' : '#FF3355' }}>
-                      {faceDetected ? `FACE ${Math.round(faceScore)}%` : 'NO FACE'}
+                      {faceDetected
+                        ? t('face_face_score').replace('{score}', String(Math.round(faceScore)))
+                        : t('face_no_face')}
                     </span>
                   </div>
                 </div>
@@ -613,7 +611,7 @@ export function FaceCapture({ capturedImage, onCapture, onRetake, onProceed, pro
           >
             <div className="w-2 h-2 rounded-full bg-[#00C2FF] animate-pulse" />
             <span className="text-xs font-bold tracking-widest" style={{ color: '#00C2FF' }}>
-              {lang === 'fr' ? 'PRÉPARATION...' : 'PREPARING...'}
+              {t('face_preparing')}
             </span>
           </motion.div>
         </div>
@@ -651,7 +649,7 @@ export function FaceCapture({ capturedImage, onCapture, onRetake, onProceed, pro
           >
             <div className="w-2 h-2 rounded-full bg-[#00C2FF] animate-pulse" />
             <span className="text-xs font-bold tracking-widest" style={{ color: '#00C2FF' }}>
-              {lang === 'fr' ? 'ANALYSE AWS REKOGNITION EN COURS...' : 'AWS REKOGNITION ANALYSIS IN PROGRESS...'}
+              {t('face_rekog_analysis')}
             </span>
           </motion.div>
         </div>

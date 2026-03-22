@@ -44,7 +44,7 @@ function ScanHeader({ elapsed }: { elapsed: number }) {
             <polygon points="14,2 26,8 26,20 14,26 2,20 2,8" fill="none" stroke="#00C2FF" strokeWidth="2" />
           </svg>
           <span className="text-xs sm:text-sm font-black tracking-widest" style={{ color: '#F0F4FF' }}>
-            HYBRID VECTOR
+            {t('demo_brand')}
           </span>
         </div>
         <div className="font-mono text-sm font-bold tabular-nums tracking-wider" style={{ color: '#00C2FF' }}>
@@ -57,7 +57,7 @@ function ScanHeader({ elapsed }: { elapsed: number }) {
           {t('demo_protocol')}
         </span>
         <span className="text-[10px] font-semibold tracking-wider" style={{ color: '#00C2FF' }}>
-          STATUS: {statusText}<span className="animate-pulse">_</span>
+          {t('demo_status_label')}: {statusText}<span className="animate-pulse">_</span>
         </span>
       </div>
     </div>
@@ -114,7 +114,7 @@ function AnalysisSequence({ onDone }: { onDone: () => void }) {
   return (
     <div className="flex flex-col gap-3 py-4">
       <p className="text-xs font-bold tracking-widest text-center mb-2" style={{ color: '#00C2FF' }}>
-        HYBRID TRUST SCORE COMPUTING
+        {t('demo_computing_title')}
       </p>
       <div className="h-px w-full" style={{ backgroundColor: '#1E2D45' }} />
       <div className="space-y-2 py-2">
@@ -144,7 +144,7 @@ function AnalysisSequence({ onDone }: { onDone: () => void }) {
               </div>
               <span className="text-[9px] font-bold tracking-wider w-16 text-right shrink-0"
                 style={{ color: done ? '#00FF88' : '#8899BB' }}>
-                {done ? 'COMPLETE' : '...'}
+                {done ? t('demo_complete') : '...'}
               </span>
             </motion.div>
           )

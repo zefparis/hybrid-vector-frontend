@@ -12,32 +12,32 @@ interface RoundConfig {
   type: 'letter' | 'stroop' | 'number' | 'math'
   display: string
   displayColor: string
-  instruction: string
+  instruction: 'vocal_instruction_letter' | 'vocal_instruction_color' | 'vocal_instruction_number' | 'vocal_instruction_math'
   answer?: string
 }
 
 const ROUNDS: RoundConfig[] = [
-  { type: 'letter', display: 'K', displayColor: '#00C2FF', instruction: 'SAY THE LETTER' },
+  { type: 'letter', display: 'K', displayColor: '#00C2FF', instruction: 'vocal_instruction_letter' },
   {
     type: 'stroop',
     display: 'ROUGE',
     displayColor: '#00C2FF',
-    instruction: 'SAY THE COLOR OF THE INK, NOT THE WORD',
+    instruction: 'vocal_instruction_color',
     answer: 'bleu',
   },
-  { type: 'number', display: '7', displayColor: '#00C2FF', instruction: 'SAY THE NUMBER' },
+  { type: 'number', display: '7', displayColor: '#00C2FF', instruction: 'vocal_instruction_number' },
   {
     type: 'stroop',
     display: 'VERT',
     displayColor: '#FF8C00',
-    instruction: 'SAY THE COLOR OF THE INK, NOT THE WORD',
+    instruction: 'vocal_instruction_color',
     answer: 'orange',
   },
   {
     type: 'math',
     display: '4',
     displayColor: '#00C2FF',
-    instruction: 'SAY THIS NUMBER PLUS ONE',
+    instruction: 'vocal_instruction_math',
     answer: '5',
   },
 ]
@@ -294,7 +294,7 @@ export function VocalImprint({ onComplete }: VocalImprintProps) {
         </AnimatePresence>
 
         <p className="text-[10px] font-semibold tracking-wider text-center" style={{ color: '#8899BB' }}>
-          {round.instruction}
+          {t(round.instruction)}
         </p>
       </div>
 
@@ -323,7 +323,7 @@ export function VocalImprint({ onComplete }: VocalImprintProps) {
           <path d="M19 10v1a7 7 0 0 1-14 0v-1" fill="none" stroke="currentColor" strokeWidth="2" />
           <line x1="12" y1="19" x2="12" y2="23" stroke="currentColor" strokeWidth="2" />
         </svg>
-        {isRecording ? 'RECORDING...' : state === 'captured' ? t('vocal_captured') : t('vocal_speak')}
+        {isRecording ? t('vocal_recording') : state === 'captured' ? t('vocal_captured') : t('vocal_speak')}
       </button>
 
       <div className="flex items-center gap-1.5 justify-center">
