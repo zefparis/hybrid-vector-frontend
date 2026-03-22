@@ -138,27 +138,14 @@ export function Hero() {
             Built for Africa. Certified for the world.
           </p>
 
-          {/* CTAs */}
-          <div style={{
-            display: 'flex',
-            gap: '0.75rem',
-            justifyContent: 'center',
-            marginTop: '1.75rem',
-            flexWrap: 'wrap',
-          }}>
+          {/* CTA */}
+          <div style={{ marginTop: '1.75rem' }}>
             <button
               className={`${styles.btn} ${styles.btnPrimary}`}
-              style={{ minWidth: 180 }}
+              style={{ minWidth: 200 }}
               onClick={() => document.querySelector('#products')?.scrollIntoView({ behavior: 'smooth' })}
             >
               See Our Products ↓
-            </button>
-            <button
-              className={`${styles.btn} ${styles.btnOutline}`}
-              style={{ minWidth: 180 }}
-              onClick={() => window.open('https://www.youtube.com', '_blank', 'noopener,noreferrer')}
-            >
-              Watch 2-min Demo
             </button>
           </div>
 

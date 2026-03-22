@@ -14,6 +14,9 @@ export function Footer() {
             <div className={styles.muted} style={{ marginTop: '0.625rem', fontSize: '0.8125rem', lineHeight: 1.7, maxWidth: 360 }}>
               HV-GUARD family: 5-layer identity verification for South African enterprise clients.
             </div>
+            <div style={{ marginTop: '0.5rem', fontSize: '0.6875rem', color: 'var(--grey)', fontFamily: '"DM Sans", system-ui, sans-serif' }}>
+              An IA-SOLUTION × HMH venture
+            </div>
           </div>
 
           <div>
@@ -34,6 +37,9 @@ export function Footer() {
             </div>
             <div className={styles.muted} style={{ marginTop: '0.625rem', fontSize: '0.75rem' }}>
               © 2026 IA-SOLUTION. All rights reserved.
+            </div>
+            <div style={{ marginTop: '0.5rem', fontSize: '0.6875rem', color: 'var(--grey)', lineHeight: 1.6, fontFamily: '"DM Sans", system-ui, sans-serif' }}>
+              Hybrid Vector is a joint venture between IA-SOLUTION and HMH — combining deep tech IP with enterprise deployment at scale.
             </div>
           </div>
         </div>
