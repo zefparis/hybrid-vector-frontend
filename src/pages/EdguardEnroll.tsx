@@ -11,8 +11,9 @@ import { useSensors } from '@/hooks/useSensors'
 import { computeCognitiveScore, scoreMouseBehavior } from '@/services/api'
 import { useT } from '@/i18n/useLang'
 import type { VocalImportData, ReflexResult } from '@/types'
+import { enrollmentUrl } from '@/config/api'
 
-const ENROLLMENT_URL = 'https://hybrid-vector-frontend.vercel.app/edguard/enroll'
+const ENROLLMENT_URL = enrollmentUrl()
 
 const isMobileDevice =
   /Android|iPhone|iPad/i.test(navigator.userAgent) || 'ontouchstart' in window

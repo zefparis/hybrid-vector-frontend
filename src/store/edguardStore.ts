@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
 import type { EnrollResponse, CheckpointResponse } from '@/services/edguardApi'
+import { config } from '@/config/api'
 
 type EdguardRole = 'STUDENT' | 'TEACHER' | 'BENEFICIARY'
 
@@ -51,7 +52,7 @@ const initialState: EdguardState = {
   email: '',
   role: 'STUDENT',
   studentId: '',
-  institutionId: (import.meta.env.VITE_INSTITUTION_ID as string) ?? '',
+  institutionId: config.institutionId,
   selfieB64: null,
   selfieDescriptor: null,
   enrollmentResult: null,

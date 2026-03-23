@@ -1,9 +1,10 @@
 import axios from 'axios'
 import type { AnalyzePayload, SessionResult, CognitiveScoreInput } from '@/types'
 import type { MouseBehavior } from '@/hooks/useSensors'
+import { config } from '@/config/api'
 
-const API_URL = (import.meta.env.VITE_HV_API_URL as string) ?? ''
-const API_KEY = (import.meta.env.VITE_HV_API_KEY as string) ?? ''
+const API_URL = config.apiUrl
+const API_KEY = config.apiKey
 
 const client = axios.create({
   baseURL: API_URL,
@@ -268,7 +269,7 @@ export function generateMockResult(cognitiveScore?: number): SessionResult {
   return {
     session_id: crypto.randomUUID(),
     user_id: `demo-${Date.now()}`,
-    tenant_id: (import.meta.env.VITE_TENANT_ID as string) ?? 'demo-tenant',
+    tenant_id: config.tenantId,
     trust_score: Math.min(100, trustScore),
     is_human: trustScore >= 55,
     confidence_level: trustScore >= 80 ? 'HIGH' : trustScore >= 60 ? 'MEDIUM' : 'LOW',

@@ -1,7 +1,8 @@
 import axios from 'axios'
+import { config } from '@/config/api'
 
-const API_URL = (import.meta.env.VITE_HV_API_URL as string) ?? ''
-const API_KEY = (import.meta.env.VITE_HV_API_KEY as string) ?? ''
+const API_URL = config.apiUrl
+const API_KEY = config.apiKey
 
 const client = axios.create({
   baseURL: API_URL,
