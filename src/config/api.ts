@@ -3,7 +3,7 @@
  * All API URLs and keys should be accessed through this file
  */
 
-const API_URL = import.meta.env.VITE_HV_API_URL as string
+const API_URL = (import.meta.env.VITE_API_URL as string) || 'https://hybrid-vector-api.fly.dev'
 const API_KEY = import.meta.env.VITE_HV_API_KEY as string
 const TENANT_ID = import.meta.env.VITE_TENANT_ID as string
 const INSTITUTION_ID = import.meta.env.VITE_INSTITUTION_ID as string

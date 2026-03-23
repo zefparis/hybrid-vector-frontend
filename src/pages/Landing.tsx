@@ -178,7 +178,7 @@ export function Landing() {
               <div className="w-3 h-3 rounded-full bg-hv-green/70" />
               <div className="flex-1 flex justify-center">
                 <div className="px-3 py-1 rounded-md bg-white/5 text-xs text-hv-muted font-mono truncate max-w-[180px] sm:max-w-none">
-                  hybrid-vector-api.onrender.com
+                  https://hybrid-vector-api.fly.dev
                 </div>
               </div>
             </div>
