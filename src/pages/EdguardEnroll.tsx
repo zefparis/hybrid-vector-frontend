@@ -11,7 +11,7 @@ import { useSensors } from '@/hooks/useSensors'
 import { computeCognitiveScore, scoreMouseBehavior } from '@/services/api'
 import { useT } from '@/i18n/useLang'
 import type { VocalImportData, ReflexResult } from '@/types'
-import { enrollmentUrl } from '@/config/api'
+import { enrollmentUrl, config } from '@/config/api'
 
 const ENROLLMENT_URL = enrollmentUrl()
 
@@ -700,7 +700,7 @@ export function EdguardEnroll() {
   const [errorMsg, setErrorMsg] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const tenantId = 'demo-tenant'
+  const tenantId = config.tenantId
 
   const handleIdentitySubmit = useCallback((e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
