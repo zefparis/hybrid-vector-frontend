@@ -14,6 +14,7 @@ export default function App() {
         <Route path="/" element={<HVGuardLanding />} />
         <Route path="/edguard" element={<EdguardHome />} />
         <Route path="/edguard/enroll" element={<EdguardEnroll />} />
+        <Route path="/enroll" element={<EdguardEnroll />} />
         <Route path="/edguard/session" element={<EdguardSession />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/edguard/verify" element={<EdguardVerify />} />
