@@ -1,4 +1,5 @@
 import { Routes, Route } from 'react-router-dom'
+import { useEffect } from 'react'
 import { HVGuardLanding } from './hvguard/HVGuardLanding'
 import { Dashboard } from '@/pages/Dashboard'
 import { EdguardHome } from '@/pages/EdguardHome'
@@ -8,6 +9,25 @@ import { EdguardVerify } from '@/pages/Edguardverify'
 import { EdguardProfile } from './pages/EdguardProfile'
 
 export default function App() {
+  useEffect(() => {
+    const existingScript = document.querySelector('script[data-widget="wid_252792d76ceaa21f2d263aab"]')
+
+    if (existingScript) {
+      return
+    }
+
+    const script = document.createElement('script')
+    script.src = 'https://hcs-widget-mvp.vercel.app/widget/v3/hcs-widget.js'
+    script.async = true
+    script.setAttribute('data-widget', 'wid_252792d76ceaa21f2d263aab')
+
+    document.body.appendChild(script)
+
+    return () => {
+      script.remove()
+    }
+  }, [])
+
   return (
     <div>
       <Routes>
