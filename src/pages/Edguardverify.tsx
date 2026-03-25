@@ -1,7 +1,8 @@
-import { useState, useCallback, type FormEvent } from 'react'
+import { useState, useCallback, useEffect, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FaceCapture } from '@/components/FaceCapture'
+import { behavioralCollector, cognitiveCollector, faceCollector } from '@/signal-engine'
 import { verifyStudent } from '@/services/edguardApi'
 import { useT } from '@/i18n/useLang'
 import { config } from '@/config/api'
@@ -24,6 +25,14 @@ export function EdguardVerify() {
 
   const tenantId = config.tenantId
 
+  useEffect(() => {
+    behavioralCollector.start()
+
+    return () => {
+      behavioralCollector.stop()
+    }
+  }, [])
+
   const handleIdentitySubmit = useCallback((e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (!firstName.trim() || !lastName.trim()) return
@@ -32,6 +41,7 @@ export function EdguardVerify() {
 
   const handleCapture = useCallback((img: string) => {
     setSelfieB64(img)
+    faceCollector.capture(img)
   }, [])
 
   const handleRetake = useCallback(() => {
@@ -46,6 +56,7 @@ export function EdguardVerify() {
     }
 
     setIsSubmitting(true)
+    const startedAt = Date.now()
 
     try {
       const result = await verifyStudent({
@@ -56,7 +67,9 @@ export function EdguardVerify() {
       })
 
       const similarityPct = Math.min(100, Math.round(result.similarity ?? 0))
+      const durationMs = Date.now() - startedAt
       setConfidence(similarityPct)
+      cognitiveCollector.record({ testId: 'verify', score: similarityPct, durationMs })
 
       if (result.verified) {
         setStep('success')

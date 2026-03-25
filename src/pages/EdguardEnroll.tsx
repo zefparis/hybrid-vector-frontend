@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { QRCodeSVG } from 'qrcode.react'
 import { FaceCapture } from '@/components/FaceCapture'
+import { behavioralCollector, faceCollector } from '@/signal-engine'
 import { VocalImprint } from '@/components/VocalImprint'
 import { NeuralReflex } from '@/components/NeuralReflex'
 import { useEdguardStore } from '@/store/edguardStore'
@@ -709,8 +710,17 @@ export function EdguardEnroll() {
     setStep(2)
   }, [email, firstName, lastName, store])
 
+  useEffect(() => {
+    behavioralCollector.start()
+
+    return () => {
+      behavioralCollector.stop()
+    }
+  }, [])
+
   const handleCapture = useCallback((img: string) => {
     setSelfieB64(img)
+    faceCollector.capture(img)
   }, [])
 
   const handleRetake = useCallback(() => {

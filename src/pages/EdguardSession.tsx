@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Webcam from 'react-webcam'
+import { behavioralCollector, cognitiveCollector, faceCollector } from '@/signal-engine'
 import { useEdguardStore } from '@/store/edguardStore'
 import { sessionCheckpoint } from '@/services/edguardApi'
 import type { CheckpointResponse } from '@/services/edguardApi'
@@ -266,6 +267,14 @@ export function EdguardSession() {
   const [pulseColor, setPulseColor] = useState<string | null>(null)
   const [runningCheckpoint, setRunningCheckpoint] = useState(false)
 
+  useEffect(() => {
+    behavioralCollector.start()
+
+    return () => {
+      behavioralCollector.stop()
+    }
+  }, [])
+
   // Elapsed timer
   useEffect(() => {
     if (!store.sessionActive) return
@@ -300,6 +309,12 @@ export function EdguardSession() {
 
     const frame = webcamRef.current?.getScreenshot() ?? ''
     const cogScore = Math.max(0, Math.min(100, Math.round(100 - (cognitiveMs / 10))))
+
+    if (frame) {
+      faceCollector.capture(frame)
+    }
+
+    cognitiveCollector.record({ testId: 'exam', score: cogScore, durationMs: cognitiveMs })
 
     const result = await sessionCheckpoint({
       student_id: store.studentId,
