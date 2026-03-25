@@ -84,6 +84,28 @@ export function Products() {
     },
   ]
 
+  const renderCardContent = (p: Product) => (
+    <>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
+        <div style={{ fontFamily: 'Syne, system-ui, sans-serif', fontWeight: 800, opacity: 0.18, fontSize: 36, lineHeight: 1 }}>
+          {p.num}
+        </div>
+        <div style={{ fontSize: 20 }}>{p.icon}</div>
+      </div>
+
+      <div style={{ marginTop: '0.75rem', flex: 1 }}>
+        <div style={{ fontFamily: 'Syne, system-ui, sans-serif', fontWeight: 800, letterSpacing: '0.04em', fontSize: '0.875rem' }}>{p.name}</div>
+        <div style={{ marginTop: 4, fontWeight: 700, fontSize: '0.9375rem' }}>{p.title}</div>
+        <div className={styles.muted} style={{ marginTop: 8, fontSize: '0.8125rem', lineHeight: 1.6 }}>{p.desc}</div>
+      </div>
+
+      <div style={{ marginTop: '0.875rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+        <div className={styles.mono} style={{ fontSize: '0.75rem', color: 'rgba(249,250,251,0.9)' }}>{p.stat}</div>
+        <div className={styles.mono} style={{ fontSize: '0.75rem', color: p.color, whiteSpace: 'nowrap' }}>Live Demo →</div>
+      </div>
+    </>
+  )
+
   return (
     <section id="products" className={styles.section}>
       <div className={styles.container}>
@@ -114,25 +136,13 @@ export function Products() {
                   width: '100%',
                   textAlign: 'left',
                   background: 'transparent',
+                  padding: 0,
+                  borderLeft: 'none',
+                  borderRight: 'none',
+                  borderBottom: 'none',
                 }}
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
-                  <div style={{ fontFamily: 'Syne, system-ui, sans-serif', fontWeight: 800, opacity: 0.18, fontSize: 36, lineHeight: 1 }}>
-                    {p.num}
-                  </div>
-                  <div style={{ fontSize: 20 }}>{p.icon}</div>
-                </div>
-
-                <div style={{ marginTop: '0.75rem', flex: 1 }}>
-                  <div style={{ fontFamily: 'Syne, system-ui, sans-serif', fontWeight: 800, letterSpacing: '0.04em', fontSize: '0.875rem' }}>{p.name}</div>
-                  <div style={{ marginTop: 4, fontWeight: 700, fontSize: '0.9375rem' }}>{p.title}</div>
-                  <div className={styles.muted} style={{ marginTop: 8, fontSize: '0.8125rem', lineHeight: 1.6 }}>{p.desc}</div>
-                </div>
-
-                <div style={{ marginTop: '0.875rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                  <div className={styles.mono} style={{ fontSize: '0.75rem', color: 'rgba(249,250,251,0.9)' }}>{p.stat}</div>
-                  <div className={styles.mono} style={{ fontSize: '0.75rem', color: p.color, whiteSpace: 'nowrap' }}>Live Demo →</div>
-                </div>
+                {renderCardContent(p)}
               </button>
             ) : (
               <a
@@ -149,23 +159,7 @@ export function Products() {
                   transitionDelay: inView ? `${idx * 90}ms` : '0ms',
                 }}
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
-                  <div style={{ fontFamily: 'Syne, system-ui, sans-serif', fontWeight: 800, opacity: 0.18, fontSize: 36, lineHeight: 1 }}>
-                    {p.num}
-                  </div>
-                  <div style={{ fontSize: 20 }}>{p.icon}</div>
-                </div>
-
-                <div style={{ marginTop: '0.75rem', flex: 1 }}>
-                  <div style={{ fontFamily: 'Syne, system-ui, sans-serif', fontWeight: 800, letterSpacing: '0.04em', fontSize: '0.875rem' }}>{p.name}</div>
-                  <div style={{ marginTop: 4, fontWeight: 700, fontSize: '0.9375rem' }}>{p.title}</div>
-                  <div className={styles.muted} style={{ marginTop: 8, fontSize: '0.8125rem', lineHeight: 1.6 }}>{p.desc}</div>
-                </div>
-
-                <div style={{ marginTop: '0.875rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                  <div className={styles.mono} style={{ fontSize: '0.75rem', color: 'rgba(249,250,251,0.9)' }}>{p.stat}</div>
-                  <div className={styles.mono} style={{ fontSize: '0.75rem', color: p.color, whiteSpace: 'nowrap' }}>Live Demo →</div>
-                </div>
+                {renderCardContent(p)}
               </a>
             )
           ))}

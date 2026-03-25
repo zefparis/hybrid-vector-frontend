@@ -41,8 +41,14 @@ export function GuardLauncher({ guard, onClose }: GuardLauncherProps) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 px-4 py-6">
-      <div className="w-full max-w-md rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-2xl">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        className="bg-[#111] border border-[#00C2FF]/30 rounded-xl p-6 max-w-sm w-full mx-4 text-white"
+        onClick={(event) => event.stopPropagation()}
+      >
         <div className="flex items-start justify-between gap-4">
           <div>
             <h3 className="text-xl font-bold tracking-wide text-white">{guard.name}</h3>
