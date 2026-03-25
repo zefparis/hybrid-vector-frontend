@@ -22,7 +22,7 @@ export function Products() {
   const edguardConfig: GuardConfig = {
     id: 'edguard',
     name: 'EdGuard',
-    description: 'Authentification cognitive pour examens en ligne',
+    description: 'Cognitive identity verification for online exams',
     path: '/edguard',
   }
 

@@ -29,8 +29,8 @@ function StepIndicator({ current }: { current: number }) {
     t('edguard_student_id'),
     t('edguard_selfie'),
     'VOCAL',
-    'RÉFLEXE',
-    'ANALYSE',
+    'REFLEX',
+    'ANALYSIS',
   ]
   return (
     <div className="flex items-center gap-1 sm:gap-2 mb-5">
@@ -111,19 +111,19 @@ function Step1({ onNext }: { onNext: () => void }) {
     <form onSubmit={handleSubmit} className="flex flex-col gap-3">
       <div className="grid grid-cols-2 gap-3">
         <div className="flex flex-col gap-1.5">
-          <label className="text-[10px] font-semibold tracking-widest" style={{ color: '#8899BB' }}>PRÉNOM *</label>
+          <label className="text-[10px] font-semibold tracking-widest" style={{ color: '#8899BB' }}>FIRST NAME *</label>
           <input
             type="text" value={localFirstName} onChange={(e) => setLocalFirstName(e.target.value)} required
             className="w-full px-4 py-3 rounded-xl text-sm font-medium outline-none transition-all duration-200"
-            style={inputStyle} placeholder="Jean"
+            style={inputStyle} placeholder="John"
           />
         </div>
         <div className="flex flex-col gap-1.5">
-          <label className="text-[10px] font-semibold tracking-widest" style={{ color: '#8899BB' }}>NOM *</label>
+          <label className="text-[10px] font-semibold tracking-widest" style={{ color: '#8899BB' }}>LAST NAME *</label>
           <input
             type="text" value={localLastName} onChange={(e) => setLocalLastName(e.target.value)} required
             className="w-full px-4 py-3 rounded-xl text-sm font-medium outline-none transition-all duration-200"
-            style={inputStyle} placeholder="Dupont"
+            style={inputStyle} placeholder="Doe"
           />
         </div>
       </div>
@@ -132,11 +132,11 @@ function Step1({ onNext }: { onNext: () => void }) {
         <input
           type="email" value={localEmail} onChange={(e) => setLocalEmail(e.target.value)}
           className="w-full px-4 py-3 rounded-xl text-sm font-medium outline-none transition-all duration-200"
-          style={inputStyle} placeholder="jean.dupont@universite.fr"
+          style={inputStyle} placeholder="john.doe@university.edu"
         />
       </div>
       <div className="flex flex-col gap-1.5">
-        <label className="text-[10px] font-semibold tracking-widest" style={{ color: '#8899BB' }}>RÔLE</label>
+        <label className="text-[10px] font-semibold tracking-widest" style={{ color: '#8899BB' }}>ROLE</label>
         <div className="flex gap-2">
           {(['STUDENT', 'TEACHER', 'BENEFICIARY'] as const).map((r) => (
             <button
@@ -148,7 +148,7 @@ function Step1({ onNext }: { onNext: () => void }) {
                 color: localRole === r ? '#00C2FF' : '#8899BB',
               }}
             >
-              {r === 'STUDENT' ? 'ÉTUDIANT' : r === 'TEACHER' ? 'ENSEIGNANT' : 'BÉNÉFICIAIRE'}
+              {r === 'STUDENT' ? 'STUDENT' : r === 'TEACHER' ? 'TEACHER' : 'BENEFICIARY'}
             </button>
           ))}
         </div>
@@ -178,7 +178,7 @@ function Step1({ onNext }: { onNext: () => void }) {
         className="w-full py-3.5 rounded-xl font-bold text-sm tracking-wider transition-all duration-300"
         style={{ backgroundColor: '#00C2FF', color: '#0A0F1E', boxShadow: '0 0 20px rgba(0,194,255,0.3)' }}
       >
-        Continuer →
+        Continue →
       </button>
     </form>
   )
@@ -199,10 +199,10 @@ function Step2Selfie({ onNext }: { onNext: () => void }) {
   return (
     <div className="flex flex-col gap-4">
       <p className="text-[10px] font-semibold tracking-widest" style={{ color: '#8899BB' }}>
-        CAPTURE BIOMÉTRIQUE — PHOTO DE RÉFÉRENCE
+        BIOMETRIC CAPTURE — REFERENCE PHOTO
       </p>
       <p className="text-[10px] tracking-wider" style={{ color: '#8899BB' }}>
-        Ce selfie sera votre identité biométrique enregistrée
+        This selfie will become your recorded biometric identity
       </p>
 
       <FaceCapture
@@ -220,7 +220,7 @@ function AnalysisSequence({ onDone }: { onDone: () => void }) {
   const { t } = useT()
   const ANALYSIS_LINES = [
     t('analysis_facial'),
-    'ANALYSE AWS REKOGNITION',
+    'AWS REKOGNITION ANALYSIS',
     t('analysis_vocal'),
     t('analysis_cognitive'),
     t('analysis_behavioral'),
@@ -361,7 +361,7 @@ function SuccessScreen() {
 
   const initials = `${(store.firstName[0] ?? '').toUpperCase()}${(store.lastName[0] ?? '').toUpperCase()}` || '??'
   const fullName = `${store.firstName} ${store.lastName}`.trim() || store.studentId
-  const roleLabel = store.role === 'STUDENT' ? 'ÉTUDIANT' : store.role === 'TEACHER' ? 'ENSEIGNANT' : 'BÉNÉFICIAIRE'
+  const roleLabel = store.role === 'STUDENT' ? 'STUDENT' : store.role === 'TEACHER' ? 'TEACHER' : 'BENEFICIARY'
   const faceIdShort = enrollmentResult.faceId?.slice(0, 8).toUpperCase() || '—'
 
   const facialPct = Math.min(100, Math.round(enrollmentResult.confidence))
@@ -373,7 +373,7 @@ function SuccessScreen() {
 
   const overallScore = Math.round((facialPct * 0.25 + vocalPct * 0.2 + reflexPct * 0.15 + stroopPct * 0.2 + sensorPct * 0.1 + pqcPct * 0.1))
   const securityColor = overallScore >= 80 ? '#00FF88' : overallScore >= 60 ? '#00C2FF' : '#FF8800'
-  const securityLabel = overallScore >= 80 ? 'MAXIMUM' : overallScore >= 60 ? 'ÉLEVÉ' : 'STANDARD'
+  const securityLabel = overallScore >= 80 ? 'MAXIMUM' : overallScore >= 60 ? 'HIGH' : 'STANDARD'
 
   const CYAN = '#00C2FF'
   const GREEN = '#00FF88'
@@ -399,10 +399,10 @@ function SuccessScreen() {
           </div>
         </div>
         <h2 className="text-sm font-black tracking-[0.2em] mb-1" style={{ color: '#F0F4FF' }}>
-          VISAGE ENREGISTRÉ
+          FACE ENROLLED
         </h2>
         <p className="text-[10px] tracking-wider leading-relaxed max-w-xs mx-auto" style={{ color: '#8899BB' }}>
-          Visage enregistré — ID: {faceIdShort}
+          Face enrolled — ID: {faceIdShort}
         </p>
       </div>
 
@@ -458,14 +458,14 @@ function SuccessScreen() {
             <path d="M10 22h4" />
           </svg>
           <span className="text-[10px] font-black tracking-[0.2em]" style={{ color: '#F0F4FF' }}>
-            EMPREINTE NEURALE
+            NEURAL IMPRINT
           </span>
         </div>
 
         <div className="rounded-xl p-3" style={{ backgroundColor: '#0A0F1E', border: '1px solid #1E2D45' }}>
           <NeuralMetricRow
             icon={<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={CYAN} strokeWidth="1.8"><rect x="2" y="2" width="20" height="20" rx="4" /><circle cx="12" cy="10" r="3" /><path d="M6 20c0-3 3-5 6-5s6 2 6 5" /></svg>}
-            label="ANALYSE AWS REKOGNITION"
+            label="AWS REKOGNITION ANALYSIS"
             value={`${facialPct}%`}
             percent={facialPct}
             color={CYAN}
@@ -474,8 +474,8 @@ function SuccessScreen() {
           />
           <NeuralMetricRow
             icon={<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={CYAN} strokeWidth="1.8"><path d="M12 1v4m0 14v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M1 12h4m14 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83" /><circle cx="12" cy="12" r="4" /></svg>}
-            label="SIGNATURE VOCALE"
-            value={vocalPct > 0 ? 'CALIBRÉE' : '—'}
+            label="VOCAL SIGNATURE"
+            value={vocalPct > 0 ? 'CALIBRATED' : '—'}
             percent={vocalPct}
             color={CYAN}
             delay={0.1}
@@ -483,8 +483,8 @@ function SuccessScreen() {
           />
           <NeuralMetricRow
             icon={<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={CYAN} strokeWidth="1.8"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" /></svg>}
-            label="VÉLOCITÉ NEURALE"
-            value={store.reflexVelocity > 0 ? `${Math.round(store.reflexVelocity)}ms` : 'MESURÉE'}
+            label="NEURAL VELOCITY"
+            value={store.reflexVelocity > 0 ? `${Math.round(store.reflexVelocity)}ms` : 'MEASURED'}
             percent={reflexPct}
             color={CYAN}
             delay={0.2}
@@ -493,7 +493,7 @@ function SuccessScreen() {
           <NeuralMetricRow
             icon={<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="1.8"><path d="M12 2a8 8 0 0 0-8 8c0 3.4 2.1 6.3 5 7.5V20h6v-2.5c2.9-1.2 5-4.1 5-7.5a8 8 0 0 0-8-8z" /><path d="M10 22h4" /></svg>}
             label="TEST STROOP"
-            value={stroopPct > 0 ? `${stroopPct}%` : 'VALIDÉ'}
+            value={stroopPct > 0 ? `${stroopPct}%` : 'VALIDATED'}
             percent={stroopPct || 70}
             color={GREEN}
             delay={0.3}
@@ -501,7 +501,7 @@ function SuccessScreen() {
           />
           <NeuralMetricRow
             icon={<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={CYAN} strokeWidth="1.8"><rect x="5" y="2" width="14" height="20" rx="3" /><line x1="12" y1="18" x2="12" y2="18.01" strokeWidth="2" /></svg>}
-            label="PROFIL COMPORTEMENTAL"
+            label="BEHAVIORAL PROFILE"
             value={isMobileDevice ? 'MOBILE ✓' : 'DESKTOP'}
             percent={sensorPct}
             color={CYAN}
@@ -510,7 +510,7 @@ function SuccessScreen() {
           />
           <NeuralMetricRow
             icon={<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="1.8"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>}
-            label="CRYPTOGRAPHIE POST-QUANTIQUE"
+            label="POST-QUANTUM CRYPTOGRAPHY"
             value="ML-KEM FIPS 203/204"
             percent={pqcPct}
             color={GREEN}
@@ -524,7 +524,7 @@ function SuccessScreen() {
       <div className="rounded-xl p-4" style={{ backgroundColor: '#0A0F1E', border: '1px solid #1E2D45' }}>
         <div className="flex items-center justify-between mb-2">
           <span className="text-[10px] font-bold tracking-[0.15em]" style={{ color: '#8899BB' }}>
-            NIVEAU DE SÉCURITÉ COGNITIF
+            COGNITIVE SECURITY LEVEL
           </span>
           <div className="flex items-center gap-1.5">
             <span className="text-sm font-black" style={{ color: securityColor, fontFamily: "'JetBrains Mono', monospace" }}>
@@ -552,7 +552,7 @@ function SuccessScreen() {
       {/* ── 5. Certifications ── */}
       <div className="flex gap-2">
         {[
-          { label: '3 Brevets FR', icon: '🇫🇷' },
+          { label: '3 FR Patents', icon: '🇫🇷' },
           { label: 'FIPS 203/204', icon: '🔐' },
           { label: 'Brain ML', icon: '🧠' },
         ].map((cert) => (
@@ -574,14 +574,14 @@ function SuccessScreen() {
           className="w-full py-3.5 rounded-xl font-bold text-sm tracking-wider text-center transition-all duration-300 block"
           style={{ backgroundColor: CYAN, color: '#0A0F1E', boxShadow: `0 0 24px rgba(0,194,255,0.35)` }}
         >
-          Démarrer une session →
+          Start Session →
         </Link>
         <button
           onClick={() => navigate('/edguard/profile')}
           className="w-full py-3 rounded-xl font-bold text-xs tracking-widest transition-all duration-300"
           style={{ border: '1.5px solid rgba(0,194,255,0.3)', color: CYAN, backgroundColor: 'transparent' }}
         >
-          Voir mon profil
+          View My Profile
         </button>
       </div>
 
@@ -600,7 +600,7 @@ function ErrorScreen({ errorCode, onRetry }: { errorCode: string; onRetry: () =>
     IDENTITY_MISMATCH: t('edguard_identity_mismatch'),
     CAPTURE_FAILED: 'Capture failed — please center your face and try again.',
   }
-  const message = messages[errorCode] ?? 'Service indisponible. Réessayez.'
+  const message = messages[errorCode] ?? 'Service unavailable. Please try again.'
 
   return (
     <motion.div
@@ -611,14 +611,14 @@ function ErrorScreen({ errorCode, onRetry }: { errorCode: string; onRetry: () =>
       <div className="w-14 h-14 rounded-full flex items-center justify-center" style={{ border: '2px solid #FF3355', backgroundColor: 'rgba(255,51,85,0.1)' }}>
         <span className="text-xl" style={{ color: '#FF3355' }}>✗</span>
       </div>
-      <p className="text-xs font-bold tracking-widest text-center" style={{ color: '#FF3355' }}>ERREUR</p>
+      <p className="text-xs font-bold tracking-widest text-center" style={{ color: '#FF3355' }}>ERROR</p>
       <p className="text-xs text-center max-w-xs" style={{ color: '#8899BB' }}>{message}</p>
       <button
         onClick={onRetry}
         className="px-6 py-2.5 rounded-xl font-bold text-xs tracking-wider transition-all duration-300"
         style={{ border: '1.5px solid rgba(0,194,255,0.5)', color: '#00C2FF' }}
       >
-        Réessayer
+        Retry
       </button>
     </motion.div>
   )
@@ -749,11 +749,11 @@ export function EdguardEnroll() {
         store.setEnrollmentResult(result)
         setStep('success')
       } else {
-        setErrorMsg(result.message ?? result.error ?? 'Service indisponible. Réessayez.')
+        setErrorMsg(result.message ?? result.error ?? 'Service unavailable. Please try again.')
         setStep('error')
       }
     } catch {
-      setErrorMsg('Service indisponible. Réessayez.')
+      setErrorMsg('Service unavailable. Please try again.')
       setStep('error')
     } finally {
       setIsSubmitting(false)
@@ -793,36 +793,36 @@ export function EdguardEnroll() {
                     </svg>
                   </div>
                   <h2 className="text-base font-bold tracking-wider mb-1" style={{ color: '#F0F4FF' }}>
-                    Enregistrement d’identité
+                    Identity Enrollment
                   </h2>
                   <p className="text-xs" style={{ color: '#8899BB' }}>
-                    Saisissez votre prénom, votre nom et votre email optionnel
+                    Enter your first name, last name, and optional email
                   </p>
                 </div>
 
                 <form onSubmit={handleIdentitySubmit} className="flex flex-col gap-4">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="flex flex-col gap-1.5">
-                      <label className="text-[10px] font-semibold tracking-widest" style={{ color: '#8899BB' }}>PRÉNOM *</label>
+                      <label className="text-[10px] font-semibold tracking-widest" style={{ color: '#8899BB' }}>FIRST NAME *</label>
                       <input
                         type="text"
                         value={firstName}
                         onChange={(e) => setFirstName(e.target.value)}
                         required
                         autoFocus
-                        placeholder="Jean"
+                        placeholder="John"
                         className="w-full px-4 py-3 rounded-xl text-sm font-medium outline-none transition-all duration-200"
                         style={{ backgroundColor: '#0A0F1E', border: '1px solid #1E2D45', color: '#F0F4FF' }}
                       />
                     </div>
                     <div className="flex flex-col gap-1.5">
-                      <label className="text-[10px] font-semibold tracking-widest" style={{ color: '#8899BB' }}>NOM *</label>
+                      <label className="text-[10px] font-semibold tracking-widest" style={{ color: '#8899BB' }}>LAST NAME *</label>
                       <input
                         type="text"
                         value={lastName}
                         onChange={(e) => setLastName(e.target.value)}
                         required
-                        placeholder="Dupont"
+                        placeholder="Doe"
                         className="w-full px-4 py-3 rounded-xl text-sm font-medium outline-none transition-all duration-200"
                         style={{ backgroundColor: '#0A0F1E', border: '1px solid #1E2D45', color: '#F0F4FF' }}
                       />
@@ -835,7 +835,7 @@ export function EdguardEnroll() {
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      placeholder="jean.dupont@universite.fr"
+                      placeholder="john.doe@university.edu"
                       className="w-full px-4 py-3 rounded-xl text-sm font-medium outline-none transition-all duration-200"
                       style={{ backgroundColor: '#0A0F1E', border: '1px solid #1E2D45', color: '#F0F4FF' }}
                     />
@@ -846,7 +846,7 @@ export function EdguardEnroll() {
                     className="w-full py-3.5 rounded-xl font-bold text-sm tracking-wider transition-all duration-300"
                     style={{ backgroundColor: '#00C2FF', color: '#0A0F1E', boxShadow: '0 0 20px rgba(0,194,255,0.3)' }}
                   >
-                    Continuer →
+                    Continue →
                   </button>
                 </form>
               </motion.div>
@@ -856,10 +856,10 @@ export function EdguardEnroll() {
               <motion.div key="enroll-face" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.3 }}>
                 <div className="text-center mb-4">
                   <h2 className="text-base font-bold tracking-wider mb-1" style={{ color: '#F0F4FF' }}>
-                    Capture selfie
+                    Selfie Capture
                   </h2>
                   <p className="text-xs" style={{ color: '#8899BB' }}>
-                    Centrez votre visage et capturez une seule fois
+                    Center your face and capture once
                   </p>
                 </div>
 
@@ -868,7 +868,7 @@ export function EdguardEnroll() {
                   onCapture={handleCapture}
                   onRetake={handleRetake}
                   onProceed={handleEnroll}
-                  proceedLabel="M'enregistrer"
+                  proceedLabel="Enroll Me"
                 />
 
                 <button
@@ -876,7 +876,7 @@ export function EdguardEnroll() {
                   className="w-full mt-3 text-[10px] font-semibold tracking-wider py-2"
                   style={{ color: '#3D5A75' }}
                 >
-                  ← Modifier l’identité
+                  ← Edit identity
                 </button>
               </motion.div>
             )}
@@ -895,7 +895,7 @@ export function EdguardEnroll() {
 
                 <div className="text-center">
                   <p className="text-sm font-bold tracking-widest mb-1" style={{ color: '#00FF88' }}>
-                    ✅ Identité enregistrée
+                    ✅ Identity enrolled
                   </p>
                   <p className="text-xs mb-3" style={{ color: '#8899BB' }}>
                     {firstName.trim()}
@@ -915,7 +915,7 @@ export function EdguardEnroll() {
                   className="w-full py-3.5 rounded-xl font-bold text-sm tracking-wider transition-all duration-300"
                   style={{ backgroundColor: '#00C2FF', color: '#0A0F1E', boxShadow: '0 0 20px rgba(0,194,255,0.3)' }}
                 >
-                  Accéder à l’examen →
+                  Go to Verification →
                 </button>
               </motion.div>
             )}
@@ -928,7 +928,7 @@ export function EdguardEnroll() {
 
                 <div className="text-center">
                   <p className="text-sm font-bold tracking-widest mb-2" style={{ color: '#FF3355' }}>
-                    ENREGISTREMENT ÉCHOUÉ
+                    ENROLLMENT FAILED
                   </p>
                   <p className="text-xs max-w-xs" style={{ color: '#8899BB' }}>
                     {errorMsg}
@@ -941,14 +941,14 @@ export function EdguardEnroll() {
                     className="flex-1 py-3 rounded-xl font-bold text-sm tracking-wider"
                     style={{ backgroundColor: '#00C2FF', color: '#0A0F1E', boxShadow: '0 0 20px rgba(0,194,255,0.3)' }}
                   >
-                    Réessayer
+                    Retry
                   </button>
                   <button
                     onClick={handleReset}
                     className="flex-1 py-3 rounded-xl font-bold text-sm tracking-wider"
                     style={{ border: '1px solid #1E2D45', color: '#8899BB' }}
                   >
-                    Recommencer
+                    Start Over
                   </button>
                 </div>
               </motion.div>
@@ -959,7 +959,7 @@ export function EdguardEnroll() {
             <div className="absolute inset-0 flex items-center justify-center z-20 rounded-2xl" style={{ backgroundColor: 'rgba(10,15,30,0.85)' }}>
               <div className="flex flex-col items-center gap-3">
                 <div className="w-8 h-8 rounded-full border-2 border-[#1E2D45] border-t-[#00C2FF] animate-spin" />
-                <span className="text-xs font-semibold tracking-widest" style={{ color: '#00C2FF' }}>ENREGISTREMENT EN COURS...</span>
+                <span className="text-xs font-semibold tracking-widest" style={{ color: '#00C2FF' }}>ENROLLMENT IN PROGRESS...</span>
               </div>
             </div>
           )}

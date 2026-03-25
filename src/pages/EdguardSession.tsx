@@ -104,7 +104,7 @@ function CheckpointItem({ cp }: { cp: CheckpointResponse }) {
           </span>
         </div>
         <span className="text-[9px] tracking-wider" style={{ color: '#8899BB' }}>
-          {new Date(cp.timestamp).toLocaleTimeString('fr-FR')}
+          {new Date(cp.timestamp).toLocaleTimeString('en-US')}
         </span>
       </div>
       <span className="text-[9px] font-bold tracking-widest px-2 py-0.5 rounded-full shrink-0" style={{ backgroundColor: `${color}15`, color, border: `1px solid ${color}30` }}>
@@ -182,8 +182,8 @@ function SessionSummary({ checkpoints, duration }: { checkpoints: CheckpointResp
     ? Math.round(checkpoints.reduce((s, c) => s + c.trust_score, 0) / checkpoints.length)
     : 0
   const alertCount = checkpoints.filter((c) => c.alert_level === 'ALERT').length
-  const verdict = alertCount === 0 && avgScore >= 70 ? 'VALIDÉ' : alertCount > 0 ? 'SUSPECT' : 'ATTENTION'
-  const verdictColor = verdict === 'VALIDÉ' ? '#00FF88' : verdict === 'SUSPECT' ? '#FF3355' : '#FF8C00'
+  const verdict = alertCount === 0 && avgScore >= 70 ? 'CLEARED' : alertCount > 0 ? 'SUSPECT' : 'WARNING'
+  const verdictColor = verdict === 'CLEARED' ? '#00FF88' : verdict === 'SUSPECT' ? '#FF3355' : '#FF8C00'
 
   const handleExport = () => {
     const w = window.open('', '_blank')
@@ -197,7 +197,7 @@ function SessionSummary({ checkpoints, duration }: { checkpoints: CheckpointResp
       <h1>${t('session_report_title')}</h1>
       <p>${t('session_report_duration')}: ${formatDuration(duration)} | ${t('session_report_checkpoints')}: ${checkpoints.length} | ${t('session_report_average')}: ${avgScore}% | ${t('session_report_alerts')}: ${alertCount}</p>
       <table><tr><th>#</th><th>${t('session_report_time')}</th><th>${t('session_report_score')}</th><th>${t('session_report_status')}</th><th>${t('session_report_flags')}</th></tr>
-      ${checkpoints.map((c) => `<tr><td>${c.checkpoint_number}</td><td>${new Date(c.timestamp).toLocaleTimeString('fr-FR')}</td><td>${c.trust_score}%</td><td>${c.alert_level}</td><td>${c.flags.join(', ') || '—'}</td></tr>`).join('')}
+      ${checkpoints.map((c) => `<tr><td>${c.checkpoint_number}</td><td>${new Date(c.timestamp).toLocaleTimeString('en-US')}</td><td>${c.trust_score}%</td><td>${c.alert_level}</td><td>${c.flags.join(', ') || '—'}</td></tr>`).join('')}
       </table></body></html>
     `)
     w.document.close()
@@ -389,7 +389,7 @@ export function EdguardSession() {
               <div className="flex flex-wrap items-center gap-3 text-[10px] font-semibold tracking-wider" style={{ color: '#8899BB' }}>
                 <span>ID: <span style={{ color: '#F0F4FF' }}>{store.studentId}</span></span>
                 <span>Session: <span style={{ color: '#F0F4FF' }}>{store.sessionId.slice(0, 8)}</span></span>
-                {examName && <span>Examen: <span style={{ color: '#F0F4FF' }}>{examName}</span></span>}
+                {examName && <span>Exam: <span style={{ color: '#F0F4FF' }}>{examName}</span></span>}
               </div>
 
               {/* Webcam + status */}

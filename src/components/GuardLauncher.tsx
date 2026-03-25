@@ -83,22 +83,32 @@ export function GuardLauncher({ guard, onClose }: GuardLauncherProps) {
               marginBottom: '10px',
             }}
           >
-            Ouvrir
+            Open
           </button>
 
           {canInstall && (
             <button
               type="button"
               onClick={handleInstall}
-              className="w-full rounded-xl border border-cyan-500/50 bg-slate-950 px-4 py-3 text-sm font-bold tracking-wider text-cyan-300 transition hover:border-cyan-400 hover:text-cyan-200"
+              style={{
+                display: 'block',
+                width: '100%',
+                padding: '12px',
+                background: 'rgba(0,194,255,0.1)',
+                color: '#00C2FF',
+                fontWeight: 700,
+                border: '1px solid rgba(0,194,255,0.35)',
+                borderRadius: '8px',
+                cursor: 'pointer',
+              }}
             >
-              Installer
+              Install
             </button>
           )}
 
           {isIOS && !canInstall && (
             <div className="rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm leading-6 text-slate-300">
-              Pour installer : appuyez sur Partager puis 'Ajouter à l'écran d'accueil'
+              To install, tap Share and then Add to Home Screen.
             </div>
           )}
 
@@ -116,7 +126,7 @@ export function GuardLauncher({ guard, onClose }: GuardLauncherProps) {
               cursor: 'pointer',
             }}
           >
-            Fermer
+            Close
           </button>
         </div>
       </div>
