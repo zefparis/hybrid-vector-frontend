@@ -22,6 +22,10 @@ const STEP_DURATION_MS = 2000
 
 const WARMUP_DURATION_MS = 3000
 
+const MIN_FACE_SCORE = 0.55
+const MIN_STABLE_DETECTIONS = 3
+const CAPTURE_RETRY_DELAY_MS = 350
+
 const STEP_CONFIG: Record<'center', { labelFr: string; labelEn: string; index: number }> = {
   center: { labelFr: 'REGARDEZ DROIT DEVANT', labelEn: 'LOOK STRAIGHT AHEAD', index: 0 },
 }
@@ -253,6 +257,9 @@ export function FaceCapture({ capturedImage, onCapture, onRetake, onProceed, pro
   const [faceScore, setFaceScore] = useState(0)
   const descriptorRef = useRef<Float32Array | null>(null)
   const detectionLoopRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const stableDetectionsRef = useRef(0)
+  const [stableFaceReady, setStableFaceReady] = useState(false)
+  const [captureFeedback, setCaptureFeedback] = useState<string | null>(null)
 
   const statusText = useTypewriter(
     capturedImage
@@ -273,6 +280,8 @@ export function FaceCapture({ capturedImage, onCapture, onRetake, onProceed, pro
     if (!faceApiLoaded || !isActiveStep || capturedImage) {
       setFaceDetected(false)
       setFaceScore(0)
+      setStableFaceReady(false)
+      stableDetectionsRef.current = 0
       if (detectionLoopRef.current) clearTimeout(detectionLoopRef.current)
       return
     }
@@ -283,10 +292,22 @@ export function FaceCapture({ capturedImage, onCapture, onRetake, onProceed, pro
       if (video && video.readyState >= 4 && !cancelled) {
         const result = await detectFace(video)
         if (!cancelled) {
-          setFaceDetected(!!result)
-          setFaceScore(result ? 75 : 0)
-          if (result?.descriptor) {
+          const scorePct = result ? Math.round(result.score * 100) : 0
+          const isStable = !!result && result.score >= MIN_FACE_SCORE
+          stableDetectionsRef.current = isStable
+            ? Math.min(stableDetectionsRef.current + 1, MIN_STABLE_DETECTIONS)
+            : 0
+
+          setFaceDetected(isStable)
+          setFaceScore(scorePct)
+          setStableFaceReady(stableDetectionsRef.current >= MIN_STABLE_DETECTIONS)
+
+          if (result?.descriptor && isStable) {
             descriptorRef.current = result.descriptor
+          }
+
+          if (isStable) {
+            setCaptureFeedback(null)
           }
         }
       }
@@ -306,7 +327,7 @@ export function FaceCapture({ capturedImage, onCapture, onRetake, onProceed, pro
     if (capturedImage) setShowSuccess(true)
   }, [capturedImage])
 
-  const captureFrame = useCallback((): string | null => {
+  const captureFrame = useCallback(async (): Promise<string | null> => {
     const video = webcamRef.current?.video
     // FIX 5: Ensure video is fully ready
     if (!video || video.readyState < 4 || video.videoWidth === 0) {
@@ -337,22 +358,46 @@ export function FaceCapture({ capturedImage, onCapture, onRetake, onProceed, pro
       return null
     }
 
-    return img
-  }, [])
-
-  const advanceStep = useCallback((currentStep: LivenessStep, frames: string[], retryCount = 0) => {
-    // Capture BEFORE flash to avoid grabbing white overlay
-    const frame = captureFrame()
-    if (!frame) {
-      if (retryCount < 3) {
-        console.warn('[FACE] capture failed at step:', currentStep, '— retry', retryCount + 1)
-        setTimeout(() => advanceStep(currentStep, frames, retryCount + 1), 500)
-        return
+    if (faceApiLoaded) {
+      const detection = await detectFace(canvas)
+      if (!detection || detection.score < MIN_FACE_SCORE) {
+        console.warn('[FACE] final frame rejected — face not stable enough')
+        return null
       }
-      console.error('[FACE] capture failed after 3 retries at step:', currentStep)
+      descriptorRef.current = detection.descriptor
+    }
+
+    return img
+  }, [detectFace, faceApiLoaded])
+
+  const advanceStep = useCallback(async (currentStep: LivenessStep, frames: string[], retryCount = 0) => {
+    if (currentStep === 'center' && faceApiLoaded && !stableFaceReady) {
+      setCaptureFeedback('Hold steady and center your face before capture.')
       return
     }
 
+    // Capture BEFORE flash to avoid grabbing white overlay
+    const frame = await captureFrame()
+    if (!frame) {
+      if (retryCount < 3) {
+        console.warn('[FACE] capture failed at step:', currentStep, '— retry', retryCount + 1)
+        setCaptureFeedback('Clear image not captured yet. Hold steady...')
+        setTimeout(() => {
+          void advanceStep(currentStep, frames, retryCount + 1)
+        }, CAPTURE_RETRY_DELAY_MS)
+        return
+      }
+      console.error('[FACE] capture failed after 3 retries at step:', currentStep)
+      if (currentStep === 'center') {
+        stableDetectionsRef.current = 0
+        setStableFaceReady(false)
+        setCaptureFeedback('Clear image not captured. Re-align your face and hold steady.')
+        setLivenessStep('warmup')
+      }
+      return
+    }
+
+    setCaptureFeedback(null)
     setFlashVisible(true)
     playCapture()
     setTimeout(() => setFlashVisible(false), 150)
@@ -366,7 +411,7 @@ export function FaceCapture({ capturedImage, onCapture, onRetake, onProceed, pro
       onCapture(newFrames[0])
       onLivenessComplete?.(newFrames, descriptorRef.current ?? undefined)
     }
-  }, [captureFrame, onCapture, onLivenessComplete])
+  }, [captureFrame, faceApiLoaded, onCapture, onLivenessComplete, stableFaceReady])
 
   // Timer for each liveness step
   useEffect(() => {
@@ -383,10 +428,19 @@ export function FaceCapture({ capturedImage, onCapture, onRetake, onProceed, pro
       setStepTimer(elapsed)
 
       if (elapsed >= STEP_DURATION_MS) {
+        if (livenessStep === 'center' && faceApiLoaded && !stableFaceReady) {
+          stepStartRef.current = Date.now()
+          setStepTimer(0)
+          setCaptureFeedback('Hold steady and center your face before capture.')
+          return
+        }
+
         if (timerRef.current) clearInterval(timerRef.current)
         setStepTimer(STEP_DURATION_MS)
         setLivenessFrames((prevFrames) => {
-          setTimeout(() => advanceStep(livenessStep, prevFrames), 50)
+          setTimeout(() => {
+            void advanceStep(livenessStep, prevFrames)
+          }, 50)
           return prevFrames
         })
       }
@@ -395,12 +449,15 @@ export function FaceCapture({ capturedImage, onCapture, onRetake, onProceed, pro
     return () => {
       if (timerRef.current) clearInterval(timerRef.current)
     }
-  }, [livenessStep, advanceStep])
+  }, [livenessStep, advanceStep, faceApiLoaded, stableFaceReady])
 
   // Start liveness sequence when permission granted
   const startLiveness = useCallback(() => {
     if (livenessStartedRef.current || capturedImage) return
     livenessStartedRef.current = true
+    setCaptureFeedback(null)
+    setStableFaceReady(false)
+    stableDetectionsRef.current = 0
     setLivenessStep('warmup')
     setLivenessFrames([])
   }, [capturedImage])
@@ -429,6 +486,11 @@ export function FaceCapture({ capturedImage, onCapture, onRetake, onProceed, pro
     setLivenessFrames([])
     setStepTimer(0)
     setShowSuccess(false)
+    setFaceDetected(false)
+    setFaceScore(0)
+    setStableFaceReady(false)
+    stableDetectionsRef.current = 0
+    setCaptureFeedback(null)
     onRetake()
   }, [onRetake])
 
@@ -480,7 +542,10 @@ export function FaceCapture({ capturedImage, onCapture, onRetake, onProceed, pro
             ref={webcamRef} audio={false}
             screenshotFormat="image/jpeg" screenshotQuality={0.92}
             videoConstraints={videoConstraints}
-            onUserMedia={() => setPermission('granted')}
+            onUserMedia={() => {
+              setPermission('granted')
+              setCameraError(null)
+            }}
             onUserMediaError={(err) => {
               console.error('[FACE] Webcam error:', err)
               setPermission('denied')
@@ -642,17 +707,22 @@ export function FaceCapture({ capturedImage, onCapture, onRetake, onProceed, pro
       )}
 
       {!capturedImage && livenessStep === 'center' && (
-        <div className="flex items-center justify-center py-3.5">
+        <div className="flex flex-col items-center justify-center py-3.5 gap-1.5">
           <motion.div
             className="flex items-center gap-2"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
           >
-            <div className="w-2 h-2 rounded-full bg-[#00C2FF] animate-pulse" />
-            <span className="text-xs font-bold tracking-widest" style={{ color: '#00C2FF' }}>
-              {t('face_rekog_analysis')}
+            <div className={`w-2 h-2 rounded-full ${stableFaceReady ? 'bg-[#00FF88]' : 'bg-[#00C2FF] animate-pulse'}`} />
+            <span className="text-xs font-bold tracking-widest" style={{ color: stableFaceReady ? '#00FF88' : '#00C2FF' }}>
+              {stableFaceReady ? 'FACE LOCKED' : t('face_rekog_analysis')}
             </span>
           </motion.div>
+          <span className="text-[10px] font-semibold tracking-wider text-center" style={{ color: stableFaceReady ? '#00FF88' : '#8899BB' }}>
+            {stableFaceReady
+              ? 'Face locked — capturing shortly.'
+              : captureFeedback ?? (faceApiLoaded ? 'Hold steady inside the frame.' : 'Keep your face centered for capture.')}
+          </span>
         </div>
       )}
 
