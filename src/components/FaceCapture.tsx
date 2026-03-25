@@ -5,6 +5,7 @@ import { playCapture, playScan } from '@/utils/sounds'
 import { useTypewriter } from '@/hooks/useTypewriter'
 import { useT } from '@/i18n/useLang'
 import { useFaceApi } from '@/hooks/useFaceApi'
+import styles from '@/hvguard/theme.module.css'
 
 interface FaceCaptureProps {
   capturedImage: string | null
@@ -656,22 +657,41 @@ export function FaceCapture({ capturedImage, onCapture, onRetake, onProceed, pro
       )}
 
       {capturedImage && (
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-3">
+          <div
+            className={styles.card}
+            style={{
+              background: 'rgba(17,24,39,0.52)',
+              padding: '0.875rem 1rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 12,
+              flexWrap: 'wrap',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span style={{ width: 8, height: 8, borderRadius: 999, background: '#00FF88', boxShadow: '0 0 12px rgba(0,255,136,0.45)', flexShrink: 0 }} />
+              <span className={styles.mono} style={{ color: '#00FF88', fontWeight: 800, letterSpacing: '0.14em', fontSize: 11, textTransform: 'uppercase' }}>
+                Capture complete
+              </span>
+            </div>
+            <span style={{ color: '#8899BB', fontSize: '0.78rem', lineHeight: 1.5 }}>
+              Review the image, then continue or retake.
+            </span>
+          </div>
+
           <button
             onClick={onProceed}
-            className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-bold text-sm tracking-wider transition-all duration-300 touch-manipulation"
-            style={{
-              backgroundColor: '#00C2FF',
-              color: '#0A0F1E',
-              boxShadow: '0 0 20px rgba(0,194,255,0.3)',
-            }}
+            className={`${styles.btn} ${styles.btnPrimary}`}
+            style={{ width: '100%' }}
           >
             {proceedLabel ?? t('face_proceed')}
           </button>
           <button
             onClick={handleRetake}
-            className="w-full py-2 text-[11px] font-semibold tracking-wider transition-all duration-300"
-            style={{ color: '#8899BB' }}
+            className={`${styles.btn} ${styles.btnOutline}`}
+            style={{ width: '100%' }}
           >
             {t('face_retake')}
           </button>
