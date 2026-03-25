@@ -43,42 +43,45 @@ export function GuardLauncher({ guard, onClose }: GuardLauncherProps) {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: 'rgba(0,0,0,0.7)',
+        backgroundColor: 'rgba(0,0,0,0.85)',
+        backdropFilter: 'blur(4px)',
       }}
       onClick={onClose}
     >
       <div
         style={{
-          background: '#111',
-          border: '1px solid #00C2FF',
-          borderRadius: '12px',
-          padding: '24px',
-          maxWidth: '360px',
+          background: '#0d0d0d',
+          border: '1px solid rgba(0,194,255,0.4)',
+          borderRadius: '16px',
+          padding: '28px',
+          maxWidth: '340px',
           width: '100%',
           margin: '0 16px',
           color: 'white',
         }}
         onClick={(event) => event.stopPropagation()}
       >
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <h3 className="text-xl font-bold tracking-wide text-white">{guard.name}</h3>
-            <p className="mt-2 text-sm leading-6 text-slate-300">{guard.description}</p>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-lg border border-slate-700 px-3 py-2 text-xs font-semibold uppercase tracking-wider text-slate-300 transition hover:border-slate-500 hover:text-white"
-          >
-            Fermer
-          </button>
+        <div>
+          <h3 className="text-xl font-bold tracking-wide text-white">{guard.name}</h3>
+          <p className="mt-2 text-sm leading-6 text-slate-300">{guard.description}</p>
         </div>
 
         <div className="mt-6 flex flex-col gap-3">
           <button
             type="button"
             onClick={handleOpen}
-            className="w-full rounded-xl bg-cyan-400 px-4 py-3 text-sm font-bold tracking-wider text-slate-950 transition hover:bg-cyan-300"
+            style={{
+              display: 'block',
+              width: '100%',
+              padding: '12px',
+              background: '#00C2FF',
+              color: '#000',
+              fontWeight: 700,
+              borderRadius: '8px',
+              border: 'none',
+              cursor: 'pointer',
+              marginBottom: '10px',
+            }}
           >
             Ouvrir
           </button>
@@ -102,7 +105,16 @@ export function GuardLauncher({ guard, onClose }: GuardLauncherProps) {
           <button
             type="button"
             onClick={onClose}
-            className="w-full rounded-xl border border-slate-700 px-4 py-3 text-sm font-semibold tracking-wider text-slate-300 transition hover:border-slate-500 hover:text-white"
+            style={{
+              display: 'block',
+              width: '100%',
+              padding: '12px',
+              background: 'transparent',
+              color: '#999',
+              border: '1px solid #333',
+              borderRadius: '8px',
+              cursor: 'pointer',
+            }}
           >
             Fermer
           </button>

@@ -68,7 +68,7 @@ export function EdguardHome() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.15, duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
           >
-            <Link to="/edguard/enroll" className="block group">
+            <Link to="/edguard/enroll" className="block group" style={{ textDecoration: 'none' }}>
               <div
                 className="rounded-2xl p-6 sm:p-7 relative overflow-hidden transition-all duration-300 group-hover:border-[#00C2FF]/50"
                 style={{ backgroundColor: '#0D1526', border: '1px solid #1E2D45' }}
@@ -99,7 +99,7 @@ export function EdguardHome() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3, duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
           >
-            <Link to="/edguard/verify" className="block group">
+            <Link to="/edguard/verify" className="block group" style={{ textDecoration: 'none' }}>
               <div
                 className="rounded-2xl p-6 sm:p-7 relative overflow-hidden transition-all duration-300 group-hover:border-[#00C2FF]/50"
                 style={{ backgroundColor: '#0D1526', border: '1px solid #1E2D45' }}
