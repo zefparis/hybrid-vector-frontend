@@ -10,7 +10,7 @@ import { EdguardProfile } from './pages/EdguardProfile'
 
 export default function App() {
   useEffect(() => {
-    const existingScript = document.querySelector('script[data-widget="wid_252792d76ceaa21f2d263aab"]')
+    const existingScript = document.querySelector('script[data-widget="15965865-8f52-4d4a-9d0d-b6d151107749"]')
 
     if (existingScript) {
       return
@@ -19,7 +19,7 @@ export default function App() {
     const script = document.createElement('script')
     script.src = 'https://hcs-widget-mvp.vercel.app/widget/v3/hcs-widget.js'
     script.async = true
-    script.setAttribute('data-widget', 'wid_252792d76ceaa21f2d263aab')
+    script.setAttribute('data-widget', '15965865-8f52-4d4a-9d0d-b6d151107749')
 
     document.body.appendChild(script)
 
