@@ -84,8 +84,17 @@ export function Products() {
     },
   ]
 
-  const renderCardContent = (p: Product) => (
-    <>
+  const renderCardContent = (p: Product, idx: number) => (
+    <div
+      className={`${styles.card} ${styles.lift} ${p.glowClass} ${styles.fadeUp} ${inView ? styles.fadeUpVisible : ''}`}
+      style={{
+        textDecoration: 'none',
+        display: 'flex',
+        flexDirection: 'column',
+        borderTop: `3px solid ${p.color}`,
+        transitionDelay: inView ? `${idx * 90}ms` : '0ms',
+      }}
+    >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
         <div style={{ fontFamily: 'Syne, system-ui, sans-serif', fontWeight: 800, opacity: 0.18, fontSize: 36, lineHeight: 1 }}>
           {p.num}
@@ -103,7 +112,7 @@ export function Products() {
         <div className={styles.mono} style={{ fontSize: '0.75rem', color: 'rgba(249,250,251,0.9)' }}>{p.stat}</div>
         <div className={styles.mono} style={{ fontSize: '0.75rem', color: p.color, whiteSpace: 'nowrap' }}>Live Demo →</div>
       </div>
-    </>
+    </div>
   )
 
   return (
@@ -122,44 +131,21 @@ export function Products() {
         <div className="productsGrid" style={{ marginTop: '1.75rem' }}>
           {products.map((p, idx) => (
             p.name === 'EDGUARD' ? (
-              <button
+              <div
                 key={p.name}
-                type="button"
                 onClick={() => setSelectedGuard(edguardConfig)}
-                className={`${styles.card} ${styles.lift} ${p.glowClass} ${styles.fadeUp} ${inView ? styles.fadeUpVisible : ''}`}
-                style={{
-                  textDecoration: 'none',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  borderTop: `3px solid ${p.color}`,
-                  transitionDelay: inView ? `${idx * 90}ms` : '0ms',
-                  width: '100%',
-                  textAlign: 'left',
-                  background: 'transparent',
-                  padding: 0,
-                  borderLeft: 'none',
-                  borderRight: 'none',
-                  borderBottom: 'none',
-                }}
+                className="cursor-pointer"
               >
-                {renderCardContent(p)}
-              </button>
+                {renderCardContent(p, idx)}
+              </div>
             ) : (
               <a
                 key={p.name}
                 href={p.href}
                 target="_blank"
                 rel="noreferrer"
-                className={`${styles.card} ${styles.lift} ${p.glowClass} ${styles.fadeUp} ${inView ? styles.fadeUpVisible : ''}`}
-                style={{
-                  textDecoration: 'none',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  borderTop: `3px solid ${p.color}`,
-                  transitionDelay: inView ? `${idx * 90}ms` : '0ms',
-                }}
               >
-                {renderCardContent(p)}
+                {renderCardContent(p, idx)}
               </a>
             )
           ))}

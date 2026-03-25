@@ -1,4 +1,5 @@
 import { useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import { usePWAInstall } from '@/hooks/usePWAInstall'
 
@@ -40,9 +41,9 @@ export function GuardLauncher({ guard, onClose }: GuardLauncherProps) {
     return null
   }
 
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm"
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm"
       onClick={onClose}
     >
       <div
@@ -97,6 +98,7 @@ export function GuardLauncher({ guard, onClose }: GuardLauncherProps) {
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }
