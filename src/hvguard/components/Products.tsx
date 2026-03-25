@@ -19,13 +19,6 @@ export function Products() {
   const { ref, inView } = useInView<HTMLDivElement>()
   const [selectedGuard, setSelectedGuard] = useState<GuardConfig | null>(null)
 
-  const edguardConfig: GuardConfig = {
-    id: 'edguard',
-    name: 'EdGuard',
-    description: 'Cognitive identity verification for online exams',
-    path: '/edguard',
-  }
-
   const products: Product[] = [
     {
       num: '01',
@@ -84,6 +77,18 @@ export function Products() {
     },
   ]
 
+  const guardConfigs: Record<string, GuardConfig> = Object.fromEntries(
+    products.map((product) => [
+      product.name,
+      {
+        id: product.name.toLowerCase(),
+        name: product.name === 'EDGUARD' ? 'EdGuard' : product.name,
+        description: product.desc,
+        url: product.href,
+      },
+    ]),
+  )
+
   const renderCardContent = (p: Product, idx: number) => (
     <div
       className={`${styles.card} ${styles.lift} ${p.glowClass} ${styles.fadeUp} ${inView ? styles.fadeUpVisible : ''}`}
@@ -130,27 +135,14 @@ export function Products() {
         {/* Products grid — 3 cols desktop, 2 tablet, 1 mobile */}
         <div className="productsGrid" style={{ marginTop: '1.75rem' }}>
           {products.map((p, idx) => (
-            p.name === 'EDGUARD' ? (
-              <div
-                key={p.name}
-                onClick={() => setSelectedGuard(edguardConfig)}
-                className="cursor-pointer no-underline [&_*]:no-underline"
-                style={{ textDecoration: 'none' }}
-              >
-                {renderCardContent(p, idx)}
-              </div>
-            ) : (
-              <a
-                key={p.name}
-                href={p.href}
-                target="_blank"
-                rel="noreferrer"
-                className="no-underline [&_*]:no-underline"
-                style={{ textDecoration: 'none' }}
-              >
-                {renderCardContent(p, idx)}
-              </a>
-            )
+            <div
+              key={p.name}
+              onClick={() => setSelectedGuard(guardConfigs[p.name])}
+              className="cursor-pointer no-underline [&_*]:no-underline"
+              style={{ textDecoration: 'none' }}
+            >
+              {renderCardContent(p, idx)}
+            </div>
           ))}
         </div>
 

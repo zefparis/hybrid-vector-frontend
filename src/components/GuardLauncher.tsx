@@ -1,12 +1,11 @@
 import { useCallback } from 'react'
 import { createPortal } from 'react-dom'
-import { usePWAInstall } from '@/hooks/usePWAInstall'
 
 export type GuardConfig = {
   id: string
   name: string
   description: string
-  path: string
+  url: string
 }
 
 type GuardLauncherProps = {
@@ -15,20 +14,14 @@ type GuardLauncherProps = {
 }
 
 export function GuardLauncher({ guard, onClose }: GuardLauncherProps) {
-  const { canInstall, install, isIOS } = usePWAInstall()
-
   const handleOpen = useCallback(() => {
     if (!guard) {
       return
     }
 
-    window.location.href = guard.path
+    window.location.href = guard.url
     onClose()
   }, [guard, onClose])
-
-  const handleInstall = useCallback(async () => {
-    await install()
-  }, [install])
 
   if (guard === null) {
     return null
@@ -64,6 +57,16 @@ export function GuardLauncher({ guard, onClose }: GuardLauncherProps) {
         <div>
           <h3 className="text-xl font-bold tracking-wide text-white">{guard.name}</h3>
           <p className="mt-2 text-sm leading-6 text-slate-300">{guard.description}</p>
+          <div
+            className="mt-4 rounded-xl border px-4 py-3 text-sm leading-6"
+            style={{
+              borderColor: 'rgba(0,194,255,0.18)',
+              background: 'rgba(0,194,255,0.06)',
+              color: '#cbd5e1',
+            }}
+          >
+            Open the module on its own secure domain to continue. If you want to install it, use the browser install prompt from that module after it opens.
+          </div>
         </div>
 
         <div className="mt-6 flex flex-col gap-3">
@@ -83,34 +86,8 @@ export function GuardLauncher({ guard, onClose }: GuardLauncherProps) {
               marginBottom: '10px',
             }}
           >
-            Open
+            Open module
           </button>
-
-          {canInstall && (
-            <button
-              type="button"
-              onClick={handleInstall}
-              style={{
-                display: 'block',
-                width: '100%',
-                padding: '12px',
-                background: 'rgba(0,194,255,0.1)',
-                color: '#00C2FF',
-                fontWeight: 700,
-                border: '1px solid rgba(0,194,255,0.35)',
-                borderRadius: '8px',
-                cursor: 'pointer',
-              }}
-            >
-              Install
-            </button>
-          )}
-
-          {isIOS && !canInstall && (
-            <div className="rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm leading-6 text-slate-300">
-              To install, tap Share and then Add to Home Screen.
-            </div>
-          )}
 
           <button
             type="button"

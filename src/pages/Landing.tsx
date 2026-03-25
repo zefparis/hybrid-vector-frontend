@@ -1,4 +1,3 @@
-import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { ArrowRight, Shield, Brain, Lock, ChevronRight, Fingerprint, Cpu, Zap } from 'lucide-react'
 import { useMemo } from 'react'
@@ -36,10 +35,16 @@ const itemVariants = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.55, ease: [0.16, 1, 0.3, 1] } },
 }
 
+const EDGUARD_URL = 'https://edguard-v2.vercel.app'
+
 export function Landing() {
   const { t } = useT()
-  const navigate = useNavigate()
   const particles = useMemo(generateParticles, [])
+
+  const openEdguard = () => {
+    window.location.href = EDGUARD_URL
+  }
+
   const features = [
     {
       icon: Fingerprint,
@@ -132,7 +137,7 @@ export function Landing() {
 
           <motion.div variants={itemVariants} className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <button
-              onClick={() => navigate('/edguard')}
+              onClick={openEdguard}
               className="group flex items-center gap-2.5 px-8 py-4 rounded-xl font-bold text-base bg-hv-cyan text-hv-bg transition-all duration-200 hover:bg-hv-cyan-dark"
               style={{ boxShadow: '0 0 24px rgba(0,194,255,0.45), 0 0 48px rgba(0,194,255,0.2)' }}
             >
@@ -349,7 +354,7 @@ export function Landing() {
               {t('landing_experience_live_desc')}
             </p>
             <button
-              onClick={() => navigate('/edguard')}
+              onClick={openEdguard}
               className="group inline-flex items-center gap-2.5 px-8 py-4 rounded-xl font-bold text-base bg-hv-cyan text-hv-bg hover:bg-hv-cyan-dark transition-all duration-200"
               style={{ boxShadow: '0 0 24px rgba(0,194,255,0.45)' }}
             >
