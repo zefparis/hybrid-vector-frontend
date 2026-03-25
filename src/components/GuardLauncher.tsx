@@ -1,6 +1,5 @@
 import { useCallback } from 'react'
 import { createPortal } from 'react-dom'
-import { useNavigate } from 'react-router-dom'
 import { usePWAInstall } from '@/hooks/usePWAInstall'
 
 export type GuardConfig = {
@@ -16,7 +15,6 @@ type GuardLauncherProps = {
 }
 
 export function GuardLauncher({ guard, onClose }: GuardLauncherProps) {
-  const navigate = useNavigate()
   const { canInstall, install, isIOS } = usePWAInstall()
 
   const handleOpen = useCallback(() => {
@@ -24,14 +22,9 @@ export function GuardLauncher({ guard, onClose }: GuardLauncherProps) {
       return
     }
 
-    if (typeof navigate === 'function') {
-      navigate(guard.path)
-    } else {
-      window.location.assign(guard.path)
-    }
-
+    window.location.href = guard.path
     onClose()
-  }, [guard, navigate, onClose])
+  }, [guard, onClose])
 
   const handleInstall = useCallback(async () => {
     await install()
@@ -43,11 +36,28 @@ export function GuardLauncher({ guard, onClose }: GuardLauncherProps) {
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm"
+      style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 9999,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: 'rgba(0,0,0,0.7)',
+      }}
       onClick={onClose}
     >
       <div
-        className="bg-[#111] border border-[#00C2FF]/30 rounded-xl p-6 max-w-sm w-full mx-4 text-white"
+        style={{
+          background: '#111',
+          border: '1px solid #00C2FF',
+          borderRadius: '12px',
+          padding: '24px',
+          maxWidth: '360px',
+          width: '100%',
+          margin: '0 16px',
+          color: 'white',
+        }}
         onClick={(event) => event.stopPropagation()}
       >
         <div className="flex items-start justify-between gap-4">

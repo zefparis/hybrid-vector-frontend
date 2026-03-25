@@ -134,7 +134,8 @@ export function Products() {
               <div
                 key={p.name}
                 onClick={() => setSelectedGuard(edguardConfig)}
-                className="cursor-pointer"
+                className="cursor-pointer no-underline [&_*]:no-underline"
+                style={{ textDecoration: 'none' }}
               >
                 {renderCardContent(p, idx)}
               </div>
@@ -144,6 +145,8 @@ export function Products() {
                 href={p.href}
                 target="_blank"
                 rel="noreferrer"
+                className="no-underline [&_*]:no-underline"
+                style={{ textDecoration: 'none' }}
               >
                 {renderCardContent(p, idx)}
               </a>
