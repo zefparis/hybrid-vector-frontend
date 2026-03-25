@@ -2,6 +2,7 @@ import { useState, useRef, useCallback, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Webcam from 'react-webcam'
 import { behavioralCollector, cognitiveCollector, faceCollector } from '@/signal-engine'
+import styles from '@/hvguard/theme.module.css'
 import { useEdguardStore } from '@/store/edguardStore'
 import { sessionCheckpoint } from '@/services/edguardApi'
 import type { CheckpointResponse } from '@/services/edguardApi'
@@ -131,9 +132,9 @@ function SessionSetup({ onStart }: { onStart: (studentId: string, examName: stri
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       <div className="text-center mb-2">
         <p className="text-xs font-bold tracking-widest" style={{ color: '#00C2FF' }}>
-          {t('edguard_title')} — ENROLLMENT
+          SESSION SETUP
         </p>
-        <div className="h-px w-full mt-3" style={{ backgroundColor: '#1E2D45' }} />
+        <div className="h-px w-full mt-3" style={{ backgroundColor: 'rgba(255,255,255,0.08)' }} />
       </div>
 
       <div className="flex flex-col gap-1.5">
@@ -166,8 +167,8 @@ function SessionSetup({ onStart }: { onStart: (studentId: string, examName: stri
 
       <button
         type="submit"
-        className="w-full py-3.5 rounded-xl font-bold text-sm tracking-wider transition-all duration-300"
-        style={{ backgroundColor: '#00C2FF', color: '#0A0F1E', boxShadow: '0 0 20px rgba(0,194,255,0.3)' }}
+        className={`${styles.btn} ${styles.btnPrimary}`}
+        style={{ width: '100%' }}
       >
         {t('session_continue')}
       </button>
@@ -246,8 +247,8 @@ function SessionSummary({ checkpoints, duration }: { checkpoints: CheckpointResp
 
       <button
         onClick={handleExport}
-        className="w-full py-3 rounded-xl font-bold text-sm tracking-wider transition-all duration-300"
-        style={{ border: '1.5px solid rgba(0,194,255,0.5)', color: '#00C2FF' }}
+        className={`${styles.btn} ${styles.btnOutline}`}
+        style={{ width: '100%' }}
       >
         {t('edguard_export_pdf')}
       </button>
@@ -340,139 +341,282 @@ export function EdguardSession() {
     setPhase('checkpoint')
   }, [])
 
+  const averageTrust = store.checkpoints.length > 0
+    ? Math.round(store.checkpoints.reduce((sum, cp) => sum + cp.trust_score, 0) / store.checkpoints.length)
+    : 0
+
+  const statusCards = [
+    { value: store.sessionActive ? 'Live' : 'Idle', label: 'Session state' },
+    { value: formatDuration(elapsed), label: 'Elapsed time' },
+    { value: `${store.checkpoints.length}`, label: 'Checkpoints recorded' },
+    { value: `${averageTrust}%`, label: 'Average trust' },
+  ]
+
   return (
-    <div className="min-h-screen pt-16 pb-8 px-3 sm:px-4 overflow-x-hidden" style={{ backgroundColor: '#0A0F1E' }}>
-      <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: HEX_PATTERN }} />
+    <div className={styles.app} style={{ background: '#030712' }}>
+      <section className={styles.hero} style={{ minHeight: 'auto', paddingBottom: '3rem' }}>
+        <div className={`${styles.heroBackdrop} ${styles.gridBg}`} style={{ opacity: 0.72 }} />
+        <div className={styles.heroBackdrop} style={{ background: 'radial-gradient(ellipse at 50% 18%, rgba(0,194,255,0.16) 0%, transparent 58%)' }} />
+        <div className={styles.heroBackdrop} style={{ backgroundImage: HEX_PATTERN, opacity: 0.5 }} />
+        <div className={styles.scanLine} />
 
-      <div className="max-w-2xl mx-auto relative w-full pt-6 sm:pt-8">
-        <div
-          className="rounded-2xl p-5 sm:p-7 relative overflow-hidden"
-          style={{ backgroundColor: '#0D1526', border: '1px solid #1E2D45' }}
-        >
-          {/* Pulse overlay */}
-          <AnimatePresence>
-            {pulseColor && (
-              <motion.div
-                initial={{ opacity: 0.6 }}
-                animate={{ opacity: 0 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 2 }}
-                className="absolute inset-0 z-10 rounded-2xl pointer-events-none"
-                style={{ boxShadow: `inset 0 0 60px ${pulseColor}40` }}
-              />
-            )}
-          </AnimatePresence>
+        <div className={styles.container}>
+          <motion.div
+            initial={{ opacity: 0, y: 22 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.55, ease: [0.4, 0, 0.2, 1] }}
+            style={{ maxWidth: 860, margin: '0 auto', textAlign: 'center' }}
+          >
+            <div
+              className={styles.card}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 10,
+                padding: '8px 14px',
+                background: 'rgba(17,24,39,0.45)',
+                borderColor: 'rgba(0,194,255,0.18)',
+              }}
+            >
+              <span className={styles.pulseDot} style={{ background: store.sessionActive ? '#00FF88' : '#00C2FF', boxShadow: `0 0 12px ${store.sessionActive ? 'rgba(0,255,136,0.45)' : 'rgba(0,194,255,0.45)'}` }} />
+              <span style={{ fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', fontSize: 11, color: 'rgba(249,250,251,0.9)' }}>
+                Exam session monitoring
+              </span>
+            </div>
 
-          {/* Setup */}
-          {phase === 'setup' && <SessionSetup onStart={handleStart} />}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, marginTop: '1.25rem' }}>
+              <svg width="42" height="42" viewBox="0 0 28 28">
+                <polygon points="14,2 26,8 26,20 14,26 2,20 2,8" fill="none" stroke="#00C2FF" strokeWidth="1.5" />
+                <circle cx="14" cy="14" r="4" fill="#00C2FF" opacity="0.45" />
+              </svg>
+              <span className={styles.mono} style={{ color: '#00C2FF', fontWeight: 800, letterSpacing: '0.24em', fontSize: 14 }}>
+                EDGUARD SESSION
+              </span>
+            </div>
 
-          {/* Active session */}
-          {(phase === 'active' || phase === 'checkpoint') && (
-            <div className="flex flex-col gap-4">
-              {/* Header */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <svg width="16" height="16" viewBox="0 0 28 28">
-                    <polygon points="14,2 26,8 26,20 14,26 2,20 2,8" fill="none" stroke="#00C2FF" strokeWidth="2" />
-                  </svg>
-                  <span className="text-xs sm:text-sm font-black tracking-widest" style={{ color: '#F0F4FF' }}>
-                    {t('session_title')}
-                  </span>
+            <h1 className={styles.headline} style={{ fontSize: 'clamp(2.15rem, 8vw, 4.8rem)', marginTop: '1rem' }}>
+              Monitor identity
+              <br />
+              <span style={{ color: 'var(--cyan)' }}>during the exam.</span>
+            </h1>
+
+            <p className={styles.muted} style={{ marginTop: '1rem', maxWidth: 680, marginLeft: 'auto', marginRight: 'auto', fontSize: 'clamp(0.95rem, 2.5vw, 1.06rem)', lineHeight: 1.7 }}>
+              Start a monitored session, trigger manual or automatic checkpoints, and keep a compact trust history across the full exam flow.
+            </p>
+
+            <div className={styles.statsGrid}>
+              {statusCards.map((item) => (
+                <div key={item.label} className={styles.card} style={{ textAlign: 'left', background: 'rgba(17,24,39,0.55)' }}>
+                  <div className={styles.mono} style={{ fontSize: 'clamp(1.2rem, 4vw, 1.65rem)', fontWeight: 800, color: 'var(--cyan)' }}>
+                    {item.value}
+                  </div>
+                  <div style={{ fontWeight: 700, marginTop: 6, fontSize: '0.8125rem' }}>{item.label}</div>
                 </div>
-                <span className="font-mono text-sm font-bold tabular-nums tracking-wider" style={{ color: '#00C2FF' }}>
-                  {formatDuration(elapsed)}
-                </span>
-              </div>
-              <div className="h-px w-full" style={{ backgroundColor: '#1E2D45' }} />
+              ))}
+            </div>
+          </motion.div>
 
-              {/* Info row */}
-              <div className="flex flex-wrap items-center gap-3 text-[10px] font-semibold tracking-wider" style={{ color: '#8899BB' }}>
-                <span>ID: <span style={{ color: '#F0F4FF' }}>{store.studentId}</span></span>
-                <span>Session: <span style={{ color: '#F0F4FF' }}>{store.sessionId.slice(0, 8)}</span></span>
-                {examName && <span>Exam: <span style={{ color: '#F0F4FF' }}>{examName}</span></span>}
-              </div>
+          <div className="edguardSessionLayout" style={{ marginTop: '2rem' }}>
+            <motion.div
+              initial={{ opacity: 0, y: 18 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1, duration: 0.5 }}
+            >
+              <div className={styles.card} style={{ background: 'rgba(17,24,39,0.58)', position: 'relative', overflow: 'hidden' }}>
+                <AnimatePresence>
+                  {pulseColor && (
+                    <motion.div
+                      initial={{ opacity: 0.6 }}
+                      animate={{ opacity: 0 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 2 }}
+                      className="absolute inset-0 z-10 rounded-2xl pointer-events-none"
+                      style={{ boxShadow: `inset 0 0 60px ${pulseColor}40` }}
+                    />
+                  )}
+                </AnimatePresence>
 
-              {/* Webcam + status */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* Small webcam */}
-                <div className="rounded-xl overflow-hidden" style={{ border: '1px solid #1E2D45', aspectRatio: '4/3' }}>
-                  <Webcam
-                    ref={webcamRef}
-                    audio={false}
-                    screenshotFormat="image/jpeg"
-                    screenshotQuality={0.8}
-                    videoConstraints={VIDEO_CONSTRAINTS}
-                    className="w-full h-full object-cover block"
-                  />
-                </div>
+                {phase === 'setup' && <SessionSetup onStart={handleStart} />}
 
-                {/* Status */}
-                <div className="flex flex-col gap-2">
-                  <p className="text-[10px] font-semibold tracking-widest" style={{ color: '#8899BB' }}>{t('session_current_status').toUpperCase()}</p>
-                  {[
-                    { label: t('session_identity_verified'), ok: store.currentStatus !== 'ALERT' },
-                    { label: t('session_liveness_confirmed'), ok: store.currentStatus !== 'ALERT' },
-                    { label: t('session_cognitive_stable'), ok: store.currentStatus === 'CLEAR' || store.currentStatus === 'IDLE' },
-                  ].map((s) => (
-                    <div key={s.label} className="flex items-center gap-2">
-                      <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: s.ok ? '#00FF88' : '#FF3355' }} />
-                      <span className="text-[10px] font-semibold tracking-wider" style={{ color: s.ok ? '#F0F4FF' : '#FF3355' }}>
-                        {s.label}
+                {(phase === 'active' || phase === 'checkpoint') && (
+                  <div className="flex flex-col gap-4">
+                    <div className="flex items-center justify-between gap-4 flex-wrap">
+                      <div className="flex items-center gap-2.5">
+                        <svg width="16" height="16" viewBox="0 0 28 28">
+                          <polygon points="14,2 26,8 26,20 14,26 2,20 2,8" fill="none" stroke="#00C2FF" strokeWidth="2" />
+                        </svg>
+                        <span className="text-xs sm:text-sm font-black tracking-widest" style={{ color: '#F0F4FF' }}>
+                          {t('session_title')}
+                        </span>
+                      </div>
+                      <span className="font-mono text-sm font-bold tabular-nums tracking-wider" style={{ color: '#00C2FF' }}>
+                        {formatDuration(elapsed)}
                       </span>
                     </div>
-                  ))}
 
-                  <button
-                    onClick={handleManualCheckpoint}
-                    disabled={runningCheckpoint}
-                    className="mt-2 px-4 py-2 rounded-xl text-[10px] font-bold tracking-widest transition-all duration-200 disabled:opacity-40"
-                    style={{ border: '1px solid #1E2D45', color: '#00C2FF' }}
-                  >
-                    {t('session_manual_checkpoint').toUpperCase()}
-                  </button>
-                </div>
-              </div>
+                    <div className="h-px w-full" style={{ backgroundColor: 'rgba(255,255,255,0.08)' }} />
 
-              {/* Checkpoint history */}
-              {store.checkpoints.length > 0 && (
-                <div>
-                  <div className="h-px w-full mb-3" style={{ backgroundColor: '#1E2D45' }} />
-                  <p className="text-[10px] font-semibold tracking-widest mb-2" style={{ color: '#8899BB' }}>
-                    {t('session_history').toUpperCase()} ({store.checkpoints.length})
-                  </p>
-                  <div className="max-h-40 overflow-y-auto space-y-0.5">
-                    {[...store.checkpoints].reverse().map((cp) => (
-                      <CheckpointItem key={cp.checkpoint_number} cp={cp} />
-                    ))}
+                    <div className="flex flex-wrap items-center gap-3 text-[10px] font-semibold tracking-wider" style={{ color: '#8899BB' }}>
+                      <span>ID: <span style={{ color: '#F0F4FF' }}>{store.studentId}</span></span>
+                      <span>Session: <span style={{ color: '#F0F4FF' }}>{store.sessionId.slice(0, 8)}</span></span>
+                      {examName && <span>Exam: <span style={{ color: '#F0F4FF' }}>{examName}</span></span>}
+                    </div>
+
+                    <div className="edguardSessionActiveGrid">
+                      <div className={styles.card} style={{ background: 'rgba(3,7,18,0.55)', padding: '0.75rem' }}>
+                        <div className="rounded-xl overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.08)', aspectRatio: '4/3' }}>
+                          <Webcam
+                            ref={webcamRef}
+                            audio={false}
+                            screenshotFormat="image/jpeg"
+                            screenshotQuality={0.8}
+                            videoConstraints={VIDEO_CONSTRAINTS}
+                            className="w-full h-full object-cover block"
+                          />
+                        </div>
+                      </div>
+
+                      <div className={styles.card} style={{ background: 'rgba(3,7,18,0.55)' }}>
+                        <p className="text-[10px] font-semibold tracking-widest" style={{ color: '#8899BB' }}>{t('session_current_status').toUpperCase()}</p>
+                        <div style={{ display: 'grid', gap: 10, marginTop: '0.75rem' }}>
+                          {[
+                            { label: t('session_identity_verified'), ok: store.currentStatus !== 'ALERT' },
+                            { label: t('session_liveness_confirmed'), ok: store.currentStatus !== 'ALERT' },
+                            { label: t('session_cognitive_stable'), ok: store.currentStatus === 'CLEAR' || store.currentStatus === 'IDLE' },
+                          ].map((s) => (
+                            <div key={s.label} className="flex items-center gap-2">
+                              <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: s.ok ? '#00FF88' : '#FF3355' }} />
+                              <span className="text-[10px] font-semibold tracking-wider" style={{ color: s.ok ? '#F0F4FF' : '#FF3355' }}>
+                                {s.label}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+
+                        <button
+                          onClick={handleManualCheckpoint}
+                          disabled={runningCheckpoint}
+                          className={`${styles.btn} ${styles.btnOutline}`}
+                          style={{ width: '100%', marginTop: '1rem', opacity: runningCheckpoint ? 0.4 : 1 }}
+                        >
+                          {t('session_manual_checkpoint').toUpperCase()}
+                        </button>
+                      </div>
+                    </div>
+
+                    {store.checkpoints.length > 0 && (
+                      <div className={styles.card} style={{ background: 'rgba(3,7,18,0.55)' }}>
+                        <p className="text-[10px] font-semibold tracking-widest mb-2" style={{ color: '#8899BB' }}>
+                          {t('session_history').toUpperCase()} ({store.checkpoints.length})
+                        </p>
+                        <div className="max-h-56 overflow-y-auto space-y-0.5">
+                          {[...store.checkpoints].reverse().map((cp) => (
+                            <CheckpointItem key={cp.checkpoint_number} cp={cp} />
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    <button
+                      onClick={handleEnd}
+                      className={`${styles.btn} ${styles.btnOutline}`}
+                      style={{ width: '100%', color: '#FF3355', borderColor: 'rgba(255,51,85,0.45)' }}
+                    >
+                      ⏹ {t('edguard_end_session').toUpperCase()}
+                    </button>
+
+                    <AnimatePresence>
+                      {phase === 'checkpoint' && (
+                        <MiniReactionTest onDone={runCheckpoint} />
+                      )}
+                    </AnimatePresence>
                   </div>
-                </div>
-              )}
-
-              <div className="h-px w-full" style={{ backgroundColor: '#1E2D45' }} />
-
-              <button
-                onClick={handleEnd}
-                className="w-full py-3.5 rounded-xl font-bold text-sm tracking-wider transition-all duration-300"
-                style={{ border: '1.5px solid #FF3355', color: '#FF3355' }}
-              >
-                ⏹ {t('edguard_end_session').toUpperCase()}
-              </button>
-
-              {/* Cognitive overlay */}
-              <AnimatePresence>
-                {phase === 'checkpoint' && (
-                  <MiniReactionTest onDone={runCheckpoint} />
                 )}
-              </AnimatePresence>
-            </div>
-          )}
 
-          {/* Summary */}
-          {phase === 'summary' && (
-            <SessionSummary checkpoints={store.checkpoints} duration={elapsed} />
-          )}
+                {phase === 'summary' && (
+                  <SessionSummary checkpoints={store.checkpoints} duration={elapsed} />
+                )}
+              </div>
+            </motion.div>
+
+            <div style={{ display: 'grid', gap: '1rem' }}>
+              {[
+                {
+                  title: 'Continuous trust',
+                  body: 'Each checkpoint updates the exam trust trail so academic staff can review the session in context.',
+                },
+                {
+                  title: 'Manual control',
+                  body: 'You can force an extra checkpoint at any time without interrupting the full monitoring flow.',
+                },
+                {
+                  title: 'Compact reporting',
+                  body: 'The summary view keeps duration, alerts, history, and PDF export in one final review panel.',
+                },
+              ].map((item, idx) => (
+                <motion.div
+                  key={item.title}
+                  initial={{ opacity: 0, y: 18 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.18 + idx * 0.08, duration: 0.45 }}
+                  className={styles.card}
+                  style={{ background: 'rgba(17,24,39,0.45)' }}
+                >
+                  <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#7DDFFF' }}>
+                    {item.title}
+                  </div>
+                  <div className={styles.muted} style={{ marginTop: '0.75rem', fontSize: '0.9rem', lineHeight: 1.7 }}>
+                    {item.body}
+                  </div>
+                </motion.div>
+              ))}
+
+              <motion.div
+                initial={{ opacity: 0, y: 18 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4, duration: 0.45 }}
+                className={styles.card}
+                style={{ background: 'rgba(17,24,39,0.45)' }}
+              >
+                <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#7DDFFF' }}>
+                  Session scope
+                </div>
+                <div style={{ display: 'grid', gap: 10, marginTop: '0.9rem' }}>
+                  {['Live webcam signal', 'Automatic 5-minute checkpoints', 'End-of-session trust summary'].map((point) => (
+                    <div key={point} style={{ display: 'flex', alignItems: 'center', gap: 10, color: '#E5EEF9', fontSize: '0.875rem', lineHeight: 1.5 }}>
+                      <span style={{ width: 7, height: 7, borderRadius: 999, background: '#00C2FF', flexShrink: 0 }} />
+                      <span>{point}</span>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            </div>
+          </div>
         </div>
-      </div>
+
+        <style>{`
+          .edguardSessionLayout {
+            display: grid;
+            grid-template-columns: minmax(0, 1.6fr) minmax(280px, 0.9fr);
+            gap: 1rem;
+            align-items: start;
+          }
+
+          .edguardSessionActiveGrid {
+            display: grid;
+            grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr);
+            gap: 1rem;
+            align-items: start;
+          }
+
+          @media (max-width: 960px) {
+            .edguardSessionLayout,
+            .edguardSessionActiveGrid {
+              grid-template-columns: 1fr;
+            }
+          }
+        `}</style>
+      </section>
     </div>
   )
 }
