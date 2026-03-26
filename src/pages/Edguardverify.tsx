@@ -2,11 +2,10 @@ import { useState, useCallback, useEffect, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FaceCapture } from '@/components/FaceCapture'
-import { behavioralCollector, cognitiveCollector, faceCollector } from '@/signal-engine'
-import { verifyStudent } from '@/services/edguardApi'
 import { useT } from '@/i18n/useLang'
-import { config } from '@/config/api'
 import styles from '@/hvguard/theme.module.css'
+
+const EDGUARD_URL = 'https://edguard-v2.vercel.app'
 
 const HEX_PATTERN = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='49' viewBox='0 0 28 49'%3E%3Cg fill-rule='evenodd'%3E%3Cg fill='%2300C2FF' fill-opacity='0.03'%3E%3Cpath d='M13.99 9.25l13 7.5v15l-13 7.5L1 31.75v-15l12.99-7.5zM3 17.9v12.7l10.99 6.34 11-6.35V17.9l-11-6.34L3 17.9z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
 
@@ -24,15 +23,7 @@ export function EdguardVerify() {
   const [errorMsg, setErrorMsg] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const tenantId = config.tenantId
-
-  useEffect(() => {
-    behavioralCollector.start()
-
-    return () => {
-      behavioralCollector.stop()
-    }
-  }, [])
+  const tenantId = 'demo-tenant'
 
   const handleIdentitySubmit = useCallback((e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -42,7 +33,6 @@ export function EdguardVerify() {
 
   const handleCapture = useCallback((img: string) => {
     setSelfieB64(img)
-    faceCollector.capture(img)
   }, [])
 
   const handleRetake = useCallback(() => {
@@ -50,6 +40,8 @@ export function EdguardVerify() {
   }, [])
 
   const handleProceed = useCallback(async () => {
+    // Vitrine-only: pas d'appel API. Redirection vers le Guard externe.
+    // On conserve le formulaire/capture pour ne pas casser l'UI, mais l'action continue sur edguard.
     if (!selfieB64) {
       setErrorMsg(t('edguard_verify_capture_failed'))
       setStep('error')
@@ -57,33 +49,7 @@ export function EdguardVerify() {
     }
 
     setIsSubmitting(true)
-    const startedAt = Date.now()
-
-    try {
-      const result = await verifyStudent({
-        selfie_b64: selfieB64,
-        first_name: firstName.trim(),
-        last_name: lastName.trim(),
-        tenant_id: tenantId,
-      })
-
-      const similarityPct = Math.min(100, Math.round(result.similarity ?? 0))
-      const durationMs = Date.now() - startedAt
-      setConfidence(similarityPct)
-      cognitiveCollector.record({ testId: 'verify', score: similarityPct, durationMs })
-
-      if (result.verified) {
-        setStep('success')
-      } else {
-        setErrorMsg(t('edguard_verify_similarity_error').replace('{similarity}', String(similarityPct)))
-        setStep('error')
-      }
-    } catch {
-      setErrorMsg(t('edguard_verify_service_unavailable'))
-      setStep('error')
-    } finally {
-      setIsSubmitting(false)
-    }
+    window.location.href = `${EDGUARD_URL}/verify`
   }, [selfieB64, firstName, lastName, t])
 
   const handleRetry = useCallback(() => {

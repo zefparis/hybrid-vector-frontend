@@ -1,17 +1,6 @@
-import axios from 'axios'
-import { config } from '@/config/api'
-
-const API_URL = config.apiUrl
-const API_KEY = config.apiKey
-
-const client = axios.create({
-  baseURL: API_URL,
-  timeout: 30000,
-  headers: {
-    'Content-Type': 'application/json',
-    'X-API-Key': API_KEY,
-  },
-})
+// VITRINE-ONLY: aucune communication backend depuis hybrid-vector-frontend.
+// Les flows EdGuard (enroll/verify/session) sont désormais délégués au Guard externe.
+// On garde ce module comme stub typé pour ne pas casser l'UI lors du build.
 
 export interface EnrollRequest {
   selfie_b64: string
@@ -54,72 +43,30 @@ export interface CheckpointResponse {
   error?: string
 }
 
+function nowIso(): string {
+  return new Date().toISOString()
+}
+
+function pseudoRandomFromSeed(seed: string): number {
+  // Simple hash -> [0, 1)
+  let h = 2166136261
+  for (let i = 0; i < seed.length; i += 1) {
+    h ^= seed.charCodeAt(i)
+    h = Math.imul(h, 16777619)
+  }
+  return (h >>> 0) / 2 ** 32
+}
+
 export async function enrollStudent(payload: EnrollRequest): Promise<EnrollResponse> {
-  try {
-    const { data } = await client.post<EnrollResponse>('/edguard/enroll', payload)
-    return data
-  } catch (err: unknown) {
-    if (axios.isAxiosError(err) && err.response?.data) {
-      return err.response.data as EnrollResponse
-    }
-    return {
-      success: false,
-      student_id: '',
-      confidence: 0,
-      error: 'NETWORK_ERROR',
-      message: 'Service indisponible. Réessayez.',
-    }
-  }
-}
-
-export async function sessionCheckpoint(payload: CheckpointRequest): Promise<CheckpointResponse> {
-  try {
-    const { data } = await client.post<CheckpointResponse>('/edguard/session/checkpoint', payload)
-    return data
-  } catch (err: unknown) {
-    if (axios.isAxiosError(err) && err.response?.data) {
-      return err.response.data as CheckpointResponse
-    }
-    return {
-      success: false,
-      session_id: payload.session_id,
-      student_id: payload.student_id,
-      checkpoint_number: payload.checkpoint_number,
-      trust_score: 0,
-      alert_level: 'ALERT',
-      verified: false,
-      liveness: false,
-      cognitive_deviation: 0,
-      flags: ['NETWORK_ERROR'],
-      timestamp: new Date().toISOString(),
-      error: 'NETWORK_ERROR',
-    }
-  }
-}
-
-export async function lookupStudent(payload: {
-  first_name: string
-  last_name: string
-  tenant_id: string
-}): Promise<{
-  found: boolean
-  student_id?: string
-  first_name?: string
-}> {
-  try {
-    const { data } = await client.post('/edguard/lookup', payload)
-    return data
-  } catch (err: unknown) {
-    if (axios.isAxiosError(err) && err.response?.data) {
-      return err.response.data as {
-        found: boolean
-        student_id?: string
-        first_name?: string
-      }
-    }
-    return {
-      found: false,
-    }
+  // Simule un résultat sans backend.
+  const r = pseudoRandomFromSeed(`${payload.first_name}-${payload.last_name}-${payload.tenant_id}`)
+  const confidence = Math.round(70 + r * 28)
+  return {
+    success: true,
+    student_id: `demo-${Math.floor(r * 10_000)}`,
+    confidence,
+    faceId: crypto.randomUUID().slice(0, 12),
+    enrolled_at: nowIso(),
   }
 }
 
@@ -134,6 +81,43 @@ export async function verifyStudent(payload: {
   student_id: string
   first_name: string
 }> {
-  const { data } = await client.post('/edguard/verify', payload)
-  return data
+  const r = pseudoRandomFromSeed(`${payload.first_name}-${payload.last_name}-${payload.tenant_id}`)
+  const similarity = Math.round(65 + r * 34)
+  return {
+    verified: similarity >= 72,
+    similarity,
+    student_id: `demo-${Math.floor(r * 10_000)}`,
+    first_name: payload.first_name,
+  }
+}
+
+export async function sessionCheckpoint(payload: CheckpointRequest): Promise<CheckpointResponse> {
+  const r = pseudoRandomFromSeed(`${payload.student_id}-${payload.session_id}-${payload.checkpoint_number}`)
+  const trust = Math.round(55 + r * 44)
+  const alert_level: CheckpointResponse['alert_level'] = trust >= 75 ? 'CLEAR' : trust >= 62 ? 'WARNING' : 'ALERT'
+  return {
+    success: true,
+    session_id: payload.session_id,
+    student_id: payload.student_id,
+    checkpoint_number: payload.checkpoint_number,
+    trust_score: trust,
+    alert_level,
+    verified: alert_level !== 'ALERT',
+    liveness: true,
+    cognitive_deviation: 0,
+    flags: alert_level === 'ALERT' ? ['OFFLINE_VITRINE_MODE'] : [],
+    timestamp: nowIso(),
+  }
+}
+
+export async function lookupStudent(_payload: {
+  first_name: string
+  last_name: string
+  tenant_id: string
+}): Promise<{
+  found: boolean
+  student_id?: string
+  first_name?: string
+}> {
+  return { found: false }
 }

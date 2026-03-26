@@ -3,19 +3,18 @@ import { Link, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { QRCodeSVG } from 'qrcode.react'
 import { FaceCapture } from '@/components/FaceCapture'
-import { behavioralCollector, faceCollector } from '@/signal-engine'
 import { VocalImprint } from '@/components/VocalImprint'
 import { NeuralReflex } from '@/components/NeuralReflex'
 import styles from '@/hvguard/theme.module.css'
 import { useEdguardStore } from '@/store/edguardStore'
-import { enrollStudent } from '@/services/edguardApi'
 import { useSensors } from '@/hooks/useSensors'
 import { computeCognitiveScore, scoreMouseBehavior } from '@/services/api'
 import { useT } from '@/i18n/useLang'
 import type { VocalImportData, ReflexResult } from '@/types'
-import { enrollmentUrl, config } from '@/config/api'
+// Vitrine-only: l'enroll se fait sur le Guard externe.
 
-const ENROLLMENT_URL = enrollmentUrl()
+const EDGUARD_URL = 'https://edguard-v2.vercel.app'
+const ENROLLMENT_URL = `${EDGUARD_URL}/enroll`
 
 const isMobileDevice =
   /Android|iPhone|iPad/i.test(navigator.userAgent) || 'ontouchstart' in window
@@ -722,7 +721,7 @@ export function EdguardEnroll() {
   const [errorMsg, setErrorMsg] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const tenantId = config.tenantId
+  const tenantId = 'demo-tenant'
 
   const handleIdentitySubmit = useCallback((e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -731,17 +730,8 @@ export function EdguardEnroll() {
     setStep(2)
   }, [email, firstName, lastName, store])
 
-  useEffect(() => {
-    behavioralCollector.start()
-
-    return () => {
-      behavioralCollector.stop()
-    }
-  }, [])
-
   const handleCapture = useCallback((img: string) => {
     setSelfieB64(img)
-    faceCollector.capture(img)
   }, [])
 
   const handleRetake = useCallback(() => {
@@ -749,37 +739,11 @@ export function EdguardEnroll() {
   }, [])
 
   const handleEnroll = useCallback(async () => {
-    if (!selfieB64) {
-      setErrorMsg('Capture failed — please center your face and try again.')
-      setStep('error')
-      return
-    }
-
+    // Vitrine-only: pas d'appel API. On bascule vers le Guard externe.
+    // On garde quand même la capture et les champs locaux pour l'UI.
     setIsSubmitting(true)
-
-    try {
-      const result = await enrollStudent({
-        selfie_b64: selfieB64,
-        first_name: firstName.trim(),
-        last_name: lastName.trim(),
-        email: email.trim() || undefined,
-        tenant_id: tenantId,
-      })
-
-      if (result.success) {
-        store.setEnrollmentResult(result)
-        setStep('success')
-      } else {
-        setErrorMsg(result.message ?? result.error ?? 'Service unavailable. Please try again.')
-        setStep('error')
-      }
-    } catch {
-      setErrorMsg('Service unavailable. Please try again.')
-      setStep('error')
-    } finally {
-      setIsSubmitting(false)
-    }
-  }, [email, firstName, lastName, selfieB64, store])
+    window.location.href = `${EDGUARD_URL}/enroll`
+  }, [])
 
   const handleRetry = useCallback(() => {
     setErrorMsg('')

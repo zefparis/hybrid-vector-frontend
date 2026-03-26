@@ -1,9 +1,8 @@
 /// <reference types="vite/client" />
 
 interface ImportMetaEnv {
-  readonly VITE_HV_API_URL: string
-  readonly VITE_HV_API_KEY: string
-  readonly VITE_TENANT_ID: string
+  // Gardé uniquement si utilisé ailleurs (non requis pour la vitrine actuellement).
+  readonly VITE_API_URL?: string
 }
 
 interface ImportMeta {

@@ -1,19 +1,8 @@
-import axios from 'axios'
 import type { AnalyzePayload, SessionResult, CognitiveScoreInput } from '@/types'
 import type { MouseBehavior } from '@/hooks/useSensors'
-import { config } from '@/config/api'
 
-const API_URL = config.apiUrl
-const API_KEY = config.apiKey
-
-const client = axios.create({
-  baseURL: API_URL,
-  timeout: 30000,
-  headers: {
-    'Content-Type': 'application/json',
-    'X-API-Key': API_KEY,
-  },
-})
+// NOTE(vitrine): aucun appel backend depuis hybrid-vector-frontend.
+// Ce fichier conserve uniquement la logique locale (scores + mocks).
 
 function clamp01(v: number): number {
   return Math.max(0, Math.min(1, v))
@@ -251,9 +240,18 @@ export function computeCognitiveScore(input: CognitiveScoreInput): number {
 }
 
 export async function analyzeSession(payload: AnalyzePayload): Promise<SessionResult> {
-  console.log('[API] cognitive_score_override sent:', payload.cognitive_score_override)
-  const { data } = await client.post<SessionResult>('/auth/session', payload)
-  return data
+  // Vitrine-only: on renvoie un résultat mocké déterministe à partir des inputs.
+  console.log('[VITRINE] analyzeSession (mock), cognitive_score_override:', payload.cognitive_score_override)
+  const cognitiveScore = payload.cognitive_score_override != null
+    ? Math.round(Math.max(0, Math.min(100, payload.cognitive_score_override * 100)))
+    : undefined
+
+  const mock = generateMockResult(cognitiveScore)
+  return {
+    ...mock,
+    tenant_id: payload.tenant_id,
+    user_id: payload.user_id,
+  }
 }
 
 export function generateMockResult(cognitiveScore?: number): SessionResult {
@@ -269,7 +267,7 @@ export function generateMockResult(cognitiveScore?: number): SessionResult {
   return {
     session_id: crypto.randomUUID(),
     user_id: `demo-${Date.now()}`,
-    tenant_id: config.tenantId,
+    tenant_id: 'demo-tenant',
     trust_score: Math.min(100, trustScore),
     is_human: trustScore >= 55,
     confidence_level: trustScore >= 80 ? 'HIGH' : trustScore >= 60 ? 'MEDIUM' : 'LOW',

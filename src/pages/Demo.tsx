@@ -12,7 +12,6 @@ import { useTypewriter } from '@/hooks/useTypewriter'
 import { playSuccess } from '@/utils/sounds'
 import type { VocalImportData, ReflexResult } from '@/types'
 import { useT } from '@/i18n/useLang'
-import { config } from '@/config/api'
 
 const HEX_PATTERN = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='49' viewBox='0 0 28 49'%3E%3Cg fill-rule='evenodd'%3E%3Cg fill='%2300C2FF' fill-opacity='0.03'%3E%3Cpath d='M13.99 9.25l13 7.5v15l-13 7.5L1 31.75v-15l12.99-7.5zM3 17.9v12.7l10.99 6.34 11-6.35V17.9l-11-6.34L3 17.9z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
 
@@ -277,9 +276,8 @@ export function Demo() {
     }))
 
     try {
-      const tenantId = config.tenantId
       const result = await analyzeSession({
-        tenant_id: tenantId,
+        tenant_id: 'demo-tenant',
         user_id: `user-${Date.now()}`,
         face_detected: !!faceDescriptor,
         face_confidence: faceConfidence,

@@ -1,12 +1,12 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Webcam from 'react-webcam'
-import { behavioralCollector, cognitiveCollector, faceCollector } from '@/signal-engine'
 import styles from '@/hvguard/theme.module.css'
 import { useEdguardStore } from '@/store/edguardStore'
-import { sessionCheckpoint } from '@/services/edguardApi'
 import type { CheckpointResponse } from '@/services/edguardApi'
 import { useT } from '@/i18n/useLang'
+
+const EDGUARD_URL = 'https://edguard-v2.vercel.app'
 
 const HEX_PATTERN = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='49' viewBox='0 0 28 49'%3E%3Cg fill-rule='evenodd'%3E%3Cg fill='%2300C2FF' fill-opacity='0.03'%3E%3Cpath d='M13.99 9.25l13 7.5v15l-13 7.5L1 31.75v-15l12.99-7.5zM3 17.9v12.7l10.99 6.34 11-6.35V17.9l-11-6.34L3 17.9z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
 
@@ -269,11 +269,7 @@ export function EdguardSession() {
   const [runningCheckpoint, setRunningCheckpoint] = useState(false)
 
   useEffect(() => {
-    behavioralCollector.start()
-
-    return () => {
-      behavioralCollector.stop()
-    }
+    // Vitrine-only: pas de collecteurs ni de backend.
   }, [])
 
   // Elapsed timer
@@ -311,22 +307,25 @@ export function EdguardSession() {
     const frame = webcamRef.current?.getScreenshot() ?? ''
     const cogScore = Math.max(0, Math.min(100, Math.round(100 - (cognitiveMs / 10))))
 
-    if (frame) {
-      faceCollector.capture(frame)
-    }
-
-    cognitiveCollector.record({ testId: 'exam', score: cogScore, durationMs: cognitiveMs })
-
-    const result = await sessionCheckpoint({
-      student_id: store.studentId,
+    // Vitrine-only: plus de checkpoint backend.
+    // On redirige vers le Guard externe pour le mode session réel.
+    window.location.href = `${EDGUARD_URL}/session`
+    // fallback UI: pseudo-checkpoint local
+    const simulated: CheckpointResponse = {
+      success: true,
       session_id: store.sessionId,
+      student_id: store.studentId,
       checkpoint_number: store.checkpointNumber + 1,
-      face_b64: frame,
-      cognitive_score: cogScore,
-    })
-
-    store.addCheckpoint(result)
-    setPulseColor(alertColor(result.alert_level))
+      trust_score: Math.max(0, Math.min(100, Math.round(50 + cogScore * 0.5))),
+      alert_level: cogScore >= 70 ? 'CLEAR' : cogScore >= 55 ? 'WARNING' : 'ALERT',
+      verified: cogScore >= 55,
+      liveness: Boolean(frame),
+      cognitive_deviation: 0,
+      flags: ['OFFLINE_VITRINE_MODE'],
+      timestamp: new Date().toISOString(),
+    }
+    store.addCheckpoint(simulated)
+    setPulseColor(alertColor(simulated.alert_level))
     setTimeout(() => setPulseColor(null), 2000)
     setRunningCheckpoint(false)
   }, [runningCheckpoint, store])
