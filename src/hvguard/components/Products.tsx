@@ -85,6 +85,11 @@ export function Products() {
         name: product.name === 'EDGUARD' ? 'EdGuard' : product.name,
         description: product.desc,
         url: product.href,
+        ...(product.name === 'PAYGUARD'
+          ? {
+              androidApk: 'https://github.com/zefparis/payguard/releases/download/v1.0.0/app-release.apk',
+            }
+          : {}),
       },
     ]),
   )

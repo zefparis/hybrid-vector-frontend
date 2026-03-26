@@ -6,6 +6,7 @@ export type GuardConfig = {
   name: string
   description: string
   url: string
+  androidApk?: string
 }
 
 type GuardLauncherProps = {
@@ -88,6 +89,29 @@ export function GuardLauncher({ guard, onClose }: GuardLauncherProps) {
           >
             Open module
           </button>
+
+          {guard.id === 'payguard' && guard.androidApk ? (
+            <a
+              href={guard.androidApk}
+              download
+              style={{
+                display: 'block',
+                width: '100%',
+                padding: '12px',
+                background: 'transparent',
+                color: '#00C2FF',
+                border: '1px solid #00C2FF',
+                borderRadius: '8px',
+                textAlign: 'center',
+                textDecoration: 'none',
+                fontWeight: 600,
+                marginTop: '10px',
+                cursor: 'pointer',
+              }}
+            >
+              📱 Télécharger l'app Android
+            </a>
+          ) : null}
 
           <button
             type="button"
